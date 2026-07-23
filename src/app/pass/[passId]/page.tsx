@@ -26,18 +26,8 @@ export default async function PassPage({
             : "This pass ID is not on the guest list."}
         </p>
         <div className="mt-6 flex gap-3">
-          
-            href="/rsvp"
-            className="rounded-full bg-gradient-to-r from-[#d4af37] to-[#b8912e] px-6 py-3 text-sm font-semibold text-black font-[family-name:var(--font-sans)]"
-          >
-            Register
-          </a>
-          
-            href="/mypass"
-            className="rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm text-white/80 font-[family-name:var(--font-sans)]"
-          >
-            Find My Pass
-          </a>
+          <a href="/rsvp" className="rounded-full bg-gradient-to-r from-[#d4af37] to-[#b8912e] px-6 py-3 text-sm font-semibold text-black font-[family-name:var(--font-sans)]">Register</a>
+          <a href="/mypass" className="rounded-full border border-white/15 bg-white/5 px-6 py-3 text-sm text-white/80 font-[family-name:var(--font-sans)]">Find My Pass</a>
         </div>
       </main>
     );
