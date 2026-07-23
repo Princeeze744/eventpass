@@ -22,6 +22,10 @@ export default function AdminPage() {
   const [guests, setGuests] = useState<G[]>([]);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<
+    "all" | "pending" | "approved" | "declined" | "checkedin"
+  >("all");
 
   const load = useCallback(async (k: string) => {
     const res = await fetch("/api/admin", { headers: { "x-admin-key": k } });
@@ -78,7 +82,9 @@ export default function AdminPage() {
             className={`mt-4 ${inp}`}
           />
           {msg && (
-            <p className="mt-2 text-sm text-red-400 font-[family-name:var(--font-sans)]">{msg}</p>
+            <p className="mt-2 text-sm text-red-400 font-[family-name:var(--font-sans)]">
+              {msg}
+            </p>
           )}
           <button
             onClick={unlock}
@@ -95,6 +101,19 @@ export default function AdminPage() {
   const pending = guests.filter((g) => g.status === "pending").length;
   const approved = guests.filter((g) => g.status === "approved").length;
   const inCount = guests.filter((g) => g.checkedIn).length;
+
+  const visibleGuests = guests.filter((g) => {
+    const q = search.toLowerCase().trim();
+    const matchSearch =
+      !q ||
+      g.name.toLowerCase().includes(q) ||
+      (g.phone || "").includes(q) ||
+      g.passId.toLowerCase().includes(q);
+    const matchFilter =
+      filter === "all" ||
+      (filter === "checkedin" ? g.checkedIn : g.status === filter);
+    return matchSearch && matchFilter;
+  });
 
   return (
     <main className="min-h-[100svh] bg-[#070707] text-white px-5 py-8 sm:px-10">
@@ -122,6 +141,36 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* Search + filters */}
+        <div className="mt-6 flex flex-col sm:flex-row gap-3">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search name, phone, or pass ID…"
+            className="flex-1 rounded-xl border border-white/10 bg-black/40 px-4 py-3 outline-none focus:border-[#d4af37]/60 font-[family-name:var(--font-sans)]"
+          />
+          <div className="flex gap-2 overflow-x-auto">
+            {(["all", "pending", "approved", "declined", "checkedin"] as const).map(
+              (f) => (
+                <button
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-[family-name:var(--font-sans)] border ${
+                    filter === f
+                      ? "border-[#d4af37] bg-[#d4af37]/15 text-[#d4af37]"
+                      : "border-white/10 bg-white/5 text-white/50"
+                  }`}
+                >
+                  {f === "checkedin"
+                    ? "Checked In"
+                    : f[0].toUpperCase() + f.slice(1)}
+                </button>
+              )
+            )}
+          </div>
+        </div>
+
+        {/* Table */}
         <div className="mt-6 overflow-x-auto rounded-3xl border border-white/8 bg-white/[0.03]">
           <table className="w-full text-left text-sm font-[family-name:var(--font-sans)]">
             <thead>
@@ -134,7 +183,7 @@ export default function AdminPage() {
               </tr>
             </thead>
             <tbody>
-              {guests.map((g) => (
+              {visibleGuests.map((g) => (
                 <tr key={g.id} className="border-b border-white/5">
                   <td className="px-5 py-3.5">
                     <span className="font-[family-name:var(--font-serif)] text-base">
@@ -201,6 +250,16 @@ export default function AdminPage() {
                   </td>
                 </tr>
               ))}
+              {visibleGuests.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-5 py-8 text-center text-sm text-white/30"
+                  >
+                    No guests match this search or filter.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
