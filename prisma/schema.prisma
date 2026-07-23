@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Guest {
+  id              String    @id @default(cuid())
+  passId          String    @unique
+  name            String
+  phone           String?
+  tier            String    @default("Guest")
+  table           String    @default("TBA")
+  status          String    @default("pending") // pending | approved | declined
+  checkedInOnline Boolean   @default(false)
+  checkedIn       Boolean   @default(false)
+  checkedInAt     DateTime?
+  createdAt       DateTime  @default(now())
+}
+
