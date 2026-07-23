@@ -7,17 +7,71 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         String   @default("planner")
+  createdAt    DateTime @default(now())
+  events       Event[]
+}
+
+model Event {
+  id        String @id @default(cuid())
+  slug      String @unique
+  ownerId   String
+  owner     User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  title      String
+  hostName   String  @default("")
+  tagline    String  @default("A Celebration")
+  eventDate  String
+  eventTime  String  @default("12:00 PM")
+  venue      String
+  address    String  @default("")
+
+  logoUrl     String?
+  accentColor String  @default("#d4af37")
+
+  deadline     DateTime?
+  capacity     Int?
+  approvalMode String    @default("manual")
+
+  adminKey String
+  usherKey String
+
+  createdAt DateTime @default(now())
+  guests    Guest[]
+}
+
 model Guest {
-  id              String    @id @default(cuid())
-  passId          String    @unique
-  name            String
-  phone           String?
-  tier            String    @default("Guest")
-  table           String    @default("TBA")
-  status          String    @default("pending") // pending | approved | declined
+  id      String @id @default(cuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  passId   String  @unique
+  name     String
+  phone    String?
+  category String  @default("Guest")
+  tier     String  @default("Guest")
+
+  partySize Int @default(1)
+  partyUsed Int @default(0)
+
+  section String @default("")
+  table   String @default("TBA")
+  seat    String @default("")
+
+  status          String    @default("pending")
   checkedInOnline Boolean   @default(false)
   checkedIn       Boolean   @default(false)
   checkedInAt     DateTime?
-  createdAt       DateTime  @default(now())
-}
+  souvenirTaken   Boolean   @default(false)
 
+  createdAt DateTime @default(now())
+
+  @@unique([eventId, phone])
+  @@index([eventId])
+}
