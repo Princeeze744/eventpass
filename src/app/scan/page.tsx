@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, XCircle, AlertTriangle, Keyboard, ScanLine, ShieldCheck } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Keyboard, ScanLine, ShieldCheck, Check } from "lucide-react";
 
 type Result = {
   status: "valid" | "invalid" | "duplicate" | "pending";
   message: string;
   preChecked?: boolean;
+  passId?: string;
   guest?: { name: string; tier: string; table: string; checkedInAt?: string };
 };
 
@@ -18,12 +19,25 @@ export default function ScanPage() {
   const [manualMode, setManualMode] = useState(false);
   const [manualId, setManualId] = useState("");
   const [cameraError, setCameraError] = useState(false);
+  const [tableInput, setTableInput] = useState("");
+  const [tableSaved, setTableSaved] = useState(false);
   const scannerRef = useRef<{ stop: () => Promise<void> } | null>(null);
   const busyRef = useRef(false);
+  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastPassId = useRef<string>("");
+
+  function dismiss() {
+    if (dismissTimer.current) clearTimeout(dismissTimer.current);
+    setResult(null);
+    setTableInput("");
+    setTableSaved(false);
+    busyRef.current = false;
+  }
 
   async function verify(passId: string) {
     if (busyRef.current) return;
     busyRef.current = true;
+    lastPassId.current = passId.trim();
     try {
       const res = await fetch("/api/verify", {
         method: "POST",
@@ -32,16 +46,27 @@ export default function ScanPage() {
       });
       const data: Result = await res.json();
       setResult(data);
+      setTableInput(data.guest?.table && data.guest.table !== "TBA" ? data.guest.table : "");
       if (typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate(data.status === "valid" ? 80 : [60, 40, 60]);
       }
-      setTimeout(() => {
-        setResult(null);
-        busyRef.current = false;
-      }, 3200);
+      const holdTime = data.status === "valid" ? 12000 : 10000;
+      dismissTimer.current = setTimeout(() => dismiss(), holdTime);
     } catch {
       busyRef.current = false;
     }
+  }
+
+  async function assignTable() {
+    if (!tableInput.trim()) return;
+    if (dismissTimer.current) clearTimeout(dismissTimer.current);
+    await fetch("/api/assign", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ passId: lastPassId.current, table: tableInput, usherKey }),
+    });
+    setTableSaved(true);
+    dismissTimer.current = setTimeout(() => dismiss(), 2500);
   }
 
   useEffect(() => {
@@ -175,20 +200,20 @@ export default function ScanPage() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className={`fixed inset-0 z-50 flex flex-col items-center justify-center ${theme.bg}`}
+            className={`fixed inset-0 z-50 flex flex-col items-center justify-center px-6 ${theme.bg}`}
           >
             <motion.div
               initial={{ scale: 0, rotate: -30 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 260, damping: 14, delay: 0.05 }}
             >
-              <theme.icon className="h-28 w-28" strokeWidth={1.5} />
+              <theme.icon className="h-24 w-24" strokeWidth={1.5} />
             </motion.div>
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="mt-6 text-3xl sm:text-4xl font-bold tracking-widest text-center px-4 font-[family-name:var(--font-sans)]"
+              className="mt-5 text-3xl sm:text-4xl font-bold tracking-widest text-center font-[family-name:var(--font-sans)]"
             >
               {theme.title}
             </motion.h1>
@@ -197,14 +222,12 @@ export default function ScanPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="mt-4 text-center font-[family-name:var(--font-sans)]"
+                className="mt-3 text-center font-[family-name:var(--font-sans)]"
               >
                 <p className="text-2xl font-[family-name:var(--font-serif)]">
                   {result.guest.name}
                 </p>
-                <p className="mt-1 text-white/85">
-                  {result.guest.tier} • {result.guest.table}
-                </p>
+                <p className="mt-1 text-white/85">{result.guest.tier}</p>
                 {result.guest.checkedInAt && (
                   <p className="mt-2 text-sm text-white/70">
                     First scanned at {result.guest.checkedInAt}
@@ -212,6 +235,50 @@ export default function ScanPage() {
                 )}
               </motion.div>
             )}
+
+            {result.status === "valid" && (
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="mt-6 w-full max-w-[300px]"
+              >
+                {tableSaved ? (
+                  <div className="flex items-center justify-center gap-2 rounded-xl bg-black/25 px-4 py-3 font-[family-name:var(--font-sans)]">
+                    <Check className="h-5 w-5" />
+                    <span className="font-semibold">Seated at {tableInput}</span>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-center text-[11px] uppercase tracking-[0.25em] text-white/80 font-[family-name:var(--font-sans)]">
+                      Assign Table
+                    </p>
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        value={tableInput}
+                        onChange={(e) => setTableInput(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && assignTable()}
+                        placeholder="e.g. Table 12"
+                        className="flex-1 rounded-xl border border-white/30 bg-black/25 px-4 py-3 text-white placeholder-white/50 outline-none focus:border-white font-[family-name:var(--font-sans)]"
+                      />
+                      <button
+                        onClick={assignTable}
+                        className="rounded-xl bg-black/40 px-5 font-semibold text-white font-[family-name:var(--font-sans)]"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </>
+                )}
+              </motion.div>
+            )}
+
+            <button
+              onClick={dismiss}
+              className="absolute bottom-8 rounded-full border border-white/40 px-6 py-2.5 text-xs tracking-[0.25em] uppercase text-white/90 font-[family-name:var(--font-sans)]"
+            >
+              Next Guest
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

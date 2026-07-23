@@ -140,7 +140,7 @@ export default function PassCard({
           {[
             { icon: CalendarDays, label: eventInfo.date, sub: eventInfo.time },
             { icon: MapPin, label: "Venue", sub: eventInfo.venue },
-            { icon: Armchair, label: "Seating", sub: guest.table },
+            { icon: Armchair, label: "Seating", sub: guest.table === "TBA" ? "At entrance" : guest.table },
           ].map((d, i) => (
             <div key={i} className="rounded-2xl border border-white/5 bg-white/[0.03] px-2 py-3">
               <d.icon className="mx-auto h-4 w-4" style={{ color: theme.accent }} />
