@@ -196,7 +196,7 @@ export default function PassCard({
         transition={{ delay: 2 }}
         className="mt-6 text-[10px] tracking-[0.3em] uppercase text-white/25 font-[family-name:var(--font-sans)]"
       >
-        Powered by EventPass
+        Powered by Story Box
       </motion.p>
     </main>
   );

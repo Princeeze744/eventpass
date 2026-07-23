@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { KeyRound, ArrowRight, Loader2 } from "lucide-react";
+import BackHome from "@/components/BackHome";
 
 export default function MyPassPage() {
   const router = useRouter();
@@ -36,6 +37,7 @@ export default function MyPassPage() {
 
   return (
     <main className="relative min-h-[100svh] overflow-hidden bg-[#070707] text-white flex flex-col items-center justify-center px-5">
+      <BackHome />
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[40vh] w-[90vw] max-w-[650px] rounded-full bg-[#d4af37]/10 blur-[110px]" />
       </div>

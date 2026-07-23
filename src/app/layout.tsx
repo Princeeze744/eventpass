@@ -14,8 +14,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "EventPass — Your Invitation, Reimagined",
-  description: "Seamless verified digital passes for unforgettable events.",
+  title: "Story Box — Chioma & Obinna",
+  description: "Verified digital passes by Story Box. No queues. No gatecrashers.",
 };
 
 export const viewport: Viewport = {

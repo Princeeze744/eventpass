@@ -1,101 +1,119 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-const headline = "Your Invitation, Reimagined.";
+import { ArrowRight, KeyRound } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
+
   return (
     <main className="relative min-h-[100svh] overflow-hidden bg-[#070707] text-white flex flex-col items-center justify-center px-5 sm:px-8">
-      {/* Ambient gold glow */}
+      {/* Ambient glow — green + gold, the Story Box blend */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[40vh] w-[90vw] max-w-[700px] rounded-full bg-[#d4af37]/10 blur-[100px]" />
-        <div className="absolute bottom-0 right-0 h-[25vh] w-[60vw] max-w-[400px] rounded-full bg-[#8a6d1f]/10 blur-[90px]" />
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[40vh] w-[90vw] max-w-[700px] rounded-full bg-emerald-700/10 blur-[110px]" />
+        <div className="absolute bottom-0 right-0 h-[25vh] w-[60vw] max-w-[400px] rounded-full bg-[#d4af37]/8 blur-[90px]" />
       </div>
 
-      {/* Floating gold particles */}
-      {[...Array(14)].map((_, i) => (
+      {/* Floating particles */}
+      {[...Array(12)].map((_, i) => (
         <motion.span
           key={i}
-          className="absolute h-1 w-1 rounded-full bg-[#d4af37]/60"
-          style={{ left: `${(i * 7.3) % 100}%`, top: `${(i * 13.7) % 100}%` }}
+          className={`absolute h-1 w-1 rounded-full ${i % 2 ? "bg-[#d4af37]/50" : "bg-emerald-500/40"}`}
+          style={{ left: `${(i * 8.3) % 100}%`, top: `${(i * 14.7) % 100}%` }}
           animate={{ y: [-10, -60], opacity: [0, 0.8, 0] }}
-          transition={{
-            duration: 6 + (i % 5),
-            repeat: Infinity,
-            delay: i * 0.7,
-            ease: "easeInOut",
-          }}
+          transition={{ duration: 6 + (i % 5), repeat: Infinity, delay: i * 0.8, ease: "easeInOut" }}
         />
       ))}
 
-      {/* Badge */}
+      {/* Logo — soft entrance with breathing glow */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.3 }}
-        className="mb-6 sm:mb-8 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-md"
+        initial={{ opacity: 0, scale: 0.8, filter: "blur(10px)" }}
+        animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+        transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+        className="relative"
       >
-        <Sparkles className="h-4 w-4 text-[#d4af37]" />
-        <span className="text-xs sm:text-sm tracking-widest uppercase text-white/70 font-[family-name:var(--font-sans)]">
-          EventPass
-        </span>
+        <motion.div
+          animate={{ opacity: [0.25, 0.5, 0.25] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute inset-0 -m-8 rounded-full bg-emerald-600/20 blur-3xl"
+        />
+        <Image
+          src="/brand/logo-mark.jpg"
+          alt="Story Box"
+          width={130}
+          height={130}
+          priority
+          className="relative rounded-2xl"
+        />
       </motion.div>
 
-      {/* Headline — letter by letter */}
-      <h1 className="max-w-4xl text-center text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-[family-name:var(--font-serif)] font-medium leading-tight">
-        {headline.split("").map((char, i) => (
-          <motion.span
-            key={i}
-            initial={{ opacity: 0, y: 30, filter: "blur(8px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            transition={{ duration: 0.6, delay: 0.6 + i * 0.03 }}
-            className={char === "R" ? "text-[#d4af37]" : ""}
-          >
-            {char}
-          </motion.span>
-        ))}
-      </h1>
-
-      {/* Subtitle */}
       <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 2 }}
-        className="mt-5 sm:mt-6 max-w-xl text-center text-base sm:text-lg text-white/60 font-[family-name:var(--font-sans)]"
+        initial={{ opacity: 0, letterSpacing: "0.2em" }}
+        animate={{ opacity: 1, letterSpacing: "0.45em" }}
+        transition={{ duration: 1.2, delay: 0.6 }}
+        className="mt-6 text-sm sm:text-base uppercase text-[#c9a227] font-[family-name:var(--font-sans)]"
       >
-        Verified digital passes for weddings and events. No queues. No
-        gatecrashers. Just elegance at the door.
+        Story Box
       </motion.p>
 
-      {/* CTA button */}
-      <motion.button
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 2.4 }}
-        whileHover={{ scale: 1.04 }}
-        whileTap={{ scale: 0.97 }}
-        onClick={() => router.push("/pass/EP-2026-000148")}
-        className="group mt-8 sm:mt-10 flex min-h-[52px] items-center gap-3 rounded-full bg-gradient-to-r from-[#d4af37] to-[#b8912e] px-8 py-4 text-black font-semibold font-[family-name:var(--font-sans)] shadow-[0_0_40px_rgba(212,175,55,0.35)]"
+      {/* Event headline */}
+      <motion.h1
+        initial={{ opacity: 0, y: 24, filter: "blur(6px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.9, delay: 1 }}
+        className="mt-8 max-w-3xl text-center text-4xl sm:text-5xl md:text-6xl font-[family-name:var(--font-serif)] font-medium leading-tight"
       >
-        View Your Pass
-        <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-      </motion.button>
+        Chioma <span className="text-[#d4af37]">&amp;</span> Obinna
+      </motion.h1>
 
-      {/* Bottom hint */}
+      <motion.p
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 1.5 }}
+        className="mt-4 max-w-xl text-center text-base sm:text-lg text-white/55 font-[family-name:var(--font-sans)]"
+      >
+        Sat, Dec 19, 2026 • Aztech Arcum Event Center, Port Harcourt
+      </motion.p>
+
+      {/* The two doors */}
+      <div className="mt-10 flex flex-col sm:flex-row items-center gap-4">
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 1.9 }}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => router.push("/rsvp")}
+          className="group flex min-h-[52px] w-[240px] items-center justify-center gap-3 rounded-full bg-gradient-to-r from-[#d4af37] to-[#b8912e] px-8 text-black font-semibold font-[family-name:var(--font-sans)] shadow-[0_0_40px_rgba(212,175,55,0.3)]"
+        >
+          Register for the Wedding
+          <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+        </motion.button>
+
+        <motion.button
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 2.1 }}
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.97 }}
+          onClick={() => router.push("/mypass")}
+          className="flex min-h-[52px] w-[240px] items-center justify-center gap-3 rounded-full border border-white/15 bg-white/5 px-8 text-white/85 font-semibold font-[family-name:var(--font-sans)] backdrop-blur-md"
+        >
+          <KeyRound className="h-4 w-4 text-[#d4af37]" />
+          View My Pass
+        </motion.button>
+      </div>
+
       <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 3 }}
-        className="absolute bottom-6 sm:bottom-8 px-4 text-center text-[10px] sm:text-xs tracking-[0.3em] uppercase text-white/30 font-[family-name:var(--font-sans)]"
+        transition={{ delay: 2.8 }}
+        className="absolute bottom-6 sm:bottom-8 px-4 text-center text-[10px] sm:text-xs tracking-[0.3em] uppercase text-white/25 font-[family-name:var(--font-sans)]"
       >
-        Crafted for unforgettable moments
+        A Story Box Experience
       </motion.span>
     </main>
   );
 }
-
-
