@@ -52,6 +52,15 @@ export default function AdminPage() {
     load(key);
   }
 
+  async function saveDetails(id: string, tier: string, table: string) {
+    await fetch("/api/admin/details", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-key": key },
+      body: JSON.stringify({ id, tier, table }),
+    });
+    load(key);
+  }
+
   useEffect(() => {
     if (!unlocked) return;
     const id = setInterval(() => load(key), 5000);
@@ -178,6 +187,7 @@ export default function AdminPage() {
                 <th className="px-5 py-4">Guest</th>
                 <th className="px-5 py-4">Phone</th>
                 <th className="px-5 py-4">Pass ID</th>
+                <th className="px-5 py-4">Seating</th>
                 <th className="px-5 py-4">Status</th>
                 <th className="px-5 py-4">Action</th>
               </tr>
@@ -196,6 +206,26 @@ export default function AdminPage() {
                   <td className="px-5 py-3.5 text-white/50">{g.phone || "—"}</td>
                   <td className="px-5 py-3.5 text-white/50 font-mono text-xs">
                     {g.passId}
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-2">
+                      <select
+                        defaultValue={g.tier}
+                        onChange={(e) => saveDetails(g.id, e.target.value, g.table)}
+                        className="rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-xs text-white/80 outline-none focus:border-[#d4af37]/60"
+                      >
+                        <option value="Guest">Guest</option>
+                        <option value="Family">Family</option>
+                        <option value="VIP Guest">VIP Guest</option>
+                      </select>
+                      <input
+                        defaultValue={g.table}
+                        onBlur={(e) => e.target.value !== g.table && saveDetails(g.id, g.tier, e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+                        placeholder="Table"
+                        className="w-24 rounded-lg border border-white/10 bg-black/40 px-2 py-1.5 text-xs text-white/80 outline-none focus:border-[#d4af37]/60"
+                      />
+                    </div>
                   </td>
                   <td className="px-5 py-3.5">
                     {g.checkedIn ? (
@@ -253,7 +283,7 @@ export default function AdminPage() {
               {visibleGuests.length === 0 && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-5 py-8 text-center text-sm text-white/30"
                   >
                     No guests match this search or filter.
