@@ -2,13 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Html5Qrcode } from "html5-qrcode";
-import { CheckCircle2, XCircle, AlertTriangle, Keyboard, ScanLine } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Keyboard, ScanLine, ShieldCheck } from "lucide-react";
 
 type Result = {
   status: "valid" | "invalid" | "duplicate" | "pending";
-  preChecked?: boolean;
   message: string;
+  preChecked?: boolean;
   guest?: { name: string; tier: string; table: string; checkedInAt?: string };
 };
 
@@ -19,7 +18,7 @@ export default function ScanPage() {
   const [manualMode, setManualMode] = useState(false);
   const [manualId, setManualId] = useState("");
   const [cameraError, setCameraError] = useState(false);
-  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const scannerRef = useRef<{ stop: () => Promise<void> } | null>(null);
   const busyRef = useRef(false);
 
   async function verify(passId: string) {
@@ -33,7 +32,9 @@ export default function ScanPage() {
       });
       const data: Result = await res.json();
       setResult(data);
-      if (navigator.vibrate) navigator.vibrate(data.status === "valid" ? 80 : [60, 40, 60]);
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(data.status === "valid" ? 80 : [60, 40, 60]);
+      }
       setTimeout(() => {
         setResult(null);
         busyRef.current = false;
@@ -44,21 +45,32 @@ export default function ScanPage() {
   }
 
   useEffect(() => {
-    if (manualMode) return;
-    const scanner = new Html5Qrcode("reader");
-    scannerRef.current = scanner;
-    scanner
-      .start(
-        { facingMode: "environment" },
-        { fps: 12, qrbox: { width: 230, height: 230 } },
-        (text) => verify(text),
-        () => {}
-      )
-      .catch(() => setCameraError(true));
+    if (!gateOpen || manualMode) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { Html5Qrcode } = await import("html5-qrcode");
+        if (cancelled) return;
+        const scanner = new Html5Qrcode("reader");
+        scannerRef.current = scanner;
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 12, qrbox: { width: 230, height: 230 } },
+          (text: string) => verify(text),
+          () => {}
+        );
+      } catch {
+        if (!cancelled) setCameraError(true);
+      }
+    })();
+
     return () => {
-      scanner.stop().catch(() => {});
+      cancelled = true;
+      scannerRef.current?.stop().catch(() => {});
+      scannerRef.current = null;
     };
-  }, [manualMode]);
+  }, [gateOpen, manualMode]);
 
   const theme =
     result?.status === "valid"
@@ -73,17 +85,26 @@ export default function ScanPage() {
     return (
       <main className="min-h-[100svh] bg-[#070707] text-white flex flex-col items-center justify-center px-5">
         <div className="w-full max-w-[340px] rounded-3xl border border-[#d4af37]/25 bg-white/[0.03] p-6">
-          <p className="text-[11px] tracking-[0.3em] uppercase text-white/40 font-[family-name:var(--font-sans)]">Usher Access</p>
+          <ShieldCheck className="h-6 w-6 text-[#d4af37]" />
+          <p className="mt-3 text-[11px] tracking-[0.3em] uppercase text-white/40 font-[family-name:var(--font-sans)]">
+            Usher Access
+          </p>
           <input
             type="password"
             value={usherKey}
             onChange={(e) => setUsherKey(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && usherKey === process.env.NEXT_PUBLIC_USHER_KEY && setGateOpen(true)}
+            onKeyDown={(e) =>
+              e.key === "Enter" &&
+              usherKey === process.env.NEXT_PUBLIC_USHER_KEY &&
+              setGateOpen(true)
+            }
             placeholder="Usher key"
             className="mt-4 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 outline-none focus:border-[#d4af37]/60 font-[family-name:var(--font-sans)]"
           />
           <button
-            onClick={() => usherKey === process.env.NEXT_PUBLIC_USHER_KEY && setGateOpen(true)}
+            onClick={() =>
+              usherKey === process.env.NEXT_PUBLIC_USHER_KEY && setGateOpen(true)
+            }
             className="mt-4 w-full min-h-[48px] rounded-xl bg-gradient-to-r from-[#d4af37] to-[#b8912e] font-semibold text-black font-[family-name:var(--font-sans)]"
           >
             Open Scanner
@@ -125,6 +146,7 @@ export default function ScanPage() {
           <input
             value={manualId}
             onChange={(e) => setManualId(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && manualId && verify(manualId)}
             placeholder="EP-2026-000148"
             autoFocus
             className="mt-3 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-lg tracking-wider outline-none focus:border-[#d4af37]/60 font-[family-name:var(--font-sans)]"
@@ -166,7 +188,7 @@ export default function ScanPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="mt-6 text-4xl font-bold tracking-widest font-[family-name:var(--font-sans)]"
+              className="mt-6 text-3xl sm:text-4xl font-bold tracking-widest text-center px-4 font-[family-name:var(--font-sans)]"
             >
               {theme.title}
             </motion.h1>

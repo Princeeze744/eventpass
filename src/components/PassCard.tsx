@@ -186,7 +186,7 @@ export default function PassCard({
           disabled={busy}
           className="mt-6 flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-8 font-semibold text-black font-[family-name:var(--font-sans)] shadow-[0_0_30px_rgba(52,211,153,0.3)] disabled:opacity-60"
         >
-          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <>I&apos;m On My Way — Check In</>}
+          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Online Check-In</>}
         </motion.button>
       )}
 
