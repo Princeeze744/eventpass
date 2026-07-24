@@ -78,6 +78,7 @@ export default function EventSettings() {
     setBusy(false);
     if (!res.ok) { setMsg(data.error || "Something went wrong."); return; }
     if (action === "trash" || data.destroyed) { router.push("/dashboard"); router.refresh(); return; }
+    if (data.newSlug) { router.push(`/dashboard/${data.newSlug}/settings`); router.refresh(); return; }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     if (action === "rotateKeys") setMsg("New keys generated. Share them with your team.");
@@ -186,6 +187,22 @@ export default function EventSettings() {
 
               <button onClick={() => act("update")} disabled={busy} className="mt-6 flex w-full min-h-[52px] items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <><Check className="h-4 w-4" /> Saved</> : "Save Changes"}
+              </button>
+            </div>
+
+            <div className={`${card} mt-4 p-6`}>
+              <p className="text-[10px] uppercase tracking-[0.35em] text-[#c9a227] font-[family-name:var(--font-sans)]">Event link</p>
+              <p className="mt-3 text-[13px] leading-relaxed text-white/50 font-[family-name:var(--font-sans)]">
+                Guests register at: <span className="font-mono text-[12px] text-[#e9d69a]">/e/{slug}</span>
+              </p>
+              <p className="mt-2 text-[12px] leading-relaxed text-white/40 font-[family-name:var(--font-sans)]">
+                The link is created from the original title and does not change when you rename the event —
+                so invitations already sent keep working. If you renamed the event and want the link to match,
+                update it below. <span className="text-amber-400/80">Warning: the old link stops working immediately,
+                so only do this before invitations go out.</span>
+              </p>
+              <button onClick={() => act("updateSlug")} disabled={busy} className="mt-4 flex items-center gap-2 sb-ghost px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">
+                <RefreshCw className="h-3.5 w-3.5 text-[#c9a227]" /> Update link to match title
               </button>
             </div>
 

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSessionOrganizerId } from "@/lib/auth";
 
+function slugify(s: string) {
+  return s.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 40);
+}
+
 const EDITABLE = ["title","eventType","hostName","tagline","state","eventDate","eventTime","venue","address","approvalMode"] as const;
 
 export async function POST(req: NextRequest) {
@@ -46,6 +50,23 @@ export async function POST(req: NextRequest) {
     }
     await prisma.event.update({ where: { id: event.id }, data });
     return NextResponse.json({ ok: true });
+  }
+
+  if (action === "updateSlug") {
+    let base = slugify(event.title);
+    if (!base) base = "event";
+    let candidate = base;
+    let n = 1;
+    while (true) {
+      const clash = await prisma.event.findUnique({ where: { slug: candidate } });
+      if (!clash || clash.id === event.id) break;
+      candidate = `${base}-${++n}`;
+    }
+    if (candidate === event.slug) {
+      return NextResponse.json({ error: "The link already matches the event title." }, { status: 400 });
+    }
+    await prisma.event.update({ where: { id: event.id }, data: { slug: candidate } });
+    return NextResponse.json({ ok: true, newSlug: candidate });
   }
 
   if (action === "rotateKeys") {

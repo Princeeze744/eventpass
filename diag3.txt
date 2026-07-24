@@ -1,0 +1,46 @@
+=== accentColor usage ===
+
+=== slug generation / slugify usage ===
+C:\Users\Dell\Documents\eventpass\src\app\api\e\admin\route.ts:7: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\assign\route.ts:6: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\checkin\route.ts:6: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\decline\route.ts:8: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\export\route.ts:6: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\gifts\route.ts:8: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\guests\route.ts:10: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\host\route.ts:7: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\host\route.ts:29: livestream: event.livestream, slug: event.slug,
+C:\Users\Dell\Documents\eventpass\src\app\api\e\import\route.ts:10: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\manage\route.ts:8: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\mypass\route.ts:7: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\report\route.ts:7: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\rsvp\route.ts:9: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\seating\route.ts:8: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\stats\route.ts:8: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\status\route.ts:6: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\vendors\route.ts:9: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\verify\route.ts:7: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\e\website\route.ts:16: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\events\manage\route.ts:14: const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+C:\Users\Dell\Documents\eventpass\src\app\api\events\route.ts:5: function slugify(s: string) {
+C:\Users\Dell\Documents\eventpass\src\app\api\events\route.ts:35: let slug = slugify(String(title));
+C:\Users\Dell\Documents\eventpass\src\app\api\events\route.ts:39: while (await prisma.event.findUnique({ where: { slug: candidate } })) {
+C:\Users\Dell\Documents\eventpass\src\app\api\events\route.ts:45: slug: candidate,
+C:\Users\Dell\Documents\eventpass\src\app\api\events\route.ts:64: return NextResponse.json({ ok: true, slug: event.slug });
+C:\Users\Dell\Documents\eventpass\src\app\api\me\events\route.ts:42: slug: g.event.slug,
+C:\Users\Dell\Documents\eventpass\src\app\api\staff\overview\route.ts:52: id: e.id, slug: e.slug, title: e.title, eventType: e.eventType, state: e.state, eventDate: e.eventDate, venue: e.venue,
+C:\Users\Dell\Documents\eventpass\src\app\dashboard\[slug]\page.tsx:14: params: Promise<{ slug: string }>;
+C:\Users\Dell\Documents\eventpass\src\app\e\[slug]\pass\[passId]\page.tsx:10: params: Promise<{ slug: string; passId: string }>;
+C:\Users\Dell\Documents\eventpass\src\app\e\[slug]\page.tsx:22: export default async function EventSite({ params }: { params: Promise<{ slug: string }> }) {
+C:\Users\Dell\Documents\eventpass\src\app\staff\page.tsx:10: id: string; slug: string; title: string; eventDate: string; venue: string;
+C:\Users\Dell\Documents\eventpass\src\components\EventPass.tsx:10: slug: string;
+C:\Users\Dell\Documents\eventpass\src\components\EventPass.tsx:45: body: JSON.stringify({ slug: p.slug, passId: p.passId, answer }),
+C:\Users\Dell\Documents\eventpass\src\components\EventPass.tsx:66: body: JSON.stringify({ slug: p.slug, passId: p.passId }),
+C:\Users\Dell\Documents\eventpass\src\components\GiftTracker.tsx:12: export default function GiftTracker({ slug, adminKey }: { slug: string; adminKey: string }) {
+C:\Users\Dell\Documents\eventpass\src\components\ImportPanel.tsx:10: slug: string; adminKey: string; onDone: () => void;
+C:\Users\Dell\Documents\eventpass\src\components\MyEvents.tsx:13: slug: string; title: string; tagline: string; eventDate: string; eventTime: string;
+C:\Users\Dell\Documents\eventpass\src\components\Nav.tsx:59: export function EventNav({ slug }: { slug: string }) {
+C:\Users\Dell\Documents\eventpass\src\components\Reports.tsx:13: export default function Reports({ slug, adminKey }: { slug: string; adminKey: string }) {
+C:\Users\Dell\Documents\eventpass\src\components\RestoreButton.tsx:7: export default function RestoreButton({ slug }: { slug: string }) {
+C:\Users\Dell\Documents\eventpass\src\components\SharePanel.tsx:10: slug: string; title: string; eventDate: string; venue: string; adminKey: string; usherKey: string;
+C:\Users\Dell\Documents\eventpass\src\components\SiteMotion.tsx:110: export function StickyNav({ title, slug }: { title: string; slug: string }) {

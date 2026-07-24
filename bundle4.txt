@@ -1,0 +1,575 @@
+
+########## FILE: src\app\api\events\manage\route.ts ##########
+
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { getSessionOrganizerId } from "@/lib/auth";
+
+const EDITABLE = ["title","eventType","hostName","tagline","state","eventDate","eventTime","venue","address","approvalMode"] as const;
+
+export async function POST(req: NextRequest) {
+  const userId = await getSessionOrganizerId();
+  if (!userId) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
+
+  const body = await req.json();
+  const { slug, action } = body;
+
+  const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
+  if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
+  if (event.ownerId !== userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (action === "trash") {
+    await prisma.event.update({ where: { id: event.id }, data: { deletedAt: new Date() } });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === "restore") {
+    await prisma.event.update({ where: { id: event.id }, data: { deletedAt: null } });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === "destroy") {
+    if (body.confirmTitle !== event.title) {
+      return NextResponse.json({ error: "Type the event title exactly to confirm." }, { status: 400 });
+    }
+    await prisma.event.delete({ where: { id: event.id } });
+    return NextResponse.json({ ok: true, destroyed: true });
+  }
+
+  if (action === "update") {
+    const data: Record<string, string | number | null> = {};
+    for (const f of EDITABLE) {
+      if (typeof body[f] === "string" && body[f].trim()) data[f] = body[f].trim();
+    }
+    if (typeof body.dateISO === "string" && body.dateISO) {
+      data.eventDateISO = body.dateISO;
+    }
+    if (body.capacity !== undefined) {
+      data.capacity = body.capacity ? Number(body.capacity) : null;
+    }
+    await prisma.event.update({ where: { id: event.id }, data });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === "rotateKeys") {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const gen = (p: string) => `${p}-${Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("")}`;
+    await prisma.event.update({
+      where: { id: event.id },
+      data: { adminKey: gen("ADM"), usherKey: gen("GATE") },
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  return NextResponse.json({ error: "Unknown action." }, { status: 400 });
+}
+
+
+########## FILE: src\app\dashboard\[slug]\invite\page.tsx ##########
+
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import TopBar from "@/components/TopBar";
+import { useParams } from "next/navigation";
+import { motion } from "framer-motion";
+import { ArrowLeft, Download, MessageCircle, Loader2, Copy, Check } from "lucide-react";
+
+type EventData = {
+  title: string; tagline: string; hostName: string;
+  eventDate: string; eventTime: string; venue: string; address: string;
+  dressCode: string | null; coverImage: string | null; logoUrl: string | null;
+};
+
+const THEMES = [
+  { id: "midnight", label: "Midnight", bg: "#080807", panel: "#141311", ink: "#f5f1ea", accent: "#c9a227" },
+  { id: "emerald", label: "Emerald", bg: "#0a1a13", panel: "#0f2419", ink: "#f0f5f1", accent: "#c9a227" },
+  { id: "ivory", label: "Ivory", bg: "#f5f1ea", panel: "#ffffff", ink: "#141311", accent: "#1c4634" },
+  { id: "wine", label: "Wine", bg: "#1a0d12", panel: "#26131a", ink: "#f7eef1", accent: "#d9a441" },
+];
+
+export default function InvitePage() {
+  const params = useParams();
+  const slug = String(params.slug);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [logoImg, setLogoImg] = useState<HTMLImageElement | null>(null);
+
+  const [ev, setEv] = useState<EventData | null>(null);
+  const [theme, setTheme] = useState(THEMES[0]);
+  const [note, setNote] = useState("Together with our families, we request the pleasure of your company");
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [base, setBase] = useState("");
+
+  useEffect(() => setBase(window.location.origin), []);
+
+  useEffect(() => {
+    fetch(`/api/e/invite?slug=${slug}`)
+      .then((r) => r.json())
+      .then((d) => { setEv(d.event); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [slug]);
+
+  useEffect(() => {
+    if (!ev?.logoUrl) { setLogoImg(null); return; }
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => setLogoImg(img);
+    img.onerror = () => setLogoImg(null);
+    img.src = ev.logoUrl;
+  }, [ev]);
+
+  useEffect(() => {
+    if (!ev) return;
+    const c = canvasRef.current;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+
+    const W = 1080, H = 1350;
+    c.width = W; c.height = H;
+
+    ctx.fillStyle = theme.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    const grad = ctx.createRadialGradient(W / 2, H * 0.25, 40, W / 2, H * 0.25, W * 0.9);
+    grad.addColorStop(0, theme.accent + "22");
+    grad.addColorStop(1, "transparent");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, H);
+
+    const M = 70;
+    ctx.strokeStyle = theme.accent + "66";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(M, M, W - M * 2, H - M * 2);
+    ctx.strokeStyle = theme.accent + "33";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(M + 14, M + 14, W - (M + 14) * 2, H - (M + 14) * 2);
+
+    ctx.textAlign = "center";
+
+    let topY = 250;
+    if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+      const size = 130;
+      const lx = (W - size) / 2;
+      const ly = 140;
+      ctx.save();
+      ctx.beginPath();
+      const r = 26;
+      ctx.moveTo(lx + r, ly);
+      ctx.arcTo(lx + size, ly, lx + size, ly + size, r);
+      ctx.arcTo(lx + size, ly + size, lx, ly + size, r);
+      ctx.arcTo(lx, ly + size, lx, ly, r);
+      ctx.arcTo(lx, ly, lx + size, ly, r);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(logoImg, lx, ly, size, size);
+      ctx.restore();
+      topY = ly + size + 70;
+    }
+
+    ctx.fillStyle = theme.accent;
+    ctx.font = "500 26px Georgia, serif";
+    ctx.letterSpacing = "10px";
+ctx.fillText(ev.tagline.toUpperCase(), W / 2, topY);
+
+    ctx.letterSpacing = "0px";
+    ctx.fillStyle = theme.ink;
+    const titleSize = ev.title.length > 22 ? 78 : 104;
+    ctx.font = `400 ${titleSize}px Georgia, serif`;
+    const words = ev.title.split(" ");
+let line = "", y = topY + 150;
+    const lines: string[] = [];
+    words.forEach((w) => {
+      const test = line ? `${line} ${w}` : w;
+      if (ctx.measureText(test).width > W - 220 && line) { lines.push(line); line = w; }
+      else line = test;
+    });
+    lines.push(line);
+    lines.forEach((l, i) => ctx.fillText(l, W / 2, y + i * (titleSize + 14)));
+    y += lines.length * (titleSize + 14);
+
+    ctx.strokeStyle = theme.accent;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - 90, y + 24);
+    ctx.lineTo(W / 2 + 90, y + 24);
+    ctx.stroke();
+
+    ctx.fillStyle = theme.ink + "b0";
+    ctx.font = "400 30px Georgia, serif";
+    const noteWords = note.split(" ");
+    let nl = "", ny = y + 100;
+    noteWords.forEach((w) => {
+      const test = nl ? `${nl} ${w}` : w;
+      if (ctx.measureText(test).width > W - 300 && nl) { ctx.fillText(nl, W / 2, ny); ny += 44; nl = w; }
+      else nl = test;
+    });
+    ctx.fillText(nl, W / 2, ny);
+
+    ny += 110;
+    ctx.fillStyle = theme.accent;
+    ctx.font = "500 22px Helvetica, Arial, sans-serif";
+    ctx.letterSpacing = "8px";
+    ctx.fillText(ev.eventDate.toUpperCase(), W / 2, ny);
+    ctx.fillText(ev.eventTime.toUpperCase(), W / 2, ny + 44);
+
+    ctx.letterSpacing = "3px";
+    ctx.fillStyle = theme.ink + "cc";
+    ctx.font = "400 26px Helvetica, Arial, sans-serif";
+    ctx.fillText(ev.venue, W / 2, ny + 116);
+    if (ev.address) {
+      ctx.fillStyle = theme.ink + "88";
+      ctx.font = "400 20px Helvetica, Arial, sans-serif";
+      ctx.fillText(ev.address.slice(0, 60), W / 2, ny + 154);
+    }
+
+    let flow = ny + (ev.address ? 200 : 170);
+
+    if (ev.dressCode) {
+      ctx.fillStyle = theme.accent + "cc";
+      ctx.font = "400 19px Helvetica, Arial, sans-serif";
+      ctx.letterSpacing = "5px";
+      const dc = `DRESS CODE — ${ev.dressCode.toUpperCase()}`;
+      const dcWords = dc.split(" ");
+      let dl = "";
+      const dLines: string[] = [];
+      dcWords.forEach((w) => {
+        const test = dl ? `${dl} ${w}` : w;
+        if (ctx.measureText(test).width > W - 260 && dl) { dLines.push(dl); dl = w; }
+        else dl = test;
+      });
+      dLines.push(dl);
+      dLines.forEach((l, i) => ctx.fillText(l, W / 2, flow + i * 34));
+      flow += dLines.length * 34 + 30;
+    }
+
+    const footerY = H - 110;
+    const linkY = footerY - 60;
+    const labelY = linkY - 48;
+    const bottomStart = Math.max(flow + 40, labelY) === labelY ? labelY : labelY;
+
+    ctx.letterSpacing = "5px";
+    ctx.fillStyle = theme.ink + "77";
+    ctx.font = "400 18px Helvetica, Arial, sans-serif";
+    ctx.fillText("CONFIRM YOUR SEAT AT", W / 2, labelY);
+
+    ctx.fillStyle = theme.accent;
+    ctx.font = "500 21px Helvetica, Arial, sans-serif";
+    ctx.letterSpacing = "2px";
+    ctx.fillText(`${base.replace(/^https?:\/\//, "")}/e/${slug}`, W / 2, linkY);
+
+    ctx.fillStyle = theme.ink + "55";
+    ctx.font = "400 17px Helvetica, Arial, sans-serif";
+    ctx.letterSpacing = "7px";
+    ctx.fillText("POWERED BY STORY BOX", W / 2, footerY);
+    ctx.letterSpacing = "0px";
+  }, [ev, theme, note, base, slug, logoImg]);
+
+  function download() {
+    const c = canvasRef.current;
+    if (!c) return;
+    const a = document.createElement("a");
+    a.href = c.toDataURL("image/png");
+    a.download = `${slug}-invitation.png`;
+    a.click();
+  }
+
+  const rsvpUrl = base ? `${base}/e/${slug}` : "";
+  const waText = encodeURIComponent(
+    `${ev ? ev.title : ""}\n${ev ? ev.eventDate : ""} · ${ev ? ev.venue : ""}\n\n${note}\n\nConfirm your seat and get your digital pass:\n${rsvpUrl}`
+  );
+
+  const card = "sb-surface sb-lift";
+
+  return (
+    <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-10 sm:px-8">
+      <div className="pointer-events-none fixed inset-0">
+        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] sb-glow-green" />
+      </div>
+
+      <div className="relative mx-auto max-w-[1100px]">
+        <TopBar back={`/dashboard/${slug}`} backLabel="Event" />
+        <Link href={`/dashboard/${slug}`} className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/45 font-[family-name:var(--font-sans)]">
+          <ArrowLeft className="h-3.5 w-3.5" /> Event console
+        </Link>
+
+        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl sb-display">
+          Digital <span className="italic text-[#c9a227]">invitation.</span>
+        </motion.h1>
+        <p className="mt-3 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">
+          Design it, download it as an image, and share it anywhere.
+        </p>
+
+        {loading ? (
+          <div className="mt-12 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-[#c9a227]" /></div>
+        ) : (
+          <div className="mt-8 grid gap-4 lg:grid-cols-[1fr_340px]">
+            <div className={`${card} flex items-center justify-center p-6`}>
+              <canvas ref={canvasRef} className="h-auto w-full max-w-[420px] rounded-2xl shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)]" />
+            </div>
+
+            <div className="space-y-4">
+              <div className={`${card} p-5`}>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-[family-name:var(--font-sans)]">Theme</p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {THEMES.map((t) => (
+                    <button key={t.id} onClick={() => setTheme(t)} className={`rounded-xl border px-3 py-3 text-[11px] font-[family-name:var(--font-sans)] ${theme.id === t.id ? "border-[#c9a227] bg-[#c9a227]/15 text-[#c9a227]" : "border-white/10 bg-black/30 text-white/50"}`}>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className={`${card} p-5`}>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-[family-name:var(--font-sans)]">Invitation words</p>
+                <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={4} className="mt-3 w-full resize-y sb-input px-4 py-3 text-[13px] text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]" />
+              </div>
+
+              <div className={`${card} p-5`}>
+                <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-[family-name:var(--font-sans)]">Share</p>
+                <button onClick={download} className="mt-3 flex w-full min-h-[50px] items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
+                  <Download className="h-4 w-4" /> Download image
+                </button>
+                <a href={`https://wa.me/?text=${waText}`} target="_blank" rel="noreferrer" className="mt-2 flex w-full min-h-[50px] items-center justify-center gap-2 rounded-full bg-emerald-500 text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
+                  <MessageCircle className="h-4 w-4" /> Send on WhatsApp
+                </a>
+                <button onClick={() => { navigator.clipboard.writeText(rsvpUrl); setCopied(true); setTimeout(() => setCopied(false), 1800); }} className="mt-2 flex w-full min-h-[50px] items-center justify-center gap-2 sb-ghost text-[11px] uppercase tracking-[0.2em] text-white/70 font-[family-name:var(--font-sans)]">
+                  {copied ? <><Check className="h-4 w-4 text-emerald-400" /> Copied</> : <><Copy className="h-4 w-4" /> Copy link</>}
+                </button>
+                <p className="mt-4 text-[11px] leading-relaxed text-white/35 font-[family-name:var(--font-sans)]">
+                  Download the image and attach it to WhatsApp, or send the link on its own.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
+
+
+########## FILE: src\components\EventPass.tsx ##########
+
+"use client";
+
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
+import { ShieldCheck, Clock, CheckCheck, Loader2, CalendarDays, MapPin, Armchair, XCircle, RotateCcw, Truck, Wrench } from "lucide-react";
+
+type Props = {
+  slug: string;
+  passId: string;
+  name: string;
+  tier: string;
+  table: string;
+  section: string;
+  seat: string;
+  partySize: number;
+  status: string;
+  rsvpAnswer: string;
+  isVendor?: boolean;
+  company?: string;
+  vendorRole?: string;
+  callTime?: string;
+  vendorNote?: string;
+  loadInTime?: string;
+  vendorBrief?: string;
+  logoUrl?: string;
+  checkedInOnline: boolean;
+  event: { title: string; tagline: string; eventDate: string; eventTime: string; venue: string };
+};
+
+export default function EventPass(p: Props) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+
+  const vendor = Boolean(p.isVendor);
+  const declined = !vendor && p.rsvpAnswer === "no";
+  const stage = declined ? "declined" : p.checkedInOnline ? "checked" : p.status === "approved" ? "approved" : "pending";
+
+  async function setAnswer(answer: string) {
+    setBusy(true);
+    await fetch("/api/e/decline", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug: p.slug, passId: p.passId, answer }),
+    });
+    router.refresh();
+    setBusy(false);
+  }
+
+  const theme = {
+    pending: { accent: "#9ca3af", badge: "PENDING APPROVAL", Icon: Clock, note: "Awaiting approval — check back soon" },
+    approved: { accent: "#c9a227", badge: "APPROVED", Icon: ShieldCheck, note: "Present at entrance · Single use" },
+    checked: { accent: "#34d399", badge: "CHECKED IN", Icon: CheckCheck, note: "Use the express lane at the entrance" },
+    declined: { accent: "#6b7280", badge: "NOT ATTENDING", Icon: XCircle, note: "You let the host know you cannot make it" },
+  }[stage];
+
+  const vendorTheme = { accent: "#5eead4", badge: "VENDOR ACCESS", Icon: Truck, note: "Show this at the service entrance" };
+  const T = vendor ? vendorTheme : theme;
+
+  async function selfCheckIn() {
+    setBusy(true);
+    await fetch("/api/e/checkin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug: p.slug, passId: p.passId }),
+    });
+    router.refresh();
+    setBusy(false);
+  }
+
+  return (
+    <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] flex flex-col items-center justify-center px-5 py-12">
+      <div className="pointer-events-none fixed inset-0">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[45vh] w-[80vw] rounded-full blur-[130px]" style={{ background: `${theme.accent}18` }} />
+      </div>
+
+      <p className="relative mb-6 text-[10px] uppercase tracking-[0.4em] text-white/35 font-[family-name:var(--font-sans)]">
+        {vendor ? "Vendor badge" : stage === "pending" ? "Registration received" : "Your verified pass"}
+      </p>
+
+      <motion.div
+        initial={{ opacity: 0, y: 50, rotateX: 14, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
+        transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+        className="relative w-full max-w-[370px] overflow-hidden rounded-[28px] border p-7"
+        style={{ borderColor: `${T.accent}44`, background: "linear-gradient(180deg,#141311,#0b0a09)", boxShadow: `0 30px 80px -30px ${T.accent}44` }}
+      >
+        <motion.div
+          initial={{ x: "-130%" }}
+          animate={{ x: "230%" }}
+          transition={{ duration: 1.8, delay: 1, repeat: Infinity, repeatDelay: 5, ease: "easeInOut" }}
+          className="pointer-events-none absolute inset-y-0 w-1/3 rotate-12 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+        />
+
+        <div className="flex items-center justify-between">
+          <span className="text-[9px] uppercase tracking-[0.35em] font-[family-name:var(--font-sans)]" style={{ color: T.accent }}>Story Box</span>
+          <span className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[9px] uppercase tracking-[0.15em] font-[family-name:var(--font-sans)]" style={{ color: T.accent, backgroundColor: `${T.accent}1f` }}>
+            <T.Icon className="h-3 w-3" /> {T.badge}
+          </span>
+        </div>
+
+        {p.logoUrl && (
+          <div className="mt-6 flex justify-center">
+            <img src={p.logoUrl} alt="" className="h-16 w-16 rounded-2xl border border-white/10 object-cover" />
+          </div>
+        )}
+
+        <div className="mt-7 text-center">
+          <p className="text-[9px] uppercase tracking-[0.3em] text-white/35 font-[family-name:var(--font-sans)]">{p.event.tagline}</p>
+          <h1 className="mt-2 font-[family-name:var(--font-serif)] text-3xl" style={{ color: T.accent }}>{p.event.title}</h1>
+          <div className="mx-auto mt-4 h-px w-20" style={{ background: `linear-gradient(90deg,transparent,${T.accent}99,transparent)` }} />
+          <p className="mt-4 text-[9px] uppercase tracking-[0.25em] text-white/35 font-[family-name:var(--font-sans)]">{vendor ? "Service crew" : "Admitting"}</p>
+          <p className="mt-1 font-[family-name:var(--font-serif)] text-2xl">{p.name}</p>
+          {vendor && (p.vendorRole || p.company) && (
+            <p className="mt-1 text-[11px] text-white/45 font-[family-name:var(--font-sans)]">
+              {p.vendorRole}{p.company ? ` · ${p.company}` : ""}
+            </p>
+          )}
+          {!vendor && p.partySize > 1 && (
+            <p className="mt-1 text-[11px] text-white/45 font-[family-name:var(--font-sans)]">Party of {p.partySize}</p>
+          )}
+        </div>
+
+        <div className="mt-6 grid grid-cols-3 gap-2 text-center font-[family-name:var(--font-sans)]">
+          {(vendor
+            ? [
+                { Icon: CalendarDays, l: p.event.eventDate, s: p.event.eventTime },
+                { Icon: Clock, l: "Call time", s: p.callTime || p.loadInTime || "TBC" },
+                { Icon: MapPin, l: "Venue", s: p.event.venue },
+              ]
+            : [
+                { Icon: CalendarDays, l: p.event.eventDate, s: p.event.eventTime },
+                { Icon: MapPin, l: "Venue", s: p.event.venue },
+                { Icon: Armchair, l: p.section ? p.section : "Seating", s: p.table === "TBA" ? "At entrance" : p.seat ? `${p.table} · ${p.seat}` : p.table },
+              ]
+          ).map((d, i) => (
+            <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-2 py-3">
+              <d.Icon className="mx-auto h-3.5 w-3.5" style={{ color: T.accent }} strokeWidth={1.6} />
+              <p className="mt-1.5 text-[9px] text-white/45">{d.l}</p>
+              <p className="text-[10px] leading-tight text-white/85">{d.s}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="relative mt-6 flex items-center">
+          <div className="absolute -left-10 h-6 w-6 rounded-full bg-[#080807]" />
+          <div className="h-px flex-1 border-t border-dashed border-white/15" />
+          <div className="absolute -right-10 h-6 w-6 rounded-full bg-[#080807]" />
+        </div>
+
+        <div className="mt-6 flex flex-col items-center">
+          <div className={`rounded-2xl bg-[#f5f1ea] p-3 ${stage === "pending" ? "opacity-40" : ""}`}>
+            <QRCodeSVG value={p.passId} size={132} level="H" bgColor="#f5f1ea" fgColor="#080807" />
+          </div>
+          <p className="mt-3 font-mono text-[11px] tracking-[0.2em] text-white/40">{p.passId}</p>
+          <p className="mt-1 text-[10px] text-white/30 font-[family-name:var(--font-sans)]">{T.note}</p>
+        </div>
+      </motion.div>
+
+      {vendor && (p.vendorNote || p.vendorBrief) && (
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.9 }}
+          className="sb-surface relative mt-5 w-full max-w-[370px] p-5"
+        >
+          <div className="flex items-center gap-2">
+            <Wrench className="h-3.5 w-3.5 text-[#5eead4]" strokeWidth={1.6} />
+            <p className="text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">Your brief</p>
+          </div>
+          {p.vendorNote && <p className="mt-3 text-[12px] leading-relaxed text-white/65 font-[family-name:var(--font-sans)]">{p.vendorNote}</p>}
+          {p.vendorBrief && <p className="mt-2 whitespace-pre-line text-[12px] leading-relaxed text-white/45 font-[family-name:var(--font-sans)]">{p.vendorBrief}</p>}
+          {p.loadInTime && <p className="mt-3 text-[11px] text-[#5eead4] font-[family-name:var(--font-sans)]">Load-in from {p.loadInTime}</p>}
+        </motion.div>
+      )}
+
+      {!vendor && declined && (
+        <motion.button
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          onClick={() => setAnswer("yes")}
+          disabled={busy}
+          className="relative mt-6 flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/20 px-9 text-[11px] uppercase tracking-[0.2em] text-white/75 font-[family-name:var(--font-sans)] disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><RotateCcw className="h-4 w-4" /> Actually, I can make it</>}
+        </motion.button>
+      )}
+
+      {!vendor && !declined && stage !== "checked" && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.4 }}
+          onClick={() => setAnswer("no")}
+          disabled={busy}
+          className="relative mt-4 text-[11px] uppercase tracking-[0.2em] text-white/35 underline-offset-4 hover:text-white/60 hover:underline font-[family-name:var(--font-sans)]"
+        >
+          I cannot attend
+        </motion.button>
+      )}
+
+      {!vendor && stage === "approved" && (
+        <motion.button
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+          onClick={selfCheckIn}
+          disabled={busy}
+          className="relative mt-6 flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-emerald-500 px-9 text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : "Online Check-In"}
+        </motion.button>
+      )}
+
+      <p className="relative mt-8 text-[9px] uppercase tracking-[0.35em] text-white/25 font-[family-name:var(--font-sans)]">Powered by Story Box</p>
+    </main>
+  );
+}
