@@ -40,6 +40,8 @@ export default function NewEventPage() {
     { v: "Other", tagline: "A Celebration" },
   ];
 
+  const NG_STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara","FCT Abuja"];
+
   const [form, setForm] = useState({
     title: "",
     eventType: "Wedding",
@@ -50,6 +52,7 @@ export default function NewEventPage() {
     eventTime: "",
     timeISO: "",
     venue: "",
+    state: "",
     address: "",
     capacity: "",
     approvalMode: "manual",
@@ -64,6 +67,10 @@ export default function NewEventPage() {
   async function submit() {
     if (loading) return;
     setError("");
+    if (!form.state) {
+      setError("Please select the state where the event holds.");
+      return;
+    }
     setLoading(true);
     const res = await fetch("/api/events", {
       method: "POST",
@@ -160,6 +167,20 @@ export default function NewEventPage() {
           <div className="mt-6">
             <label className={lbl}>Venue</label>
             <input value={form.venue} onChange={(e) => set("venue", e.target.value)} placeholder="Aztech Arcum Event Center" className={inp} />
+          </div>
+
+          <div className="mt-6">
+            <label className={lbl}>State (required)</label>
+            <select
+              value={form.state}
+              onChange={(e) => set("state", e.target.value)}
+              className={`${inp} [color-scheme:dark] cursor-pointer`}
+            >
+              <option value="" className="bg-[#0d0c0b]">Select a state...</option>
+              {NG_STATES.map((s) => (
+                <option key={s} value={s} className="bg-[#0d0c0b]">{s}</option>
+              ))}
+            </select>
           </div>
 
           <div className="mt-6">

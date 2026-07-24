@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
       eventDateISO: event.eventDateISO,
       eventTime: event.eventTime,
       venue: event.venue,
+      state: event.state,
       address: event.address,
       capacity: event.capacity,
       approvalMode: event.approvalMode,

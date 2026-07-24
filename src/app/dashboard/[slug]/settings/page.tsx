@@ -29,6 +29,8 @@ export default function EventSettings() {
     const hour = h % 12 === 0 ? 12 : h % 12;
     return `${hour}:${String(m || 0).padStart(2, "0")} ${suffix}`;
   }
+  const NG_STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara","FCT Abuja"];
+
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -54,6 +56,7 @@ export default function EventSettings() {
           timeISO: "",
           eventTime: d.event.eventTime || "",
           venue: d.event.venue || "",
+          state: d.event.state || "",
           address: d.event.address || "",
           capacity: d.event.capacity ? String(d.event.capacity) : "",
           approvalMode: d.event.approvalMode || "manual",
@@ -125,7 +128,7 @@ export default function EventSettings() {
               {[
                 { k: "title", l: "Event Title" },
                 { k: "hostName", l: "Host / Client Name" },
-                { k: "tagline", l: "Occasion line" },
+                { k: "tagline", l: "Occasion Line (subtitle under the title, e.g. A Celebration of Love)" },
 
                 { k: "venue", l: "Venue" },
                 { k: "address", l: "Address" },
@@ -136,6 +139,20 @@ export default function EventSettings() {
                   <input value={form[f.k] || ""} onChange={(e) => setForm({ ...form, [f.k]: e.target.value })} className={inp} />
                 </div>
               ))}
+
+              <div className="mt-5">
+                <label className={lbl}>State</label>
+                <select
+                  value={form.state || ""}
+                  onChange={(e) => setForm({ ...form, state: e.target.value })}
+                  className={`${inp} [color-scheme:dark] cursor-pointer`}
+                >
+                  <option value="" className="bg-[#0d0c0b]">Select a state...</option>
+                  {NG_STATES.map((s) => (
+                    <option key={s} value={s} className="bg-[#0d0c0b]">{s}</option>
+                  ))}
+                </select>
+              </div>
 
               <div className="mt-5">
                 <label className={lbl}>Date</label>

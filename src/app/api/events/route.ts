@@ -28,6 +28,9 @@ export async function POST(req: NextRequest) {
   if (!title || !eventDate || !venue) {
     return NextResponse.json({ error: "Title, date and venue are required." }, { status: 400 });
   }
+  if (!body.state || !String(body.state).trim()) {
+    return NextResponse.json({ error: "Please select the state where the event holds." }, { status: 400 });
+  }
 
   let slug = slugify(String(title));
   if (!slug) slug = "event";
@@ -49,6 +52,7 @@ export async function POST(req: NextRequest) {
       eventDateISO: body.dateISO ? String(body.dateISO).trim() : "",
       eventTime: eventTime ? String(eventTime).trim() : "12:00 PM",
       venue: String(venue).trim(),
+      state: String(body.state).trim(),
       address: address ? String(address).trim() : "",
       approvalMode: approvalMode === "auto" ? "auto" : "manual",
       capacity: capacity ? Number(capacity) : null,

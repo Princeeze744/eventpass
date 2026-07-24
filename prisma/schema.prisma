@@ -37,6 +37,7 @@ model Event {
   eventDateISO String @default("")
   eventTime  String  @default("12:00 PM")
   venue      String
+  state      String @default("")
   address    String  @default("")
 
   logoUrl     String?

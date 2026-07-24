@@ -23,6 +23,17 @@ export async function GET() {
 
   const ownerEmail = (process.env.OWNER_EMAIL || "").toLowerCase();
 
+  const tallyBy = (get: (e: (typeof events)[number]) => string) => {
+    const m: Record<string, { count: number; guests: number }> = {};
+    for (const e of events) {
+      const k = get(e) || "Unspecified";
+      if (!m[k]) m[k] = { count: 0, guests: 0 };
+      m[k].count += 1;
+      m[k].guests += e._count.guests;
+    }
+    return Object.entries(m).sort((a, b) => b[1].count - a[1].count);
+  };
+
   return NextResponse.json({
     me: { name: staff.name, email: staff.email, level: staff.level },
     totals: {
@@ -35,8 +46,10 @@ export async function GET() {
       revenue: events.reduce((a, e) => a + (e.paymentAmount || 0), 0),
       staff: users.filter((u) => u.isStaff).length,
     },
+    byType: tallyBy((e) => e.eventType),
+    byState: tallyBy((e) => e.state),
     events: events.map((e) => ({
-      id: e.id, slug: e.slug, title: e.title, eventType: e.eventType, eventDate: e.eventDate, venue: e.venue,
+      id: e.id, slug: e.slug, title: e.title, eventType: e.eventType, state: e.state, eventDate: e.eventDate, venue: e.venue,
       approval: e.approval, reviewNote: e.reviewNote, approvedBy: e.approvedBy,
       paymentStatus: e.paymentStatus, paymentAmount: e.paymentAmount,
       createdAt: e.createdAt, guests: e._count.guests, owner: e.owner,
