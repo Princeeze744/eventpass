@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import TopBar from "@/components/TopBar";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, Check, Trash2, RefreshCw, AlertTriangle } from "lucide-react";
@@ -71,6 +72,7 @@ export default function EventSettings() {
       </div>
 
       <div className="relative mx-auto max-w-[760px]">
+        <TopBar back={`/dashboard/${slug}`} backLabel="Event" />
         <Link href={`/dashboard/${slug}`} className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/45 font-[family-name:var(--font-sans)]">
           <ArrowLeft className="h-3.5 w-3.5" /> Event console
         </Link>

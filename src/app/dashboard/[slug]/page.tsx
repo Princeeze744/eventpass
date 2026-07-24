@@ -1,5 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import TopBar from "@/components/TopBar";
 import { prisma } from "@/lib/db";
 import { getSessionOrganizerId } from "@/lib/auth";
 import { ArrowLeft, Users, BadgeCheck, DoorOpen, KeyRound } from "lucide-react";
@@ -37,6 +38,7 @@ export default async function EventConsole({
       </div>
 
       <div className="relative mx-auto max-w-[1100px]">
+        <TopBar back={"/dashboard"} backLabel="All events" />
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/45 font-[family-name:var(--font-sans)]">
           <ArrowLeft className="h-3.5 w-3.5" /> All events
         </Link>

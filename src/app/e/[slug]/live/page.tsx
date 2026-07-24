@@ -1,5 +1,7 @@
 "use client";
 
+import TopBar from "@/components/TopBar";
+
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,6 +55,7 @@ export default function LiveBoard() {
       </div>
 
       <div className="relative mx-auto max-w-[1200px]">
+        <TopBar back={`/e/${slug}/admin`} backLabel="Guests" />
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-[10px] sb-eyebrow text-[#c9a227] font-[family-name:var(--font-sans)]">Live Arrivals</p>

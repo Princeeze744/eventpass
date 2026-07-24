@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import TopBar from "@/components/TopBar";
 import { prisma } from "@/lib/db";
 import { getSessionOrganizerId } from "@/lib/auth";
 import RestoreButton from "@/components/RestoreButton";
@@ -22,6 +23,7 @@ export default async function TrashPage() {
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-10 sm:px-8">
       <div className="relative mx-auto max-w-[860px]">
+        <TopBar back={"/dashboard"} backLabel="Console" />
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/45 font-[family-name:var(--font-sans)]">
           <ArrowLeft className="h-3.5 w-3.5" /> Console
         </Link>

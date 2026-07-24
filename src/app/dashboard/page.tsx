@@ -70,7 +70,8 @@ export default async function DashboardPage() {
             </div>
 
             <div className="mt-10 border-t border-white/[0.07] pt-8">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-white/35 font-[family-name:var(--font-sans)]">Events you are attending</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-white/35 font-[family-name:var(--font-sans)]">Your own passes</p>
+              <p className="mt-1 text-[11px] text-white/25 font-[family-name:var(--font-sans)]">Events where your phone number is registered as a guest or vendor.</p>
               <MyEvents role={user.role} />
             </div>
           </>

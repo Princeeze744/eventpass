@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import TopBar from "@/components/TopBar";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { EventNav, Crumbs } from "@/components/Nav";
@@ -109,6 +110,7 @@ export default function SeatingPlan() {
   return (
     <main className="min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-8 sm:px-8 print:bg-white print:text-black">
       <div className="mx-auto max-w-[1300px]">
+        <TopBar back={`/e/${slug}/admin`} backLabel="Guests" />
         <div className="flex flex-wrap items-end justify-between gap-4 print:hidden">
           <div>
             <Link href={`/e/${slug}/admin`} className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">

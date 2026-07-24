@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import TopBar from "@/components/TopBar";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowUpRight, ArrowLeft } from "lucide-react";
@@ -56,6 +57,7 @@ export default function NewEventPage() {
       </div>
 
       <div className="relative mx-auto max-w-[720px]">
+        <TopBar back={"/dashboard"} backLabel="Console" />
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/45 font-[family-name:var(--font-sans)]">
           <ArrowLeft className="h-3.5 w-3.5" /> Back to console
         </Link>

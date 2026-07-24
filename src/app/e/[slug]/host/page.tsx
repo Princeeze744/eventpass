@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import TopBar from "@/components/TopBar";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Loader2, Heart, Users, Check, X, Crown, Gift, CalendarDays, MapPin, Armchair, Video, Utensils, Clock } from "lucide-react";
@@ -104,6 +105,7 @@ export default function HostDashboard() {
       </div>
 
       <div className="relative mx-auto max-w-[1100px]">
+        <TopBar back={`/dashboard/${slug}`} backLabel="Event" />
         <div className="text-center">
           <p className="text-[10px] sb-eyebrow text-[#c9a227] font-[family-name:var(--font-sans)]">{e.tagline}</p>
           <h1 className="mt-3 font-[family-name:var(--font-serif)] text-6xl sb-display leading-[0.95] sm:text-7xl">{e.title}</h1>

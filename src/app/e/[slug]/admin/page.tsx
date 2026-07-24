@@ -1,5 +1,7 @@
 "use client";
 
+import TopBar from "@/components/TopBar";
+
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -155,6 +157,7 @@ export default function EventAdmin() {
   return (
     <main className="min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-8 sm:px-8">
       <div className="mx-auto max-w-[1200px]">
+        <TopBar back={`/dashboard/${slug}`} backLabel="Event" />
         <p className="text-[10px] uppercase tracking-[0.35em] text-white/35 font-[family-name:var(--font-sans)]">Host Terminal</p>
         <div className="flex flex-wrap items-end justify-between gap-3">
           <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl sb-display text-[#c9a227]">{title}</h1>

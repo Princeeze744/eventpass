@@ -14,8 +14,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Story Box — Chioma & Obinna",
-  description: "Verified digital passes by Story Box. No queues. No gatecrashers.",
+  title: "Story Box — Event Experience Platform",
+  description: "Verified digital passes, self-service registration and gate control for weddings, conferences and celebrations.",
 };
 
 export const viewport: Viewport = {

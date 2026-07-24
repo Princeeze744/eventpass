@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import TopBar from "@/components/TopBar";
 import { motion, AnimatePresence } from "framer-motion";
 import { Loader2, ShieldCheck, Calendar, Users, Ticket, Wallet, Check, X, Pause, ExternalLink, UserPlus, Crown, ArrowLeft } from "lucide-react";
 
@@ -92,6 +93,7 @@ export default function StaffPanel() {
       </div>
 
       <div className="relative mx-auto max-w-[1200px]">
+        <TopBar back={"/dashboard"} backLabel="My console" />
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <Link href="/dashboard" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">
