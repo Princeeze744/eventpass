@@ -76,3 +76,40 @@ host reports/exports · planner aggregate stats across events
 Give me PowerShell blocks I can paste, not manual file edits.
 Full file rewrites over regex patches when a file is fragile.
 Always end with: Remove-Item -Recurse -Force ".next"; npm run build
+
+## RULES FOR ANY AI ASSISTANT WORKING ON THIS PROJECT
+
+This is a WORKING, TESTED product with a live deployment. It is not a prototype.
+Twenty-plus hours of decisions are already baked in. Your job is to ADD, never to rebuild.
+
+1. NEVER rewrite a file you have not read. Ask for it first.
+2. NEVER "clean up", refactor, rename, or reorganise anything that already works.
+   If something looks unusual, assume there was a reason and ask before changing it.
+3. NEVER run `prisma migrate reset` or anything that drops data.
+   Additive migrations only — new fields, new tables.
+4. NEVER touch the `main` branch. That is the live wedding. All work happens on `platform`.
+5. ALWAYS end a change with:
+   Remove-Item -Recurse -Force ".next"; npm run build
+   Do not consider work finished until the build is clean.
+6. ALWAYS match the existing design system (sb-* classes in globals.css).
+   Never introduce flat cards, new colour palettes, or a different font.
+7. When editing files whose path contains [brackets], use
+   [System.IO.File]::ReadAllText / WriteAllText, or write to a temp path then Move-Item.
+8. The user works on Windows PowerShell. Give paste-ready blocks, not manual edit instructions.
+9. Prefer full-file rewrites over regex patching when a file is fragile — patches have
+   silently corrupted files on this project before.
+10. If unsure whether something exists, ask the user to run:
+    Get-ChildItem -Recurse src -Include *.tsx,*.ts | Select-Object FullName
+
+## WHAT ALREADY WORKS — DO NOT REBUILD
+Auth with roles · multi-tenant events with per-event keys · staff approval tiers ·
+guest registration + decline · three-stage passes · QR scanning with duplicate detection ·
+table assignment at the gate · seating plan with auto-seat · import/export ·
+event website builder · digital invitation generator · live arrivals board ·
+host dashboard with gift tracker · vendor hub with badges · soft delete + trash + restore ·
+platform control panel with revenue tracking.
+
+## STARTING A NEW SESSION — attach these
+1. STORYBOX.md (this file)
+2. prisma/schema.prisma (the complete data model)
+3. Any file the new task touches
