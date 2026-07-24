@@ -129,7 +129,7 @@ export default function EventSettings() {
               {[
                 { k: "title", l: "Event Title" },
                 { k: "hostName", l: "Host / Client Name" },
-                { k: "tagline", l: "Occasion Line (subtitle under the title, e.g. A Celebration of Love)" },
+                { k: "tagline", l: "Occasion Line — small text shown above the event title" },
 
                 { k: "venue", l: "Venue" },
                 { k: "address", l: "Address" },

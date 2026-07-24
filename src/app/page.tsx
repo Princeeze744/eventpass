@@ -123,18 +123,19 @@ export default function Home() {
             <div className="relative">
               <p className="text-[10px] sb-eyebrow text-[#c9a227] font-[family-name:var(--font-sans)]">Event Experience Platform</p>
               <h1 className="mt-5 font-[family-name:var(--font-serif)] text-[10vw] leading-[0.9] tracking-[-0.02em] sm:text-[6.5vw] lg:text-[4.6vw]">
-                {["Every guest", "accounted for."].map((l, i) => (
+                {["Events,", "Reimagined."].map((l, i) => (
                   <span key={l} className="block overflow-hidden">
                     <motion.span custom={i} variants={reveal} initial="hidden" animate="show" className="block">{l}</motion.span>
                   </span>
                 ))}
                 <span className="block overflow-hidden">
-                  <motion.span custom={2} variants={reveal} initial="hidden" animate="show" className="block italic sb-shimmer">Every moment remembered.</motion.span>
+                  <motion.span custom={2} variants={reveal} initial="hidden" animate="show" className="block italic sb-shimmer">One Platform. Connected Experiences.</motion.span>
                 </span>
               </h1>
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="mt-6 max-w-lg text-[14px] leading-relaxed text-white/50 font-[family-name:var(--font-sans)]">
-                Registration, verified digital passes, seating and gate control — engineered so nobody queues and nobody gatecrashes.
+                One platform for RSVP, digital invitations, verified digital passes, check-in, vendor coordination, and seamless event experiences.
               </motion.p>
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }} className="mt-4 text-[10px] uppercase tracking-[0.3em] text-white/35 font-[family-name:var(--font-sans)]">Planner &bull; Host &bull; Guest &bull; Vendor</motion.p>
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.95 }} className="mt-7 flex flex-wrap gap-3">
                 <Link href="/signup" className="group relative overflow-hidden sb-btn px-8 py-3.5 text-[11px] uppercase tracking-[0.2em] text-[#080807] font-[family-name:var(--font-sans)]">
                   <span className="relative z-10 transition-colors group-hover:text-[#f5f1ea]">Get Started</span>

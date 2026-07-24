@@ -137,7 +137,11 @@ export default function NewEventPage() {
             <div>
               <label className={lbl}>Occasion line</label>
               <input value={form.tagline} onChange={(e) => set("tagline", e.target.value)} placeholder="A Celebration of Love" className={inp} />
-              <p className="mt-2 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">Small line shown above the event name on passes and invitations.</p>
+              <div className="mt-3 rounded-xl border border-white/[0.07] bg-black/40 px-4 py-3 text-center">
+                <p className="text-[8px] uppercase tracking-[0.3em] text-[#c9a227] font-[family-name:var(--font-sans)]">{form.tagline || "A Celebration"}</p>
+                <p className="mt-1 font-[family-name:var(--font-serif)] text-[15px] text-[#f5f1ea]">{form.title || "Your Event Title"}</p>
+                <p className="mt-1.5 text-[9px] text-white/25 font-[family-name:var(--font-sans)]">How it appears on the website, invitation and passes</p>
+              </div>
             </div>
           </div>
 
