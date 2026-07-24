@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { EventNav, Crumbs } from "@/components/Nav";
 import { createPortal } from "react-dom";
 import { Loader2, Truck, Plus, X, ArrowLeft, Clock, Check, Trash2, Pencil, MessageCircle } from "lucide-react";
 
@@ -124,7 +125,9 @@ export default function Vendors() {
           </button>
         </div>
 
-        <div className="sb-surface mt-8 p-6">
+        <EventNav slug={slug} />
+
+        <div className="sb-surface mt-6 p-6">
           <p className={lbl}>Load-in time</p>
           <input value={loadIn} onChange={(e) => setLoadIn(e.target.value)} onBlur={() => act({ action: "brief", vendorBrief: brief, loadInTime: loadIn })} placeholder="8:00 AM" className={inp} />
           <p className={`mt-5 ${lbl}`}>Brief for all vendors</p>

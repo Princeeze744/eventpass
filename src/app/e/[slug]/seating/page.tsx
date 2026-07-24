@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { EventNav, Crumbs } from "@/components/Nav";
 import { Loader2, ShieldCheck, Plus, Sparkles, Printer, X, Users, ArrowLeft, Trash2 } from "lucide-react";
 
 type T = { id: string; name: string; section: string; capacity: number; note: string; seated: number; guests: { id: string; name: string; tier: string; partySize: number; seat: string; wristband: string }[] };
@@ -124,6 +125,8 @@ export default function SeatingPlan() {
         </div>
 
         <h1 className="hidden font-[family-name:var(--font-serif)] text-4xl sb-display print:block">{title} — Seating Plan</h1>
+
+        <EventNav slug={slug} />
 
         <div className="mt-6 flex flex-wrap gap-5 text-[12px] text-white/50 font-[family-name:var(--font-sans)] print:text-black">
           <span>{tables.length} tables</span>

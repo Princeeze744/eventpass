@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { EventNav, Crumbs } from "@/components/Nav";
 import { ShieldCheck, RefreshCw, Loader2, Trash2, RotateCcw, Pencil, X, Check } from "lucide-react";
 import ImportPanel from "@/components/ImportPanel";
 
@@ -167,6 +168,8 @@ export default function EventAdmin() {
             <button onClick={() => load(key)} className="text-[#c9a227]"><RefreshCw className="h-3.5 w-3.5" /></button>
           </div>
         </div>
+
+        <EventNav slug={slug} />
 
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <ImportPanel slug={slug} adminKey={key} onDone={() => load(key)} />

@@ -117,3 +117,29 @@ platform control panel with revenue tracking.
 ## Progress note
 All four roles complete. Host has dashboard, gift tracker, and four CSV reports.
 Remaining: photo uploads, guest gallery, souvenir tracking, offline scanner, wristband on pass, planner aggregate stats.
+
+## DEPLOYMENT (live as of this session)
+- Story Box platform: https://storybox-fawn.vercel.app
+  Vercel project `storybox` -> branch `platform` -> Neon DB (host contains "withered")
+  Env vars set in Vercel: DATABASE_URL, AUTH_SECRET, OWNER_EMAIL
+- Wedding (EventPass): https://eventpass-sable.vercel.app
+  Vercel project `eventpass` -> branch `main` -> Neon DB (host contains "wispy")
+  DO NOT TOUCH.
+
+Deploying = `git push` on the platform branch. Vercel builds automatically.
+package.json has a `postinstall: prisma generate` step — required for Vercel builds.
+
+## NAVIGATION SYSTEM
+src/components/Nav.tsx exports: PageShell, BackLink, Crumbs, EventNav, BrandBar.
+EventNav is the sliding gold pill bar across Guests / Seating / Vendors / Client view / Live.
+Use it on every event-scoped page.
+
+## COMPLETED SINCE LAST NOTE
+Host dashboard 100% (countdown, stats, arrivals ring, seating view, gift tracker,
+four CSV reports: rsvp, checkin, seating, gifts) · vendor role complete with teal badges ·
+navigation polish · depth system applied platform-wide.
+
+## STILL TO BUILD
+photo uploads (currently URL-only) · guest gallery uploads · souvenir tracking ·
+offline scanner mode · wristband category surfaced on pass · planner aggregate stats ·
+activity log for staff approvals · separate host key with narrower powers than admin key
