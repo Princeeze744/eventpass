@@ -122,8 +122,8 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-br from-[#1c4634]/20 via-transparent to-transparent" />
             <div className="relative">
               <p className="text-[10px] sb-eyebrow text-[#c9a227] font-[family-name:var(--font-sans)]">Event Experience Platform</p>
-              <h1 className="mt-5 font-[family-name:var(--font-serif)] text-[10vw] leading-[0.9] tracking-[-0.02em] sm:text-[6.5vw] lg:text-[4.6vw]">
-                {["Events,", "Reimagined."].map((l, i) => (
+              <h1 className="mt-5 font-[family-name:var(--font-serif)] text-[9vw] leading-[1] tracking-[-0.02em] sm:text-[5.5vw] lg:text-[3.8vw]">
+                {["Events, Reimagined."].map((l, i) => (
                   <span key={l} className="block overflow-hidden">
                     <motion.span custom={i} variants={reveal} initial="hidden" animate="show" className="block">{l}</motion.span>
                   </span>
