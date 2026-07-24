@@ -36,7 +36,7 @@ export async function GET() {
       staff: users.filter((u) => u.isStaff).length,
     },
     events: events.map((e) => ({
-      id: e.id, slug: e.slug, title: e.title, eventDate: e.eventDate, venue: e.venue,
+      id: e.id, slug: e.slug, title: e.title, eventType: e.eventType, eventDate: e.eventDate, venue: e.venue,
       approval: e.approval, reviewNote: e.reviewNote, approvedBy: e.approvedBy,
       paymentStatus: e.paymentStatus, paymentAmount: e.paymentAmount,
       createdAt: e.createdAt, guests: e._count.guests, owner: e.owner,

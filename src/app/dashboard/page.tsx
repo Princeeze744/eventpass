@@ -72,7 +72,7 @@ export default async function DashboardPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="font-[family-name:var(--font-serif)] text-2xl text-[#e9d69a]">{ev.title}</p>
-                      <p className="mt-1 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">{ev.eventDate} · {ev.venue}</p>
+                      <p className="mt-1 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">{ev.eventType} · {ev.eventDate} · {ev.venue}</p>
                       <p className="mt-2 font-mono text-[11px] text-white/25">/e/{ev.slug}</p>
                     </div>
                     <ArrowUpRight className="h-4 w-4 shrink-0 text-white/20 transition-all duration-500 group-hover:text-[#c9a227] group-hover:translate-x-1 group-hover:-translate-y-1" />

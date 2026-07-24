@@ -8,7 +8,7 @@ import { Loader2, ShieldCheck, Calendar, Users, Ticket, Wallet, Check, X, Pause,
 
 type Ev = {
   id: string; slug: string; title: string; eventDate: string; venue: string;
-  approval: string; reviewNote: string | null; approvedBy: string | null;
+  approval: string; reviewNote: string | null; approvedBy: string | null; eventType?: string;
   paymentStatus: string; paymentAmount: number | null; guests: number;
   owner: { name: string; email: string; phone: string | null; role: string };
 };
@@ -150,7 +150,7 @@ export default function StaffPanel() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <h3 className="font-[family-name:var(--font-serif)] text-2xl text-[#e9d69a]">{e.title}</h3>
-                      <p className="mt-1 text-[12px] text-white/45 font-[family-name:var(--font-sans)]">{e.eventDate} · {e.venue} · {e.guests} guests</p>
+                      <p className="mt-1 text-[12px] text-white/45 font-[family-name:var(--font-sans)]">{e.eventType ? `${e.eventType} · ` : ""}{e.eventDate} · {e.venue} · {e.guests} guests</p>
                       <p className="mt-1 text-[12px] text-white/35 font-[family-name:var(--font-sans)]">{e.owner.name} · {e.owner.email}</p>
                       {e.approvedBy && <p className="mt-1 text-[11px] text-white/25 font-[family-name:var(--font-sans)]">Activated by {e.approvedBy}</p>}
                     </div>

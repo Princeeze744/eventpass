@@ -25,8 +25,24 @@ export default function NewEventPage() {
     return `${hour}:${String(m || 0).padStart(2, "0")} ${suffix}`;
   }
 
+  const EVENT_TYPES = [
+    { v: "Wedding", tagline: "A Celebration of Love" },
+    { v: "Traditional Wedding", tagline: "A Union of Families" },
+    { v: "Birthday", tagline: "A Celebration" },
+    { v: "Conference", tagline: "Ideas Worth Gathering For" },
+    { v: "Corporate Event", tagline: "A Company Gathering" },
+    { v: "Brand Launch", tagline: "Something New Begins" },
+    { v: "Concert", tagline: "A Night of Music" },
+    { v: "Church Program", tagline: "A Gathering of Faith" },
+    { v: "Gala / Awards", tagline: "An Evening of Excellence" },
+    { v: "Private Dinner", tagline: "An Intimate Evening" },
+    { v: "Funeral / Memorial", tagline: "In Loving Memory" },
+    { v: "Other", tagline: "A Celebration" },
+  ];
+
   const [form, setForm] = useState({
     title: "",
+    eventType: "Wedding",
     hostName: "",
     tagline: "A Celebration",
     eventDate: "",
@@ -88,7 +104,22 @@ export default function NewEventPage() {
         </p>
 
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className={`${card} mt-8 p-6 sm:p-8`}>
-          <label className={lbl}>Event Title</label>
+          <label className={lbl}>Event Type</label>
+          <select
+            value={form.eventType}
+            onChange={(e) => {
+              const t = EVENT_TYPES.find((x) => x.v === e.target.value);
+              setForm({ ...form, eventType: e.target.value, tagline: t ? t.tagline : form.tagline });
+            }}
+            className={`${inp} [color-scheme:dark] cursor-pointer`}
+          >
+            {EVENT_TYPES.map((t) => (
+              <option key={t.v} value={t.v} className="bg-[#0d0c0b]">{t.v}</option>
+            ))}
+          </select>
+          <p className="mt-2 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">Sets a suggested occasion line, which you can still edit.</p>
+
+          <label className={`mt-6 block ${lbl}`}>Event Title</label>
           <input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Chioma & Obinna" className={inp} />
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2">

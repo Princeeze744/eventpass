@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
       slug: candidate,
       ownerId: userId,
       title: String(title).trim(),
+      eventType: body.eventType ? String(body.eventType).trim() : "Wedding",
       hostName: hostName ? String(hostName).trim() : "",
       tagline: tagline ? String(tagline).trim() : "A Celebration",
       eventDate: String(eventDate).trim(),

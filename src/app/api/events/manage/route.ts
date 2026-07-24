@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSessionOrganizerId } from "@/lib/auth";
 
-const EDITABLE = ["title","hostName","tagline","eventDate","eventTime","venue","address","approvalMode"] as const;
+const EDITABLE = ["title","eventType","hostName","tagline","eventDate","eventTime","venue","address","approvalMode"] as const;
 
 export async function POST(req: NextRequest) {
   const userId = await getSessionOrganizerId();

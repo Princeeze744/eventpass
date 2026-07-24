@@ -30,6 +30,7 @@ model Event {
   owner     User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   title      String
+  eventType  String @default("Wedding")
   hostName   String  @default("")
   tagline    String  @default("A Celebration")
   eventDate  String
