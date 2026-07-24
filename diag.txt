@@ -1,0 +1,55 @@
+=== 1. Everywhere eventType appears ===
+C:\Users\Dell\Documents\eventpass\src\app\api\events\manage\route.ts:5: const EDITABLE = ["title","eventType","hostName","tagline","eventDate","eventTime","venue","address","approvalMode"] as const;
+C:\Users\Dell\Documents\eventpass\src\app\api\events\route.ts:45: eventType: body.eventType ? String(body.eventType).trim() : "Wedding",
+C:\Users\Dell\Documents\eventpass\src\app\api\staff\overview\route.ts:39: id: e.id, slug: e.slug, title: e.title, eventType: e.eventType, eventDate: e.eventDate, venue: e.venue,
+C:\Users\Dell\Documents\eventpass\src\app\dashboard\new\page.tsx:45: eventType: "Wedding",
+C:\Users\Dell\Documents\eventpass\src\app\dashboard\new\page.tsx:109: value={form.eventType}
+C:\Users\Dell\Documents\eventpass\src\app\dashboard\new\page.tsx:112: setForm({ ...form, eventType: e.target.value, tagline: t ? t.tagline : form.tagline });
+C:\Users\Dell\Documents\eventpass\src\app\dashboard\page.tsx:75: <p className="mt-1 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">{ev.eventType} · {ev.eventDate} · {ev.venue}</p>
+C:\Users\Dell\Documents\eventpass\src\app\staff\page.tsx:11: approval: string; reviewNote: string | null; approvedBy: string | null; eventType?: string;
+C:\Users\Dell\Documents\eventpass\src\app\staff\page.tsx:153: <p className="mt-1 text-[12px] text-white/45 font-[family-name:var(--font-sans)]">{e.eventType ? `${e.eventType} · ` : ""}{e.eventDate} · {e.venue} · {e.guests} guests</p>
+
+=== 2. All API route files ===
+C:\Users\Dell\Documents\eventpass\src\app\api\auth\login\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\auth\logout\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\auth\signup\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\admin\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\assign\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\checkin\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\decline\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\export\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\gifts\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\guests\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\host\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\import\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\invite\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\manage\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\mypass\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\report\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\rsvp\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\seating\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\stats\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\status\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\vendors\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\verify\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\website\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\e\website\get\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\events\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\events\manage\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\me\events\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\me\link\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\staff\overview\route.ts
+C:\Users\Dell\Documents\eventpass\src\app\api\staff\review\route.ts
+
+=== 3. Routes that return event fields ===
+C:\Users\Dell\Documents\eventpass\src\app\api\e\admin\route.ts:25: event: { title: event.title, tagline: event.tagline },
+C:\Users\Dell\Documents\eventpass\src\app\api\e\guests\route.ts:25: event: { title: event.title, approvalMode: event.approvalMode },
+C:\Users\Dell\Documents\eventpass\src\app\api\e\host\route.ts:23: title: event.title, tagline: event.tagline, hostName: event.hostName,
+C:\Users\Dell\Documents\eventpass\src\app\api\e\invite\route.ts:11: title: event.title,
+C:\Users\Dell\Documents\eventpass\src\app\api\e\seating\route.ts:28: event: { title: event.title },
+C:\Users\Dell\Documents\eventpass\src\app\api\e\stats\route.ts:31: event: { title: event.title, tagline: event.tagline, eventDate: event.eventDate, venue: event.venue, capacity: event.capacity },
+C:\Users\Dell\Documents\eventpass\src\app\api\e\vendors\route.ts:19: event: { title: event.title, vendorBrief: event.vendorBrief, loadInTime: event.loadInTime },
+C:\Users\Dell\Documents\eventpass\src\app\api\events\route.ts:44: title: String(title).trim(),
+C:\Users\Dell\Documents\eventpass\src\app\api\events\manage\route.ts:29: if (body.confirmTitle !== event.title) {
+C:\Users\Dell\Documents\eventpass\src\app\api\me\events\route.ts:43: title: g.event.title,
+C:\Users\Dell\Documents\eventpass\src\app\api\staff\overview\route.ts:39: id: e.id, slug: e.slug, title: e.title, eventType: e.eventType, eventDate: e.eventDate, venue: e.venue,
