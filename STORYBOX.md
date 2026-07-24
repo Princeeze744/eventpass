@@ -113,3 +113,7 @@ platform control panel with revenue tracking.
 1. STORYBOX.md (this file)
 2. prisma/schema.prisma (the complete data model)
 3. Any file the new task touches
+
+## Progress note
+All four roles complete. Host has dashboard, gift tracker, and four CSV reports.
+Remaining: photo uploads, guest gallery, souvenir tracking, offline scanner, wristband on pass, planner aggregate stats.

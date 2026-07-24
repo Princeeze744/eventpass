@@ -170,6 +170,7 @@ export default function EventAdmin() {
 
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <ImportPanel slug={slug} adminKey={key} onDone={() => load(key)} />
+          <a href={`/e/${slug}/host`} className="flex items-center gap-2 rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Host view</a>
           <a href={`/e/${slug}/vendors`} className="flex items-center gap-2 rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Vendors</a>
           <a href={`/e/${slug}/seating`} className="flex items-center gap-2 rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Seating plan</a>
         </div>

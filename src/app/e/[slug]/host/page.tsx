@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Loader2, Heart, Users, Check, X, Crown, Gift, CalendarDays, MapPin, Armchair, Video, Utensils, Clock } from "lucide-react";
 import GiftTracker from "@/components/GiftTracker";
+import Reports from "@/components/Reports";
 
 type Data = {
   event: Record<string, string | null>;
@@ -194,6 +195,10 @@ export default function HostDashboard() {
 
         <div className="mt-3">
           <GiftTracker slug={slug} adminKey={key} />
+        </div>
+
+        <div className="mt-3">
+          <Reports slug={slug} adminKey={key} />
         </div>
 
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
