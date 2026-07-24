@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Loader2, Heart, Users, Check, X, Crown, Gift, CalendarDays, MapPin, Armchair, Video, Utensils, Clock } from "lucide-react";
+import GiftTracker from "@/components/GiftTracker";
 
 type Data = {
   event: Record<string, string | null>;
@@ -39,8 +40,9 @@ export default function HostDashboard() {
   useEffect(() => {
     if (tried) return;
     setTried(true);
-    const saved = typeof window !== "undefined" ? sessionStorage.getItem(`sb_admin_${slug}`) : null;
-    if (saved) { setKey(saved); load(saved).then((ok) => { if (ok) setUnlocked(true); }); }
+    const fromUrl = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("k") : null;
+    const saved = fromUrl || (typeof window !== "undefined" ? sessionStorage.getItem(`sb_admin_${slug}`) : null);
+    if (saved) { setKey(saved); load(saved).then((ok) => { if (ok) { setUnlocked(true); sessionStorage.setItem(`sb_admin_${slug}`, saved); } }); }
   }, [tried, slug, load]);
 
   useEffect(() => {
@@ -139,7 +141,7 @@ export default function HostDashboard() {
             <div className="relative mt-5 h-[180px] w-[180px]">
               <svg className="h-full w-full -rotate-90" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="7" />
-                <motion.circle cx="50" cy="50" r="42" fill="none" stroke="#c9a227" strokeWidth="7" strokeLinecap="round" strokeDasharray={264} animate={{ strokeDashoffset: 264 - (264 * pct) / 100 }} transition={{ duration: 1 }} />
+                <motion.circle cx="50" cy="50" r="42" fill="none" stroke="#c9a227" strokeWidth="7" strokeLinecap="round" strokeDasharray={264} initial={{ strokeDashoffset: 264 }} animate={{ strokeDashoffset: 264 - (264 * pct) / 100 }} transition={{ duration: 1 }} />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <p className="font-[family-name:var(--font-serif)] text-5xl sb-display">{pct}%</p>
@@ -189,6 +191,10 @@ export default function HostDashboard() {
             </div>
           </div>
         )}
+
+        <div className="mt-3">
+          <GiftTracker slug={slug} adminKey={key} />
+        </div>
 
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {(e.giftNote || e.bankDetails) && (

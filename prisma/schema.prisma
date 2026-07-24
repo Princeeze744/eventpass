@@ -66,6 +66,8 @@ model Event {
   receptionMap String?
   livestream   String?
   programNote  String?
+  vendorBrief  String?
+  loadInTime   String?
   menuNote     String?
   giftNote     String?
   coverImage   String?
@@ -77,6 +79,7 @@ model Event {
   deletedAt DateTime?
   guests    Guest[]
   tables    SeatTable[]
+  gifts     Gift[]
 }
 
 model SeatTable {
@@ -89,6 +92,23 @@ model SeatTable {
   capacity Int    @default(10)
   note     String @default("")
   position Int    @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
+}
+
+model Gift {
+  id        String   @id @default(cuid())
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  fromName  String
+  giftType  String   @default("cash")
+  amount    Int?
+  item      String   @default("")
+  note      String   @default("")
+  thanked   Boolean  @default(false)
 
   createdAt DateTime @default(now())
 
@@ -111,6 +131,11 @@ model Guest {
 
   section String @default("")
   wristband String @default("")
+  isVendor  Boolean @default(false)
+  company   String  @default("")
+  callTime  String  @default("")
+  vendorRole String @default("")
+  vendorNote String @default("")
   table   String @default("TBA")
   seat    String @default("")
 

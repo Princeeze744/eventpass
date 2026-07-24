@@ -3,15 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Loader2, CalendarDays, MapPin, Ticket, ArrowUpRight, Phone, Clock, Video, Shirt } from "lucide-react";
+import { Loader2, CalendarDays, MapPin, Ticket, ArrowUpRight, Phone, Clock, Video, Shirt, Truck, Wrench } from "lucide-react";
 
 type Rec = {
   passId: string; status: string; checkedIn: boolean; checkedInOnline: boolean;
   tier: string; table: string; partySize: number;
+  company?: string; vendorRole?: string; callTime?: string; vendorNote?: string;
   event: {
     slug: string; title: string; tagline: string; eventDate: string; eventTime: string;
     venue: string; address: string; ceremonyMap: string | null; receptionMap: string | null;
     livestream: string | null; programNote: string | null; dressCode: string | null;
+    vendorBrief?: string | null; loadInTime?: string | null;
   };
 };
 
@@ -93,8 +95,12 @@ export default function MyEvents({ role }: { role: string }) {
 
       <div className="space-y-3">
         {records.map((r, i) => {
-          const stage = r.checkedIn ? "In" : r.checkedInOnline ? "Express" : r.status === "approved" ? "Approved" : r.status === "declined" ? "Declined" : "Pending";
-          const colour = r.checkedIn || r.checkedInOnline ? "#34d399" : r.status === "approved" ? "#c9a227" : r.status === "declined" ? "#f87171" : "#9ca3af";
+const stage = isVendor
+            ? (r.checkedIn ? "On site" : "Expected")
+            : r.checkedIn ? "In" : r.checkedInOnline ? "Express" : r.status === "approved" ? "Approved" : r.status === "declined" ? "Declined" : "Pending";
+          const colour = isVendor
+            ? (r.checkedIn ? "#5eead4" : "#9ca3af")
+            : r.checkedIn || r.checkedInOnline ? "#34d399" : r.status === "approved" ? "#c9a227" : r.status === "declined" ? "#f87171" : "#9ca3af";
 
           return (
             <motion.div
@@ -126,15 +132,27 @@ export default function MyEvents({ role }: { role: string }) {
                   <p className="text-[11px] text-white/40 font-[family-name:var(--font-sans)]">{r.event.address}</p>
                 </div>
                 <div className="rounded-2xl border border-white/[0.06] bg-black/30 px-4 py-3">
-                  <Ticket className="h-3.5 w-3.5 text-[#c9a227]" strokeWidth={1.6} />
+                  {isVendor ? <Clock className="h-3.5 w-3.5 text-[#5eead4]" strokeWidth={1.6} /> : <Ticket className="h-3.5 w-3.5 text-[#c9a227]" strokeWidth={1.6} />}
                   <p className="mt-2 text-[12px] text-white/80 font-[family-name:var(--font-sans)]">
-                    {isVendor ? r.tier : r.table === "TBA" ? "Seat at entrance" : r.table}
+                    {isVendor ? (r.callTime || r.event.loadInTime || "Call time TBC") : r.table === "TBA" ? "Seat at entrance" : r.table}
                   </p>
                   <p className="text-[11px] text-white/40 font-[family-name:var(--font-sans)]">
-                    {r.partySize > 1 ? `Party of ${r.partySize}` : r.tier}
+                    {isVendor ? (r.vendorRole || "Vendor") : r.partySize > 1 ? `Party of ${r.partySize}` : r.tier}
                   </p>
                 </div>
               </div>
+
+              {isVendor && (r.vendorNote || r.event.vendorBrief) && (
+                <div className="mt-3 rounded-2xl border border-[#5eead4]/20 bg-[#5eead4]/[0.05] px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Wrench className="h-3.5 w-3.5 text-[#5eead4]" strokeWidth={1.6} />
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">Your brief</p>
+                  </div>
+                  {r.vendorNote && <p className="mt-2 text-[12px] leading-relaxed text-white/70 font-[family-name:var(--font-sans)]">{r.vendorNote}</p>}
+                  {r.event.vendorBrief && <p className="mt-2 whitespace-pre-line text-[12px] leading-relaxed text-white/45 font-[family-name:var(--font-sans)]">{r.event.vendorBrief}</p>}
+                  {r.event.loadInTime && <p className="mt-3 text-[11px] text-[#5eead4] font-[family-name:var(--font-sans)]">Load-in from {r.event.loadInTime}</p>}
+                </div>
+              )}
 
               {isVendor && r.event.programNote && (
                 <div className="mt-3 rounded-2xl border border-white/[0.06] bg-black/30 px-4 py-3">
@@ -146,6 +164,12 @@ export default function MyEvents({ role }: { role: string }) {
                 </div>
               )}
 
+              {isVendor && r.company && (
+                <p className="mt-3 flex items-center gap-2 text-[12px] text-white/45 font-[family-name:var(--font-sans)]">
+                  <Truck className="h-3.5 w-3.5 text-[#5eead4]" strokeWidth={1.6} /> {r.company}
+                </p>
+              )}
+
               {!isVendor && r.event.dressCode && (
                 <p className="mt-3 flex items-center gap-2 text-[12px] text-white/45 font-[family-name:var(--font-sans)]">
                   <Shirt className="h-3.5 w-3.5 text-[#c9a227]" strokeWidth={1.6} /> {r.event.dressCode}
@@ -154,7 +178,7 @@ export default function MyEvents({ role }: { role: string }) {
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link href={`/e/${r.event.slug}/pass/${r.passId}`} className="flex items-center gap-2 sb-btn px-6 py-3 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
-                  <Ticket className="h-3.5 w-3.5" /> {isVendor ? "My badge" : "My pass"}
+                  {isVendor ? <Truck className="h-3.5 w-3.5" /> : <Ticket className="h-3.5 w-3.5" />} {isVendor ? "My badge" : "My pass"}
                 </Link>
                 <Link href={`/e/${r.event.slug}`} className="flex items-center gap-2 sb-ghost px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">
                   Event page <ArrowUpRight className="h-3.5 w-3.5" />

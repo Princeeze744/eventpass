@@ -46,6 +46,13 @@ export default async function PassPage({
       partySize={guest.partySize}
       status={guest.status}
       rsvpAnswer={guest.rsvpAnswer}
+      isVendor={guest.isVendor}
+      company={guest.company}
+      vendorRole={guest.vendorRole}
+      callTime={guest.callTime}
+      vendorNote={guest.vendorNote}
+      loadInTime={event.loadInTime || ""}
+      vendorBrief={event.vendorBrief || ""}
       checkedInOnline={guest.checkedInOnline}
       event={{
         title: event.title,

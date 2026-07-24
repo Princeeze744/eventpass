@@ -19,6 +19,11 @@ export default async function DashboardPage() {
   if (!user) redirect("/login");
 
   const staff = await getStaff();
+
+  if (user.role === "host" && user.events.length === 1 && !staff) {
+    redirect(`/e/${user.events[0].slug}/host?k=${user.events[0].adminKey}`);
+  }
+
   const isOrganiser = user.role === "planner" || user.role === "host";
 
   const roleLabel =
