@@ -143,3 +143,8 @@ navigation polish · depth system applied platform-wide.
 photo uploads (currently URL-only) · guest gallery uploads · souvenir tracking ·
 offline scanner mode · wristband category surfaced on pass · planner aggregate stats ·
 activity log for staff approvals · separate host key with narrower powers than admin key
+
+## BRACKET GOTCHA (4th variant found)
+Get-Content and Select-String ALSO fail on paths containing [brackets] unless you use -LiteralPath.
+So: New-Item, Set-Content, Get-Content, Select-String all need -LiteralPath or .NET equivalents.
+A silent 'no output' from Select-String on a [slug] path does NOT mean the text is missing.

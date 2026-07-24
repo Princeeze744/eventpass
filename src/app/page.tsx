@@ -44,7 +44,7 @@ const journey = [
     icon: BadgeCheck,
     label: "Approve",
     title: "You decide who comes",
-    copy: "Review registrations in one console. Decline a stranger and their pass dies instantly — everyone else is approved automatically.",
+    copy: "Review registrations in one console. Decline a stranger and their pass is withdrawn instantly — everyone else is approved automatically.",
     accent: "#c9a227",
     badge: "APPROVED",
     state: "Ready for the day",

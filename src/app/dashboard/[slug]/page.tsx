@@ -3,8 +3,8 @@ import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import { prisma } from "@/lib/db";
 import { getSessionOrganizerId } from "@/lib/auth";
-import { ArrowLeft, Users, BadgeCheck, DoorOpen, KeyRound } from "lucide-react";
 import SharePanel from "@/components/SharePanel";
+import { Users, BadgeCheck, DoorOpen, KeyRound } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +19,7 @@ export default async function EventConsole({
   const { slug } = await params;
   const event = await prisma.event.findUnique({
     where: { slug },
-    include: { guests: true },
+    include: { guests: { where: { deletedAt: null } } },
   });
   if (!event) notFound();
   if (event.ownerId !== userId) redirect("/dashboard");
@@ -29,21 +29,16 @@ export default async function EventConsole({
   const pending = event.guests.filter((g) => g.status === "pending").length;
   const checkedIn = event.guests.filter((g) => g.checkedIn).length;
 
-  const card = "sb-surface sb-lift";
-
   return (
-    <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-10 sm:px-8">
+    <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-8 sm:px-8">
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] sb-glow-green" />
       </div>
 
       <div className="relative mx-auto max-w-[1100px]">
-        <TopBar back={"/dashboard"} backLabel="All events" />
-        <Link href="/dashboard" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/45 font-[family-name:var(--font-sans)]">
-          <ArrowLeft className="h-3.5 w-3.5" /> All events
-        </Link>
+        <TopBar back="/dashboard" backLabel="All events" title={event.title} />
 
-        <p className="mt-6 text-[10px] sb-eyebrow text-[#c9a227] font-[family-name:var(--font-sans)]">{event.tagline}</p>
+        <p className="text-[10px] sb-eyebrow text-[#c9a227] font-[family-name:var(--font-sans)]">{event.tagline}</p>
         <h1 className="mt-2 font-[family-name:var(--font-serif)] text-5xl sb-display sm:text-6xl">{event.title}</h1>
         <p className="mt-3 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">
           {event.eventDate} · {event.eventTime} · {event.venue}
@@ -61,21 +56,23 @@ export default async function EventConsole({
                 ? "This event was not approved. Please contact Story Box."
                 : event.approval === "suspended"
                 ? "This event has been suspended. Please contact Story Box."
-                : "Your event is set up and waiting to be activated by Story Box. You can keep building the website and guest list in the meantime — registration and scanning open once it is live."}
+                : "Your event is set up and waiting to be activated by Story Box. You can keep building the website and guest list in the meantime."}
             </p>
           </div>
         )}
 
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { k: total, v: "Registered", icon: Users },
-            { k: pending, v: "Pending", icon: KeyRound },
-            { k: approved, v: "Approved", icon: BadgeCheck },
-            { k: checkedIn, v: "Checked in", icon: DoorOpen },
+            { k: total, v: "Registered", Icon: Users },
+            { k: pending, v: "Pending", Icon: KeyRound },
+            { k: approved, v: "Approved", Icon: BadgeCheck },
+            { k: checkedIn, v: "Checked in", Icon: DoorOpen },
           ].map((s) => (
-            <div key={s.v} className={`${card} p-5`}>
-              <s.icon className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
-              <p className="mt-5 font-[family-name:var(--font-serif)] text-4xl sb-display">{s.k}</p>
+            <div key={s.v} className="sb-surface sb-lift p-5">
+              <div className="sb-icon sb-icon-gold">
+                <s.Icon className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
+              </div>
+              <p className="mt-5 font-[family-name:var(--font-serif)] text-4xl sb-figure">{s.k}</p>
               <p className="mt-1 text-[9px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">{s.v}</p>
             </div>
           ))}
@@ -91,6 +88,7 @@ export default async function EventConsole({
             usherKey={event.usherKey}
           />
         </div>
+
         <p className="mt-8 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">
           Registration mode: {event.approvalMode === "auto" ? "Automatic approval" : "Host approves each guest"}
           {event.capacity ? ` · Capacity ${event.capacity}` : ""}
