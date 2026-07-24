@@ -63,8 +63,8 @@ export default function StaffPanel() {
     load();
   }
 
-  const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
-  const inp = "w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
+  const card = "sb-surface sb-lift";
+  const inp = "w-full sb-input px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
   const isOwner = data?.me.level === "owner";
   const isAdmin = isOwner || data?.me.level === "admin";
 
@@ -74,9 +74,9 @@ export default function StaffPanel() {
     return (
       <main className="flex min-h-[100svh] flex-col items-center justify-center bg-[#080807] px-6 text-center text-[#f5f1ea]">
         <ShieldCheck className="h-6 w-6 text-white/25" strokeWidth={1.6} />
-        <h1 className="mt-4 font-[family-name:var(--font-serif)] text-4xl">Staff only</h1>
+        <h1 className="mt-4 font-[family-name:var(--font-serif)] text-4xl sb-display">Staff only</h1>
         <p className="mt-3 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">You do not have access to this area.</p>
-        <Link href="/dashboard" className="mt-6 rounded-full border border-white/12 px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Back to console</Link>
+        <Link href="/dashboard" className="mt-6 sb-ghost px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Back to console</Link>
       </main>
     );
   }
@@ -88,7 +88,7 @@ export default function StaffPanel() {
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-8 sm:px-8">
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] rounded-full bg-[#1c4634]/25 blur-[130px]" />
+        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] sb-glow-green" />
       </div>
 
       <div className="relative mx-auto max-w-[1200px]">
@@ -97,8 +97,8 @@ export default function StaffPanel() {
             <Link href="/dashboard" className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">
               <ArrowLeft className="h-3.5 w-3.5" /> My console
             </Link>
-            <p className="mt-5 text-[10px] uppercase tracking-[0.4em] text-[#c9a227] font-[family-name:var(--font-sans)]">Story Box Control</p>
-            <h1 className="mt-2 font-[family-name:var(--font-serif)] text-5xl">Platform <span className="italic text-[#c9a227]">overview.</span></h1>
+            <p className="mt-5 text-[10px] sb-eyebrow text-[#c9a227] font-[family-name:var(--font-sans)]">Story Box Control</p>
+            <h1 className="mt-2 font-[family-name:var(--font-serif)] text-5xl sb-display">Platform <span className="italic text-[#c9a227]">overview.</span></h1>
           </div>
           <span className="flex items-center gap-2 rounded-full border border-[#c9a227]/30 bg-[#c9a227]/[0.08] px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[#c9a227] font-[family-name:var(--font-sans)]">
             {isOwner && <Crown className="h-3.5 w-3.5" />} {data?.me.level}
@@ -116,7 +116,7 @@ export default function StaffPanel() {
           ].map((t) => (
             <div key={t.v} className={`${card} p-5`}>
               <t.Icon className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
-              <p className="mt-4 font-[family-name:var(--font-serif)] text-3xl">{t.k}</p>
+              <p className="mt-4 font-[family-name:var(--font-serif)] text-3xl sb-figure">{t.k}</p>
               <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-white/40 font-[family-name:var(--font-sans)]">{t.v}</p>
             </div>
           ))}
@@ -176,8 +176,8 @@ export default function StaffPanel() {
                         <Pause className="h-3.5 w-3.5" /> Suspend
                       </button>
                     )}
-                    <button onClick={() => { setReview(e); setNote(e.reviewNote || ""); setAmount(e.paymentAmount ? String(e.paymentAmount) : ""); }} className="rounded-full border border-white/12 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Review</button>
-                    <a href={`/e/${e.slug}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full border border-white/12 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">
+                    <button onClick={() => { setReview(e); setNote(e.reviewNote || ""); setAmount(e.paymentAmount ? String(e.paymentAmount) : ""); }} className="sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Review</button>
+                    <a href={`/e/${e.slug}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">
                       View <ExternalLink className="h-3 w-3" />
                     </a>
                   </div>
@@ -198,7 +198,7 @@ export default function StaffPanel() {
               </thead>
               <tbody>
                 {planners.map((u) => (
-                  <tr key={u.id} className="border-b border-white/[0.04]">
+                  <tr key={u.id} className="border-b border-white/[0.04] sb-row">
                     <td className="px-5 py-3.5 font-[family-name:var(--font-serif)] text-base">{u.name}</td>
                     <td className="px-5 py-3.5 text-white/45">{u.email}</td>
                     <td className="px-5 py-3.5 text-white/45">{u.role}</td>
@@ -251,7 +251,7 @@ export default function StaffPanel() {
                 </thead>
                 <tbody>
                   {team.map((u) => (
-                    <tr key={u.id} className="border-b border-white/[0.04]">
+                    <tr key={u.id} className="border-b border-white/[0.04] sb-row">
                       <td className="px-5 py-3.5 font-[family-name:var(--font-serif)] text-base">{u.name}</td>
                       <td className="px-5 py-3.5 text-white/45">{u.email}</td>
                       <td className="px-5 py-3.5">
@@ -263,7 +263,7 @@ export default function StaffPanel() {
                       <td className="px-5 py-3.5">
                         {u.level !== "owner" && (
                           <div className="flex gap-2">
-                            <button onClick={() => act({ action: "setLevel", userId: u.id, level: u.level === "admin" ? "reviewer" : "admin" })} className="rounded-full border border-white/15 px-3 py-1 text-[10px] text-white/55">Make {u.level === "admin" ? "reviewer" : "admin"}</button>
+                            <button onClick={() => act({ action: "setLevel", userId: u.id, level: u.level === "admin" ? "reviewer" : "admin" })} className="sb-ghost px-3 py-1 text-[10px] text-white/55">Make {u.level === "admin" ? "reviewer" : "admin"}</button>
                             <button onClick={() => act({ action: "setLevel", userId: u.id, level: "none" })} className="rounded-full border border-red-500/30 px-3 py-1 text-[10px] text-red-400">Remove</button>
                           </div>
                         )}
@@ -280,7 +280,7 @@ export default function StaffPanel() {
       <AnimatePresence>
         {review && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-5 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="w-full max-w-[480px] rounded-3xl border border-white/[0.09] bg-[#0d0c0b] p-6">
+            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="w-full max-w-[480px] sb-panel p-6">
               <div className="flex items-start justify-between">
                 <h3 className="font-[family-name:var(--font-serif)] text-3xl text-[#c9a227]">{review.title}</h3>
                 <button onClick={() => setReview(null)} className="rounded-full border border-white/10 p-2 text-white/50"><X className="h-4 w-4" /></button>
@@ -303,7 +303,7 @@ export default function StaffPanel() {
 
               <div className="mt-6 grid grid-cols-3 gap-2">
                 <button onClick={() => act({ action: "review", eventId: review.id, approval: "approved", note })} className="rounded-full bg-emerald-500 py-3 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">Activate</button>
-                <button onClick={() => act({ action: "review", eventId: review.id, approval: "pending", note })} className="rounded-full border border-white/15 py-3 text-[10px] uppercase tracking-[0.15em] text-white/60 font-[family-name:var(--font-sans)]">Hold</button>
+                <button onClick={() => act({ action: "review", eventId: review.id, approval: "pending", note })} className="sb-ghost py-3 text-[10px] uppercase tracking-[0.15em] text-white/60 font-[family-name:var(--font-sans)]">Hold</button>
                 <button onClick={() => act({ action: "review", eventId: review.id, approval: "rejected", note })} className="rounded-full border border-red-500/40 py-3 text-[10px] uppercase tracking-[0.15em] text-red-400 font-[family-name:var(--font-sans)]">Reject</button>
               </div>
             </motion.div>

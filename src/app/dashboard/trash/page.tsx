@@ -17,7 +17,7 @@ export default async function TrashPage() {
     include: { _count: { select: { guests: true } } },
   });
 
-  const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
+  const card = "sb-surface sb-lift";
 
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-10 sm:px-8">
@@ -26,7 +26,7 @@ export default async function TrashPage() {
           <ArrowLeft className="h-3.5 w-3.5" /> Console
         </Link>
 
-        <h1 className="mt-6 font-[family-name:var(--font-serif)] text-5xl">
+        <h1 className="mt-6 font-[family-name:var(--font-serif)] text-5xl sb-display">
           <span className="italic text-[#c9a227]">Trash.</span>
         </h1>
         <p className="mt-3 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">

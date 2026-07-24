@@ -45,14 +45,14 @@ export default function NewEventPage() {
     router.refresh();
   }
 
-  const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
-  const inp = "mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3.5 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
+  const card = "sb-surface sb-lift";
+  const inp = "mt-2 w-full sb-input px-4 py-3.5 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
   const lbl = "text-[10px] uppercase tracking-[0.3em] text-white/40 font-[family-name:var(--font-sans)]";
 
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-10 sm:px-8">
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] rounded-full bg-[#1c4634]/25 blur-[130px]" />
+        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] sb-glow-green" />
       </div>
 
       <div className="relative mx-auto max-w-[720px]">
@@ -60,7 +60,7 @@ export default function NewEventPage() {
           <ArrowLeft className="h-3.5 w-3.5" /> Back to console
         </Link>
 
-        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl">
+        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl sb-display">
           Create an <span className="italic text-[#c9a227]">event.</span>
         </motion.h1>
         <p className="mt-3 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">
@@ -123,7 +123,7 @@ export default function NewEventPage() {
 
           {error && <p className="mt-5 text-sm text-red-400 font-[family-name:var(--font-sans)]">{error}</p>}
 
-          <button onClick={submit} disabled={loading} className="mt-8 flex w-full min-h-[54px] items-center justify-center gap-2 rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
+          <button onClick={submit} disabled={loading} className="mt-8 flex w-full min-h-[54px] items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Create Event <ArrowUpRight className="h-4 w-4" /></>}
           </button>
         </motion.div>

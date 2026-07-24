@@ -181,12 +181,12 @@ export default function InvitePage() {
     `${ev ? ev.title : ""}\n${ev ? ev.eventDate : ""} · ${ev ? ev.venue : ""}\n\n${note}\n\nConfirm your seat and get your digital pass:\n${rsvpUrl}`
   );
 
-  const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
+  const card = "sb-surface sb-lift";
 
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-10 sm:px-8">
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] rounded-full bg-[#1c4634]/25 blur-[130px]" />
+        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] sb-glow-green" />
       </div>
 
       <div className="relative mx-auto max-w-[1100px]">
@@ -194,7 +194,7 @@ export default function InvitePage() {
           <ArrowLeft className="h-3.5 w-3.5" /> Event console
         </Link>
 
-        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl">
+        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl sb-display">
           Digital <span className="italic text-[#c9a227]">invitation.</span>
         </motion.h1>
         <p className="mt-3 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">
@@ -223,18 +223,18 @@ export default function InvitePage() {
 
               <div className={`${card} p-5`}>
                 <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-[family-name:var(--font-sans)]">Invitation words</p>
-                <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={4} className="mt-3 w-full resize-y rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-[13px] text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]" />
+                <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={4} className="mt-3 w-full resize-y sb-input px-4 py-3 text-[13px] text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]" />
               </div>
 
               <div className={`${card} p-5`}>
                 <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-[family-name:var(--font-sans)]">Share</p>
-                <button onClick={download} className="mt-3 flex w-full min-h-[50px] items-center justify-center gap-2 rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
+                <button onClick={download} className="mt-3 flex w-full min-h-[50px] items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
                   <Download className="h-4 w-4" /> Download image
                 </button>
                 <a href={`https://wa.me/?text=${waText}`} target="_blank" rel="noreferrer" className="mt-2 flex w-full min-h-[50px] items-center justify-center gap-2 rounded-full bg-emerald-500 text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
                   <MessageCircle className="h-4 w-4" /> Send on WhatsApp
                 </a>
-                <button onClick={() => { navigator.clipboard.writeText(rsvpUrl); setCopied(true); setTimeout(() => setCopied(false), 1800); }} className="mt-2 flex w-full min-h-[50px] items-center justify-center gap-2 rounded-full border border-white/12 text-[11px] uppercase tracking-[0.2em] text-white/70 font-[family-name:var(--font-sans)]">
+                <button onClick={() => { navigator.clipboard.writeText(rsvpUrl); setCopied(true); setTimeout(() => setCopied(false), 1800); }} className="mt-2 flex w-full min-h-[50px] items-center justify-center gap-2 sb-ghost text-[11px] uppercase tracking-[0.2em] text-white/70 font-[family-name:var(--font-sans)]">
                   {copied ? <><Check className="h-4 w-4 text-emerald-400" /> Copied</> : <><Copy className="h-4 w-4" /> Copy link</>}
                 </button>
                 <p className="mt-4 text-[11px] leading-relaxed text-white/35 font-[family-name:var(--font-sans)]">

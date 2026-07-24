@@ -44,14 +44,14 @@ export default function MyPassPage() {
           <ArrowLeft className="h-3.5 w-3.5" /> Event details
         </Link>
 
-        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl">
+        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl sb-display">
           Find your <span className="italic text-[#c9a227]">pass.</span>
         </motion.h1>
         <p className="mt-3 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">
           Enter the phone number you registered with.
         </p>
 
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-7 rounded-3xl border border-white/[0.07] bg-white/[0.025] p-6 backdrop-blur-sm">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-7 sb-surface p-6 backdrop-blur-sm">
           <label className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-[family-name:var(--font-sans)]">Phone Number</label>
           <input
             value={phone}
@@ -60,12 +60,12 @@ export default function MyPassPage() {
             placeholder="0803 123 4567"
             inputMode="tel"
             autoFocus
-            className="mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3.5 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]"
+            className="mt-2 w-full sb-input px-4 py-3.5 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]"
           />
 
           {error && <p className="mt-4 text-sm text-red-400 font-[family-name:var(--font-sans)]">{error}</p>}
 
-          <button onClick={submit} disabled={loading} className="mt-6 flex w-full min-h-[54px] items-center justify-center gap-2 rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
+          <button onClick={submit} disabled={loading} className="mt-6 flex w-full min-h-[54px] items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>View My Pass <ArrowUpRight className="h-4 w-4" /></>}
           </button>
 

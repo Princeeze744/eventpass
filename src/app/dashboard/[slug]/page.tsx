@@ -28,12 +28,12 @@ export default async function EventConsole({
   const pending = event.guests.filter((g) => g.status === "pending").length;
   const checkedIn = event.guests.filter((g) => g.checkedIn).length;
 
-  const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
+  const card = "sb-surface sb-lift";
 
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-10 sm:px-8">
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] rounded-full bg-[#1c4634]/25 blur-[130px]" />
+        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] sb-glow-green" />
       </div>
 
       <div className="relative mx-auto max-w-[1100px]">
@@ -41,8 +41,8 @@ export default async function EventConsole({
           <ArrowLeft className="h-3.5 w-3.5" /> All events
         </Link>
 
-        <p className="mt-6 text-[10px] uppercase tracking-[0.4em] text-[#c9a227] font-[family-name:var(--font-sans)]">{event.tagline}</p>
-        <h1 className="mt-2 font-[family-name:var(--font-serif)] text-5xl sm:text-6xl">{event.title}</h1>
+        <p className="mt-6 text-[10px] sb-eyebrow text-[#c9a227] font-[family-name:var(--font-sans)]">{event.tagline}</p>
+        <h1 className="mt-2 font-[family-name:var(--font-serif)] text-5xl sb-display sm:text-6xl">{event.title}</h1>
         <p className="mt-3 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">
           {event.eventDate} · {event.eventTime} · {event.venue}
         </p>
@@ -73,7 +73,7 @@ export default async function EventConsole({
           ].map((s) => (
             <div key={s.v} className={`${card} p-5`}>
               <s.icon className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
-              <p className="mt-5 font-[family-name:var(--font-serif)] text-4xl">{s.k}</p>
+              <p className="mt-5 font-[family-name:var(--font-serif)] text-4xl sb-display">{s.k}</p>
               <p className="mt-1 text-[9px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">{s.v}</p>
             </div>
           ))}

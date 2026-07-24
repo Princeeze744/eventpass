@@ -113,8 +113,8 @@ export default function EventAdmin() {
     return () => clearInterval(t);
   }, [unlocked, key, load]);
 
-  const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
-  const inp = "w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
+  const card = "sb-surface sb-lift";
+  const inp = "w-full sb-input px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
 
   if (!unlocked) {
     return (
@@ -124,7 +124,7 @@ export default function EventAdmin() {
           <h1 className="mt-3 font-[family-name:var(--font-serif)] text-3xl text-[#c9a227]">Host Terminal</h1>
           <input type="password" value={key} onChange={(e) => setKey(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlock()} placeholder="ADM-XXXXXX" className={`mt-4 ${inp} uppercase tracking-widest`} />
           {msg && <p className="mt-3 text-sm text-red-400 font-[family-name:var(--font-sans)]">{msg}</p>}
-          <button onClick={unlock} disabled={busy} className="mt-4 w-full min-h-[50px] rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
+          <button onClick={unlock} disabled={busy} className="mt-4 w-full min-h-[50px] sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
             {busy ? <Loader2 className="mx-auto h-5 w-5 animate-spin" /> : "Enter"}
           </button>
         </motion.div>
@@ -156,7 +156,7 @@ export default function EventAdmin() {
       <div className="mx-auto max-w-[1200px]">
         <p className="text-[10px] uppercase tracking-[0.35em] text-white/35 font-[family-name:var(--font-sans)]">Host Terminal</p>
         <div className="flex flex-wrap items-end justify-between gap-3">
-          <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl text-[#c9a227]">{title}</h1>
+          <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl sb-display text-[#c9a227]">{title}</h1>
           <div className="flex flex-wrap gap-4 text-[12px] text-white/55 font-[family-name:var(--font-sans)]">
             <span>{live.length} registered</span>
             <span>{pending} pending</span>
@@ -222,7 +222,7 @@ export default function EventAdmin() {
             </thead>
             <tbody>
               {visible.map((g) => (
-                <tr key={g.id} className={`border-b border-white/[0.04] ${g.deletedAt ? "opacity-50" : ""}`}>
+                <tr key={g.id} className={`border-b border-white/[0.04] sb-row ${g.deletedAt ? "opacity-50" : ""}`}>
                   <td className="px-4 py-3.5">
                     <input type="checkbox" checked={selected.includes(g.id)} onChange={(e) => setSelected(e.target.checked ? [...selected, g.id] : selected.filter((i) => i !== g.id))} className="h-4 w-4 accent-[#c9a227]" />
                   </td>
@@ -249,7 +249,7 @@ export default function EventAdmin() {
                         <>
                           {g.status !== "approved" && <button onClick={() => setStatus(g.id, "approved")} className="rounded-full border border-emerald-500/40 px-3 py-1 text-[10px] text-emerald-400">Approve</button>}
                           {g.status !== "declined" && <button onClick={() => setStatus(g.id, "declined")} className="rounded-full border border-red-500/40 px-3 py-1 text-[10px] text-red-400">Decline</button>}
-                          <button onClick={() => setEditing(g)} className="rounded-full border border-white/15 px-3 py-1 text-[10px] text-white/55"><Pencil className="h-3 w-3" /></button>
+                          <button onClick={() => setEditing(g)} className="sb-ghost px-3 py-1 text-[10px] text-white/55"><Pencil className="h-3 w-3" /></button>
                         </>
                       )}
                     </div>
@@ -265,7 +265,7 @@ export default function EventAdmin() {
       <AnimatePresence>
         {editing && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-5 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, y: 26, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0 }} className="w-full max-w-[440px] rounded-3xl border border-white/[0.09] bg-[#0d0c0b] p-6">
+            <motion.div initial={{ opacity: 0, y: 26, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0 }} className="w-full max-w-[440px] sb-panel p-6">
               <div className="flex items-start justify-between">
                 <h3 className="font-[family-name:var(--font-serif)] text-3xl text-[#c9a227]">Edit guest</h3>
                 <button onClick={() => setEditing(null)} className="rounded-full border border-white/10 p-2 text-white/50"><X className="h-4 w-4" /></button>
@@ -296,7 +296,7 @@ export default function EventAdmin() {
               </div>
 
               <div className="mt-6 flex gap-3">
-                <button onClick={saveEdit} disabled={busy} className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
+                <button onClick={saveEdit} disabled={busy} className="flex min-h-[48px] flex-1 items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="h-4 w-4" /> Save</>}
                 </button>
                 <button onClick={() => { const id = editing.id; setEditing(null); manage("trash", [id]); }} className="flex items-center gap-2 rounded-full border border-red-500/40 px-5 text-[10px] uppercase text-red-400 font-[family-name:var(--font-sans)]">

@@ -19,7 +19,7 @@ const reveal = {
   }),
 };
 
-const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
+const card = "sb-surface sb-lift";
 
 const journey = [
   {
@@ -100,18 +100,18 @@ export default function Home() {
         <rect width="100%" height="100%" filter="url(#g)" />
       </svg>
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] rounded-full bg-[#1c4634]/25 blur-[130px]" />
-        <div className="absolute bottom-0 right-0 h-[40vh] w-[45vw] rounded-full bg-[#c9a227]/[0.07] blur-[120px]" />
+        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] sb-glow-green" />
+        <div className="absolute bottom-0 right-0 h-[40vh] w-[45vw] sb-glow-warm" />
       </div>
 
       <nav className="relative z-30 mx-auto flex max-w-[1320px] items-center justify-between px-5 py-5 sm:px-8">
         <div className="flex items-center gap-3">
           <Image src="/brand/logo-mark.jpg" alt="Story Box" width={34} height={34} className="rounded-lg" />
-          <span className="text-[11px] uppercase tracking-[0.4em] font-[family-name:var(--font-sans)]">Story&nbsp;Box</span>
+          <span className="text-[11px] uppercase tracking-[0.4em] sb-shimmer font-[family-name:var(--font-sans)]">Story&nbsp;Box</span>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/login" className="rounded-full border border-white/12 px-5 py-2.5 text-[11px] uppercase tracking-[0.2em] text-white/70 font-[family-name:var(--font-sans)]">Sign In</Link>
-          <Link href="/signup" className="hidden rounded-full bg-[#f5f1ea] px-5 py-2.5 text-[11px] uppercase tracking-[0.2em] text-[#080807] font-[family-name:var(--font-sans)] sm:block">Get Started</Link>
+          <Link href="/login" className="sb-ghost px-5 py-2.5 text-[11px] uppercase tracking-[0.2em] text-white/70 font-[family-name:var(--font-sans)]">Sign In</Link>
+          <Link href="/signup" className="hidden sb-btn px-5 py-2.5 text-[11px] uppercase tracking-[0.2em] text-[#080807] font-[family-name:var(--font-sans)] sm:block">Get Started</Link>
         </div>
       </nav>
 
@@ -121,7 +121,7 @@ export default function Home() {
           <div className={`${card} relative overflow-hidden p-7 sm:p-10 lg:col-span-8`}>
             <div className="absolute inset-0 bg-gradient-to-br from-[#1c4634]/20 via-transparent to-transparent" />
             <div className="relative">
-              <p className="text-[10px] uppercase tracking-[0.4em] text-[#c9a227] font-[family-name:var(--font-sans)]">Event Experience Platform</p>
+              <p className="text-[10px] sb-eyebrow text-[#c9a227] font-[family-name:var(--font-sans)]">Event Experience Platform</p>
               <h1 className="mt-5 font-[family-name:var(--font-serif)] text-[10vw] leading-[0.9] tracking-[-0.02em] sm:text-[6.5vw] lg:text-[4.6vw]">
                 {["Every guest", "accounted for."].map((l, i) => (
                   <span key={l} className="block overflow-hidden">
@@ -129,18 +129,18 @@ export default function Home() {
                   </span>
                 ))}
                 <span className="block overflow-hidden">
-                  <motion.span custom={2} variants={reveal} initial="hidden" animate="show" className="block italic text-[#c9a227]">Every moment remembered.</motion.span>
+                  <motion.span custom={2} variants={reveal} initial="hidden" animate="show" className="block italic sb-shimmer">Every moment remembered.</motion.span>
                 </span>
               </h1>
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="mt-6 max-w-lg text-[14px] leading-relaxed text-white/50 font-[family-name:var(--font-sans)]">
                 Registration, verified digital passes, seating and gate control — engineered so nobody queues and nobody gatecrashes.
               </motion.p>
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.95 }} className="mt-7 flex flex-wrap gap-3">
-                <Link href="/signup" className="group relative overflow-hidden rounded-full bg-[#f5f1ea] px-8 py-3.5 text-[11px] uppercase tracking-[0.2em] text-[#080807] font-[family-name:var(--font-sans)]">
+                <Link href="/signup" className="group relative overflow-hidden sb-btn px-8 py-3.5 text-[11px] uppercase tracking-[0.2em] text-[#080807] font-[family-name:var(--font-sans)]">
                   <span className="relative z-10 transition-colors group-hover:text-[#f5f1ea]">Get Started</span>
                   <span className="absolute inset-0 -translate-x-full bg-[#1c4634] transition-transform duration-500 group-hover:translate-x-0" />
                 </Link>
-                <Link href="/login" className="rounded-full border border-white/12 px-8 py-3.5 text-[11px] uppercase tracking-[0.2em] text-white/70 font-[family-name:var(--font-sans)]">I have an account</Link>
+                <Link href="/login" className="sb-ghost px-8 py-3.5 text-[11px] uppercase tracking-[0.2em] text-white/70 font-[family-name:var(--font-sans)]">I have an account</Link>
               </motion.div>
             </div>
           </div>
@@ -205,8 +205,8 @@ export default function Home() {
       <section className="relative mx-auto max-w-[1320px] px-5 py-16 sm:px-8">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-white/35 font-[family-name:var(--font-sans)]">How it works</p>
-            <h2 className="mt-3 font-[family-name:var(--font-serif)] text-4xl sm:text-5xl">From invitation to <span className="italic text-[#c9a227]">the door.</span></h2>
+            <p className="text-[10px] sb-eyebrow text-white/35 font-[family-name:var(--font-sans)]">How it works</p>
+            <h2 className="mt-3 font-[family-name:var(--font-serif)] text-4xl sb-display sm:text-5xl">From invitation to <span className="italic text-[#c9a227]">the door.</span></h2>
           </div>
           <p className="hidden text-[10px] uppercase tracking-[0.25em] text-white/25 font-[family-name:var(--font-sans)] sm:block">Tap a stage</p>
         </div>
@@ -286,8 +286,8 @@ export default function Home() {
       <section className="relative mx-auto max-w-[1320px] px-5 py-16 sm:px-8">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-white/35 font-[family-name:var(--font-sans)]">The platform</p>
-            <h2 className="mt-3 font-[family-name:var(--font-serif)] text-4xl sm:text-5xl">Everything an event <span className="italic text-[#c9a227]">actually needs.</span></h2>
+            <p className="text-[10px] sb-eyebrow text-white/35 font-[family-name:var(--font-sans)]">The platform</p>
+            <h2 className="mt-3 font-[family-name:var(--font-serif)] text-4xl sb-display sm:text-5xl">Everything an event <span className="italic text-[#c9a227]">actually needs.</span></h2>
           </div>
           <Sparkles className="hidden h-5 w-5 text-[#c9a227] sm:block" />
         </div>
@@ -317,7 +317,7 @@ export default function Home() {
 
       {/* AUDIENCES */}
       <section className="relative mx-auto max-w-[1320px] px-5 py-16 sm:px-8">
-        <p className="text-[10px] uppercase tracking-[0.4em] text-white/35 font-[family-name:var(--font-sans)]">Built for everyone at your event</p>
+        <p className="text-[10px] sb-eyebrow text-white/35 font-[family-name:var(--font-sans)]">Built for everyone at your event</p>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           {[
             { n: "01", title: "Planners", copy: "One console for every event you run — guest lists, RSVPs, seating, gate control, live analytics.", href: "/signup?role=planner", cta: "Start planning" },
@@ -331,7 +331,7 @@ export default function Home() {
                   <span className="font-mono text-[10px] text-[#c9a227]">{a.n}</span>
                   <ArrowUpRight className="h-4 w-4 text-white/25 transition-all duration-500 group-hover:text-[#c9a227] group-hover:translate-x-1 group-hover:-translate-y-1" />
                 </div>
-                <h3 className="mt-4 font-[family-name:var(--font-serif)] text-4xl tracking-tight text-[#f5f1ea] transition-transform duration-500 group-hover:translate-x-1">{a.title}</h3>
+                <h3 className="mt-4 font-[family-name:var(--font-serif)] text-4xl sb-display tracking-tight text-[#f5f1ea] transition-transform duration-500 group-hover:translate-x-1">{a.title}</h3>
                 <p className="mt-2.5 text-[13px] leading-relaxed text-white/45 font-[family-name:var(--font-sans)]">{a.copy}</p>
                 <span className="mt-5 text-[10px] uppercase tracking-[0.25em] text-[#c9a227] font-[family-name:var(--font-sans)]">{a.cta}</span>
               </Link>
@@ -344,8 +344,8 @@ export default function Home() {
       <section className="relative mx-auto max-w-[1320px] px-5 py-16 sm:px-8">
         <div className="grid gap-8 lg:grid-cols-12">
           <div className="lg:col-span-4">
-            <p className="text-[10px] uppercase tracking-[0.4em] text-white/35 font-[family-name:var(--font-sans)]">Questions</p>
-            <h2 className="mt-3 font-[family-name:var(--font-serif)] text-4xl leading-tight sm:text-5xl">Before you <span className="italic text-[#c9a227]">ask.</span></h2>
+            <p className="text-[10px] sb-eyebrow text-white/35 font-[family-name:var(--font-sans)]">Questions</p>
+            <h2 className="mt-3 font-[family-name:var(--font-serif)] text-4xl sb-display leading-tight sm:text-5xl">Before you <span className="italic text-[#c9a227]">ask.</span></h2>
           </div>
           <div className="lg:col-span-8">
             {faqs.map((f, i) => (
@@ -375,10 +375,10 @@ export default function Home() {
 
       {/* CLOSER */}
       <section className="relative mx-auto max-w-[1320px] px-5 pb-14 sm:px-8">
-        <motion.div initial={{ opacity: 0, y: 26 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="relative overflow-hidden rounded-3xl bg-[#f5f1ea] px-7 py-16 text-center text-[#080807] sm:px-10">
+        <motion.div initial={{ opacity: 0, y: 26 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8 }} className="relative overflow-hidden rounded-[28px] sb-cream px-7 py-16 text-center text-[#080807] sm:px-10">
           <motion.div animate={{ x: ["-20%", "120%"] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} className="pointer-events-none absolute inset-y-0 w-1/4 rotate-12 bg-gradient-to-r from-transparent via-[#c9a227]/15 to-transparent" />
-          <p className="relative text-[10px] uppercase tracking-[0.4em] text-[#080807]/45 font-[family-name:var(--font-sans)]">Ready when you are</p>
-          <h2 className="relative mx-auto mt-5 max-w-2xl font-[family-name:var(--font-serif)] text-4xl leading-[1.05] sm:text-6xl">
+          <p className="relative text-[10px] sb-eyebrow text-[#080807]/45 font-[family-name:var(--font-sans)]">Ready when you are</p>
+          <h2 className="relative mx-auto mt-5 max-w-2xl font-[family-name:var(--font-serif)] text-4xl sb-display leading-[1.05] sm:text-6xl">
             Your event, <span className="italic text-[#1c4634]">handled.</span>
           </h2>
           <div className="relative mt-8 flex flex-wrap items-center justify-center gap-3">

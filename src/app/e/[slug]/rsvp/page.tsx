@@ -33,13 +33,13 @@ export default function RsvpPage() {
     router.push(`/e/${slug}/pass/${data.passId}`);
   }
 
-  const inp = "mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3.5 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
+  const inp = "mt-2 w-full sb-input px-4 py-3.5 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
   const lbl = "text-[10px] uppercase tracking-[0.3em] text-white/40 font-[family-name:var(--font-sans)]";
 
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] flex flex-col items-center justify-center px-5 py-12">
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[45vh] w-[80vw] rounded-full bg-[#1c4634]/25 blur-[130px]" />
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-[45vh] w-[80vw] sb-glow-green" />
       </div>
 
       <div className="relative w-full max-w-[420px]">
@@ -47,11 +47,11 @@ export default function RsvpPage() {
           <ArrowLeft className="h-3.5 w-3.5" /> Event details
         </Link>
 
-        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl">
+        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl sb-display">
           Reserve your <span className="italic text-[#c9a227]">seat.</span>
         </motion.h1>
 
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-7 rounded-3xl border border-white/[0.07] bg-white/[0.025] p-6 backdrop-blur-sm">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-7 sb-surface p-6 backdrop-blur-sm">
           <label className={lbl}>Full Name</label>
           <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Amara Johnson" className={inp} />
 
@@ -69,7 +69,7 @@ export default function RsvpPage() {
 
           {error && <p className="mt-4 text-sm text-red-400 font-[family-name:var(--font-sans)]">{error}</p>}
 
-          <button onClick={submit} disabled={loading} className="mt-7 flex w-full min-h-[54px] items-center justify-center gap-2 rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
+          <button onClick={submit} disabled={loading} className="mt-7 flex w-full min-h-[54px] items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Get My Pass <ArrowUpRight className="h-4 w-4" /></>}
           </button>
 

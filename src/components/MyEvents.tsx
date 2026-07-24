@@ -49,7 +49,7 @@ export default function MyEvents({ role }: { role: string }) {
     load();
   }
 
-  const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
+  const card = "sb-surface sb-lift";
   const isVendor = role === "vendor";
 
   if (loading) {
@@ -61,7 +61,7 @@ export default function MyEvents({ role }: { role: string }) {
       {!hasPhone && (
         <div className={`${card} p-6`}>
           <Phone className="h-5 w-5 text-[#c9a227]" strokeWidth={1.6} />
-          <h2 className="mt-4 font-[family-name:var(--font-serif)] text-3xl">Connect your number</h2>
+          <h2 className="mt-4 font-[family-name:var(--font-serif)] text-3xl sb-figure">Connect your number</h2>
           <p className="mt-2 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">
             Enter the phone number you register with at events. Every event using that number will appear here automatically.
           </p>
@@ -72,9 +72,9 @@ export default function MyEvents({ role }: { role: string }) {
               onKeyDown={(e) => e.key === "Enter" && link()}
               placeholder="0803 123 4567"
               inputMode="tel"
-              className="flex-1 rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]"
+              className="flex-1 sb-input px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]"
             />
-            <button onClick={link} disabled={busy} className="min-h-[50px] rounded-full bg-[#f5f1ea] px-7 text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
+            <button onClick={link} disabled={busy} className="min-h-[50px] sb-btn px-7 text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
               {busy ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : "Connect"}
             </button>
           </div>
@@ -153,19 +153,19 @@ export default function MyEvents({ role }: { role: string }) {
               )}
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <Link href={`/e/${r.event.slug}/pass/${r.passId}`} className="flex items-center gap-2 rounded-full bg-[#f5f1ea] px-6 py-3 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
+                <Link href={`/e/${r.event.slug}/pass/${r.passId}`} className="flex items-center gap-2 sb-btn px-6 py-3 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
                   <Ticket className="h-3.5 w-3.5" /> {isVendor ? "My badge" : "My pass"}
                 </Link>
-                <Link href={`/e/${r.event.slug}`} className="flex items-center gap-2 rounded-full border border-white/12 px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">
+                <Link href={`/e/${r.event.slug}`} className="flex items-center gap-2 sb-ghost px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">
                   Event page <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
                 {r.event.ceremonyMap && (
-                  <a href={r.event.ceremonyMap} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full border border-white/12 px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">
+                  <a href={r.event.ceremonyMap} target="_blank" rel="noreferrer" className="flex items-center gap-2 sb-ghost px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">
                     <MapPin className="h-3.5 w-3.5" /> Directions
                   </a>
                 )}
                 {r.event.livestream && (
-                  <a href={r.event.livestream} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full border border-white/12 px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">
+                  <a href={r.event.livestream} target="_blank" rel="noreferrer" className="flex items-center gap-2 sb-ghost px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">
                     <Video className="h-3.5 w-3.5" /> Livestream
                   </a>
                 )}

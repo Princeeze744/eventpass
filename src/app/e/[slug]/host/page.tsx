@@ -70,7 +70,7 @@ export default function HostDashboard() {
     else setMsg("Wrong access key.");
   }
 
-  const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
+  const card = "sb-surface sb-lift";
 
   if (!unlocked) {
     return (
@@ -79,9 +79,9 @@ export default function HostDashboard() {
           <Heart className="h-5 w-5 text-[#c9a227]" strokeWidth={1.6} />
           <h1 className="mt-3 font-[family-name:var(--font-serif)] text-3xl text-[#c9a227]">Your Event</h1>
           <p className="mt-2 text-[12px] text-white/45 font-[family-name:var(--font-sans)]">Enter the access key from your planner.</p>
-          <input type="password" value={key} onChange={(e) => setKey(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlock()} placeholder="ADM-XXXXXX" className="mt-4 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 uppercase tracking-widest text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]" />
+          <input type="password" value={key} onChange={(e) => setKey(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlock()} placeholder="ADM-XXXXXX" className="mt-4 w-full sb-input px-4 py-3 uppercase tracking-widest text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]" />
           {msg && <p className="mt-3 text-sm text-red-400 font-[family-name:var(--font-sans)]">{msg}</p>}
-          <button onClick={unlock} disabled={busy} className="mt-4 w-full min-h-[50px] rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
+          <button onClick={unlock} disabled={busy} className="mt-4 w-full min-h-[50px] sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
             {busy ? <Loader2 className="mx-auto h-5 w-5 animate-spin" /> : "Enter"}
           </button>
         </div>
@@ -96,14 +96,14 @@ export default function HostDashboard() {
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-10 sm:px-8">
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[50vh] w-[85vw] rounded-full bg-[#1c4634]/25 blur-[140px]" />
-        <div className="absolute bottom-0 right-0 h-[35vh] w-[45vw] rounded-full bg-[#c9a227]/[0.07] blur-[120px]" />
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[50vh] w-[85vw] sb-glow-green" />
+        <div className="absolute bottom-0 right-0 h-[35vh] w-[45vw] sb-glow-warm" />
       </div>
 
       <div className="relative mx-auto max-w-[1100px]">
         <div className="text-center">
-          <p className="text-[10px] uppercase tracking-[0.4em] text-[#c9a227] font-[family-name:var(--font-sans)]">{e.tagline}</p>
-          <h1 className="mt-3 font-[family-name:var(--font-serif)] text-6xl leading-[0.95] sm:text-7xl">{e.title}</h1>
+          <p className="text-[10px] sb-eyebrow text-[#c9a227] font-[family-name:var(--font-sans)]">{e.tagline}</p>
+          <h1 className="mt-3 font-[family-name:var(--font-serif)] text-6xl sb-display leading-[0.95] sm:text-7xl">{e.title}</h1>
           <p className="mt-4 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">{e.eventDate} · {e.eventTime} · {e.venue}</p>
 
           {left && (
@@ -127,7 +127,7 @@ export default function HostDashboard() {
           ].map((t) => (
             <div key={t.v} className={`${card} p-5`}>
               <t.Icon className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
-              <p className="mt-4 font-[family-name:var(--font-serif)] text-4xl">{t.k}</p>
+              <p className="mt-4 font-[family-name:var(--font-serif)] text-4xl sb-display">{t.k}</p>
               <p className="mt-1 text-[9px] uppercase tracking-[0.2em] text-white/40 font-[family-name:var(--font-sans)]">{t.v}</p>
             </div>
           ))}
@@ -142,7 +142,7 @@ export default function HostDashboard() {
                 <motion.circle cx="50" cy="50" r="42" fill="none" stroke="#c9a227" strokeWidth="7" strokeLinecap="round" strokeDasharray={264} animate={{ strokeDashoffset: 264 - (264 * pct) / 100 }} transition={{ duration: 1 }} />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <p className="font-[family-name:var(--font-serif)] text-5xl">{pct}%</p>
+                <p className="font-[family-name:var(--font-serif)] text-5xl sb-display">{pct}%</p>
               </div>
             </div>
             <p className="mt-5 font-[family-name:var(--font-serif)] text-2xl">{s.arrivedHeads} <span className="text-white/30">/ {s.expectedHeads}</span></p>
@@ -211,8 +211,8 @@ export default function HostDashboard() {
         </div>
 
         <div className="mt-8 flex flex-wrap justify-center gap-2">
-          <Link href={`/e/${slug}`} className="rounded-full border border-white/12 px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Event website</Link>
-          <Link href={`/e/${slug}/admin`} className="rounded-full border border-white/12 px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Approve guests</Link>
+          <Link href={`/e/${slug}`} className="sb-ghost px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Event website</Link>
+          <Link href={`/e/${slug}/admin`} className="sb-ghost px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Approve guests</Link>
           <Link href={`/e/${slug}/live`} className="rounded-full border border-[#c9a227]/40 px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Live board</Link>
         </div>
 

@@ -41,7 +41,7 @@ function SignupInner() {
     router.refresh();
   }
 
-  const inp = "mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3.5 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
+  const inp = "mt-2 w-full sb-input px-4 py-3.5 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
   const lbl = "text-[10px] uppercase tracking-[0.3em] text-white/40 font-[family-name:var(--font-sans)]";
 
   return (
@@ -51,21 +51,21 @@ function SignupInner() {
         <rect width="100%" height="100%" filter="url(#gs)" />
       </svg>
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] rounded-full bg-[#1c4634]/25 blur-[130px]" />
-        <div className="absolute bottom-0 right-0 h-[35vh] w-[45vw] rounded-full bg-[#c9a227]/[0.07] blur-[110px]" />
+        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] sb-glow-green" />
+        <div className="absolute bottom-0 right-0 h-[35vh] w-[45vw] sb-glow-warm" />
       </div>
 
       <div className="relative w-full max-w-[440px]">
         <Link href="/" className="flex items-center gap-3">
           <Image src="/brand/logo-mark.jpg" alt="Story Box" width={32} height={32} className="rounded-lg" />
-          <span className="text-[10px] uppercase tracking-[0.4em] text-white/60 font-[family-name:var(--font-sans)]">Story&nbsp;Box</span>
+          <span className="text-[10px] sb-eyebrow text-white/60 font-[family-name:var(--font-sans)]">Story&nbsp;Box</span>
         </Link>
 
-        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-8 font-[family-name:var(--font-serif)] text-5xl leading-[1]">
+        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-8 font-[family-name:var(--font-serif)] text-5xl sb-display leading-[1]">
           Create your <span className="italic text-[#c9a227]">account.</span>
         </motion.h1>
 
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-7 rounded-3xl border border-white/[0.07] bg-white/[0.025] p-6 backdrop-blur-sm">
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mt-7 sb-surface p-6 backdrop-blur-sm">
           <p className={lbl}>I am joining as</p>
           <div className="mt-3 grid grid-cols-4 gap-2">
             {ROLES.map((r) => (
@@ -89,7 +89,7 @@ function SignupInner() {
 
           {error && <p className="mt-4 text-sm text-red-400 font-[family-name:var(--font-sans)]">{error}</p>}
 
-          <button onClick={submit} disabled={loading} className="mt-7 flex w-full min-h-[54px] items-center justify-center gap-2 rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
+          <button onClick={submit} disabled={loading} className="mt-7 flex w-full min-h-[54px] items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Create Account <ArrowUpRight className="h-4 w-4" /></>}
           </button>
 

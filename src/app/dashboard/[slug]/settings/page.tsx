@@ -60,14 +60,14 @@ export default function EventSettings() {
     if (action === "rotateKeys") setMsg("New keys generated. Share them with your team.");
   }
 
-  const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
-  const inp = "mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
+  const card = "sb-surface sb-lift";
+  const inp = "mt-2 w-full sb-input px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
   const lbl = "text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]";
 
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-10 sm:px-8">
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] rounded-full bg-[#1c4634]/25 blur-[130px]" />
+        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] sb-glow-green" />
       </div>
 
       <div className="relative mx-auto max-w-[760px]">
@@ -75,7 +75,7 @@ export default function EventSettings() {
           <ArrowLeft className="h-3.5 w-3.5" /> Event console
         </Link>
 
-        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl">
+        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl sb-display">
           Event <span className="italic text-[#c9a227]">settings.</span>
         </motion.h1>
 
@@ -112,7 +112,7 @@ export default function EventSettings() {
                 </div>
               </div>
 
-              <button onClick={() => act("update")} disabled={busy} className="mt-6 flex w-full min-h-[52px] items-center justify-center gap-2 rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
+              <button onClick={() => act("update")} disabled={busy} className="mt-6 flex w-full min-h-[52px] items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <><Check className="h-4 w-4" /> Saved</> : "Save Changes"}
               </button>
             </div>
@@ -122,7 +122,7 @@ export default function EventSettings() {
               <p className="mt-3 text-[13px] leading-relaxed text-white/50 font-[family-name:var(--font-sans)]">
                 Generate fresh admin and gate keys. Old keys stop working immediately.
               </p>
-              <button onClick={() => act("rotateKeys")} disabled={busy} className="mt-4 flex items-center gap-2 rounded-full border border-white/12 px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">
+              <button onClick={() => act("rotateKeys")} disabled={busy} className="mt-4 flex items-center gap-2 sb-ghost px-6 py-3 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">
                 <RefreshCw className="h-3.5 w-3.5 text-[#c9a227]" /> Rotate keys
               </button>
             </div>

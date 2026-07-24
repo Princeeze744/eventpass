@@ -82,8 +82,8 @@ export default function SeatingPlan() {
     load(key);
   }
 
-  const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
-  const inp = "w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
+  const card = "sb-surface sb-lift";
+  const inp = "w-full sb-input px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
 
   if (!unlocked) {
     return (
@@ -93,7 +93,7 @@ export default function SeatingPlan() {
           <h1 className="mt-3 font-[family-name:var(--font-serif)] text-3xl text-[#c9a227]">Seating Plan</h1>
           <input type="password" value={key} onChange={(e) => setKey(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlock()} placeholder="ADM-XXXXXX" className={`mt-4 ${inp} uppercase tracking-widest`} />
           {msg && <p className="mt-3 text-sm text-red-400 font-[family-name:var(--font-sans)]">{msg}</p>}
-          <button onClick={unlock} disabled={busy} className="mt-4 w-full min-h-[50px] rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
+          <button onClick={unlock} disabled={busy} className="mt-4 w-full min-h-[50px] sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
             {busy ? <Loader2 className="mx-auto h-5 w-5 animate-spin" /> : "Enter"}
           </button>
         </div>
@@ -114,16 +114,16 @@ export default function SeatingPlan() {
               <ArrowLeft className="h-3.5 w-3.5" /> Host terminal
             </Link>
             <p className="mt-4 text-[10px] uppercase tracking-[0.35em] text-white/35 font-[family-name:var(--font-sans)]">Seating Plan</p>
-            <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl text-[#c9a227]">{title}</h1>
+            <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl sb-display text-[#c9a227]">{title}</h1>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 rounded-full border border-white/12 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]"><Plus className="h-3.5 w-3.5 text-[#c9a227]" /> Add tables</button>
-            <button onClick={() => act({ action: "autoSeat" })} disabled={busy} className="flex items-center gap-2 rounded-full bg-[#f5f1ea] px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]"><Sparkles className="h-3.5 w-3.5" /> Auto seat</button>
-            <button onClick={() => window.print()} className="flex items-center gap-2 rounded-full border border-white/12 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]"><Printer className="h-3.5 w-3.5 text-[#c9a227]" /> Print</button>
+            <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]"><Plus className="h-3.5 w-3.5 text-[#c9a227]" /> Add tables</button>
+            <button onClick={() => act({ action: "autoSeat" })} disabled={busy} className="flex items-center gap-2 sb-btn px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]"><Sparkles className="h-3.5 w-3.5" /> Auto seat</button>
+            <button onClick={() => window.print()} className="flex items-center gap-2 sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]"><Printer className="h-3.5 w-3.5 text-[#c9a227]" /> Print</button>
           </div>
         </div>
 
-        <h1 className="hidden font-[family-name:var(--font-serif)] text-4xl print:block">{title} — Seating Plan</h1>
+        <h1 className="hidden font-[family-name:var(--font-serif)] text-4xl sb-display print:block">{title} — Seating Plan</h1>
 
         <div className="mt-6 flex flex-wrap gap-5 text-[12px] text-white/50 font-[family-name:var(--font-sans)] print:text-black">
           <span>{tables.length} tables</span>
@@ -141,7 +141,7 @@ export default function SeatingPlan() {
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               {unseated.map((g) => (
-                <button key={g.id} onClick={() => setPicking(g)} className="rounded-full border border-white/12 px-4 py-2 text-[12px] text-white/70 hover:border-[#c9a227]/50 font-[family-name:var(--font-sans)]">
+                <button key={g.id} onClick={() => setPicking(g)} className="sb-ghost px-4 py-2 text-[12px] text-white/70 hover:border-[#c9a227]/50 font-[family-name:var(--font-sans)]">
                   {g.name}{g.partySize > 1 ? ` +${g.partySize - 1}` : ""} <span className="text-white/30">· {g.tier}</span>
                 </button>
               ))}
@@ -197,7 +197,7 @@ export default function SeatingPlan() {
       <AnimatePresence>
         {picking && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPicking(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-5 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} onClick={(e) => e.stopPropagation()} className="max-h-[80vh] w-full max-w-[440px] overflow-y-auto rounded-3xl border border-white/[0.09] bg-[#0d0c0b] p-6">
+            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} onClick={(e) => e.stopPropagation()} className="max-h-[80vh] w-full max-w-[440px] overflow-y-auto sb-panel p-6">
               <h3 className="font-[family-name:var(--font-serif)] text-2xl text-[#c9a227]">Seat {picking.name}</h3>
               <p className="mt-1 text-[12px] text-white/40 font-[family-name:var(--font-sans)]">{picking.partySize > 1 ? `Needs ${picking.partySize} seats` : "1 seat"}</p>
               <div className="mt-5 space-y-2">
@@ -211,14 +211,14 @@ export default function SeatingPlan() {
                   );
                 })}
               </div>
-              <button onClick={() => setPicking(null)} className="mt-5 w-full rounded-full border border-white/12 py-3 text-[10px] uppercase tracking-[0.15em] text-white/60 font-[family-name:var(--font-sans)]">Cancel</button>
+              <button onClick={() => setPicking(null)} className="mt-5 w-full sb-ghost py-3 text-[10px] uppercase tracking-[0.15em] text-white/60 font-[family-name:var(--font-sans)]">Cancel</button>
             </motion.div>
           </motion.div>
         )}
 
         {showAdd && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAdd(false)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-5 backdrop-blur-sm">
-            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} onClick={(e) => e.stopPropagation()} className="w-full max-w-[420px] rounded-3xl border border-white/[0.09] bg-[#0d0c0b] p-6">
+            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} onClick={(e) => e.stopPropagation()} className="w-full max-w-[420px] sb-panel p-6">
               <div className="flex items-start justify-between">
                 <h3 className="font-[family-name:var(--font-serif)] text-3xl text-[#c9a227]">Add tables</h3>
                 <button onClick={() => setShowAdd(false)} className="rounded-full border border-white/10 p-2 text-white/50"><X className="h-4 w-4" /></button>
@@ -234,7 +234,7 @@ export default function SeatingPlan() {
                   <input value={form[f.k as keyof typeof form]} onChange={(e) => setForm({ ...form, [f.k]: e.target.value })} placeholder={f.p} className={`mt-2 ${inp}`} />
                 </div>
               ))}
-              <button onClick={() => act({ action: "bulkTables", ...form })} disabled={busy} className="mt-6 w-full min-h-[50px] rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
+              <button onClick={() => act({ action: "bulkTables", ...form })} disabled={busy} className="mt-6 w-full min-h-[50px] sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
                 {busy ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : "Create tables"}
               </button>
             </motion.div>

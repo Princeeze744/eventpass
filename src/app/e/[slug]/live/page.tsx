@@ -42,21 +42,21 @@ export default function LiveBoard() {
   }, []);
 
   const pct = s && s.expectedHeads > 0 ? Math.min(100, Math.round((s.arrivedHeads / s.expectedHeads) * 100)) : 0;
-  const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
+  const card = "sb-surface sb-lift";
   const peak = s?.hourly.length ? Math.max(...s.hourly.map((h) => h.count)) : 1;
 
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-8 sm:px-8">
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] rounded-full bg-[#1c4634]/25 blur-[130px]" />
-        <div className="absolute bottom-0 right-0 h-[35vh] w-[45vw] rounded-full bg-[#c9a227]/[0.07] blur-[110px]" />
+        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] sb-glow-green" />
+        <div className="absolute bottom-0 right-0 h-[35vh] w-[45vw] sb-glow-warm" />
       </div>
 
       <div className="relative mx-auto max-w-[1200px]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.4em] text-[#c9a227] font-[family-name:var(--font-sans)]">Live Arrivals</p>
-            <h1 className="mt-2 font-[family-name:var(--font-serif)] text-5xl sm:text-6xl">{s?.event.title || "—"}</h1>
+            <p className="text-[10px] sb-eyebrow text-[#c9a227] font-[family-name:var(--font-sans)]">Live Arrivals</p>
+            <h1 className="mt-2 font-[family-name:var(--font-serif)] text-5xl sb-display sm:text-6xl">{s?.event.title || "—"}</h1>
             <p className="mt-2 text-[12px] text-white/40 font-[family-name:var(--font-sans)]">{s?.event.eventDate} · {s?.event.venue}</p>
           </div>
           <div className="flex items-center gap-4">
@@ -83,7 +83,7 @@ export default function LiveBoard() {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <motion.p key={pct} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="font-[family-name:var(--font-serif)] text-6xl">{pct}%</motion.p>
+                <motion.p key={pct} initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="font-[family-name:var(--font-serif)] text-6xl sb-display">{pct}%</motion.p>
                 <p className="mt-1 text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">Arrived</p>
               </div>
             </div>
@@ -103,7 +103,7 @@ export default function LiveBoard() {
           ].map((t) => (
             <motion.div key={t.v} layout className={`${card} p-5 lg:col-span-2`}>
               <t.Icon className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
-              <motion.p key={t.k} initial={{ y: -8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mt-5 font-[family-name:var(--font-serif)] text-4xl">{t.k}</motion.p>
+              <motion.p key={t.k} initial={{ y: -8, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mt-5 font-[family-name:var(--font-serif)] text-4xl sb-display">{t.k}</motion.p>
               <p className="mt-1 text-[9px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">{t.v}</p>
             </motion.div>
           ))}

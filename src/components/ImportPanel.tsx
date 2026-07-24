@@ -58,7 +58,7 @@ export default function ImportPanel({
     URL.revokeObjectURL(url);
   }
 
-  const btn = "flex items-center gap-2 rounded-full border border-white/12 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]";
+  const btn = "flex items-center gap-2 sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]";
 
   return (
     <>
@@ -87,7 +87,7 @@ export default function ImportPanel({
               initial={{ opacity: 0, y: 30, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20 }}
-              className="w-full max-w-[560px] rounded-3xl border border-white/[0.09] bg-[#0d0c0b] p-6"
+              className="w-full max-w-[560px] sb-panel p-6"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -117,10 +117,10 @@ export default function ImportPanel({
               {msg && <p className="mt-4 text-[12px] text-[#c9a227] font-[family-name:var(--font-sans)]">{msg}</p>}
 
               <div className="mt-6 flex gap-3">
-                <button onClick={importList} disabled={busy} className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
+                <button onClick={importList} disabled={busy} className="flex min-h-[48px] flex-1 items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Import"}
                 </button>
-                <button onClick={() => setOpen(false)} className="rounded-full border border-white/12 px-6 text-[11px] uppercase tracking-[0.2em] text-white/60 font-[family-name:var(--font-sans)]">
+                <button onClick={() => setOpen(false)} className="sb-ghost px-6 text-[11px] uppercase tracking-[0.2em] text-white/60 font-[family-name:var(--font-sans)]">
                   Close
                 </button>
               </div>

@@ -85,14 +85,14 @@ export default function WebsiteEditor() {
     setTimeout(() => setSaved(false), 2200);
   }
 
-  const card = "rounded-3xl border border-white/[0.07] bg-white/[0.025] backdrop-blur-sm";
-  const inp = "mt-2 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
+  const card = "sb-surface sb-lift";
+  const inp = "mt-2 w-full sb-input px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
   const lbl = "text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]";
 
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-10 sm:px-8">
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] rounded-full bg-[#1c4634]/25 blur-[130px]" />
+        <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] sb-glow-green" />
       </div>
 
       <div className="relative mx-auto max-w-[820px]">
@@ -105,7 +105,7 @@ export default function WebsiteEditor() {
           </Link>
         </div>
 
-        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl">
+        <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl sb-display">
           Event <span className="italic text-[#c9a227]">website.</span>
         </motion.h1>
         <p className="mt-3 text-[13px] text-white/45 font-[family-name:var(--font-sans)]">
@@ -150,7 +150,7 @@ export default function WebsiteEditor() {
             ))}
 
             <div className="sticky bottom-5 mt-6">
-              <button onClick={save} disabled={busy} className="flex w-full min-h-[56px] items-center justify-center gap-2 rounded-full bg-[#f5f1ea] text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] shadow-[0_10px_40px_rgba(0,0,0,0.6)] font-[family-name:var(--font-sans)] disabled:opacity-60">
+              <button onClick={save} disabled={busy} className="flex w-full min-h-[56px] items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] shadow-[0_10px_40px_rgba(0,0,0,0.6)] font-[family-name:var(--font-sans)] disabled:opacity-60">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <><Check className="h-4 w-4" /> Saved</> : "Save Website"}
               </button>
             </div>
