@@ -54,7 +54,8 @@ export default function HostDashboard() {
   }, [unlocked, key, load]);
 
   useEffect(() => {
-    const target = new Date(String(data?.event.eventDate || "")).getTime();
+    const iso = String(data?.event.eventDateISO || "");
+    const target = new Date(iso ? iso + "T12:00:00" : String(data?.event.eventDate || "")).getTime();
     if (isNaN(target)) return;
     const tick = () => {
       const diff = target - Date.now();

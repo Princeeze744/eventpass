@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
       hostName: hostName ? String(hostName).trim() : "",
       tagline: tagline ? String(tagline).trim() : "A Celebration",
       eventDate: String(eventDate).trim(),
+      eventDateISO: body.dateISO ? String(body.dateISO).trim() : "",
       eventTime: eventTime ? String(eventTime).trim() : "12:00 PM",
       venue: String(venue).trim(),
       address: address ? String(address).trim() : "",

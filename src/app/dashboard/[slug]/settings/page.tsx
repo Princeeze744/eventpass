@@ -13,6 +13,22 @@ export default function EventSettings() {
   const slug = String(params.slug);
 
   const [form, setForm] = useState<Record<string, string>>({});
+
+  function prettyDate(iso: string) {
+    if (!iso) return "";
+    const d = new Date(iso + "T12:00:00");
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  }
+
+  function prettyTime(t: string) {
+    if (!t) return "";
+    const [h, m] = t.split(":").map(Number);
+    if (isNaN(h)) return t;
+    const suffix = h >= 12 ? "PM" : "AM";
+    const hour = h % 12 === 0 ? 12 : h % 12;
+    return `${hour}:${String(m || 0).padStart(2, "0")} ${suffix}`;
+  }
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -33,6 +49,8 @@ export default function EventSettings() {
           hostName: d.event.hostName || "",
           tagline: d.event.tagline || "",
           eventDate: d.event.eventDate || "",
+          dateISO: d.event.eventDateISO || "",
+          timeISO: "",
           eventTime: d.event.eventTime || "",
           venue: d.event.venue || "",
           address: d.event.address || "",
@@ -93,9 +111,8 @@ export default function EventSettings() {
               {[
                 { k: "title", l: "Event Title" },
                 { k: "hostName", l: "Host / Client Name" },
-                { k: "tagline", l: "Tagline" },
-                { k: "eventDate", l: "Date" },
-                { k: "eventTime", l: "Time" },
+                { k: "tagline", l: "Occasion line" },
+
                 { k: "venue", l: "Venue" },
                 { k: "address", l: "Address" },
                 { k: "capacity", l: "Capacity" },
@@ -105,6 +122,28 @@ export default function EventSettings() {
                   <input value={form[f.k] || ""} onChange={(e) => setForm({ ...form, [f.k]: e.target.value })} className={inp} />
                 </div>
               ))}
+
+              <div className="mt-5">
+                <label className={lbl}>Date</label>
+                <input
+                  type="date"
+                  value={form.dateISO || ""}
+                  onChange={(e) => setForm({ ...form, dateISO: e.target.value, eventDate: prettyDate(e.target.value) })}
+                  className={`${inp} [color-scheme:dark]`}
+                />
+                <p className="mt-2 text-[11px] text-[#c9a227] font-[family-name:var(--font-sans)]">{form.eventDate || "No date set"}</p>
+              </div>
+
+              <div className="mt-5">
+                <label className={lbl}>Time</label>
+                <input
+                  type="time"
+                  value={form.timeISO || ""}
+                  onChange={(e) => setForm({ ...form, timeISO: e.target.value, eventTime: prettyTime(e.target.value) })}
+                  className={`${inp} [color-scheme:dark]`}
+                />
+                <p className="mt-2 text-[11px] text-[#c9a227] font-[family-name:var(--font-sans)]">{form.eventTime || "No time set"}</p>
+              </div>
 
               <div className="mt-5">
                 <label className={lbl}>Registration Mode</label>

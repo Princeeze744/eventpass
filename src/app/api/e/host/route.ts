@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     event: {
       title: event.title, tagline: event.tagline, hostName: event.hostName,
-      eventDate: event.eventDate, eventTime: event.eventTime,
+      eventDate: event.eventDate, eventDateISO: event.eventDateISO, eventTime: event.eventTime,
       venue: event.venue, address: event.address,
       dressCode: event.dressCode, colours: event.colours,
       giftNote: event.giftNote, bankDetails: event.bankDetails,

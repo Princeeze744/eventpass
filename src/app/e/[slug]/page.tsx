@@ -46,7 +46,7 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
       <div className="mx-auto mt-6 h-px w-28 bg-gradient-to-r from-transparent via-[#c9a227]/70 to-transparent" />
       <p className="mt-6 text-[14px] text-white/70 font-[family-name:var(--font-sans)]">{e.eventDate} · {e.eventTime}</p>
       <p className="text-[13px] text-white/50 font-[family-name:var(--font-sans)]">{e.venue}{e.address ? ` · ${e.address}` : ""}</p>
-      <Countdown date={e.eventDate} />
+      <Countdown date={e.eventDateISO || e.eventDate} />
       <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row">
         <Link href={`/e/${e.slug}/rsvp`} className="flex min-h-[54px] w-full items-center justify-center gap-2 sb-btn px-9 text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] sm:w-auto">Register &amp; Get Pass <ArrowUpRight className="h-4 w-4" /></Link>
         <Link href={`/e/${e.slug}/mypass`} className="flex min-h-[54px] w-full items-center justify-center rounded-full border border-white/25 px-9 text-[11px] uppercase tracking-[0.2em] text-white/85 backdrop-blur-sm font-[family-name:var(--font-sans)] sm:w-auto">My Pass</Link>

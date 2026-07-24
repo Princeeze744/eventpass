@@ -38,6 +38,9 @@ export async function POST(req: NextRequest) {
     for (const f of EDITABLE) {
       if (typeof body[f] === "string" && body[f].trim()) data[f] = body[f].trim();
     }
+    if (typeof body.dateISO === "string" && body.dateISO) {
+      data.eventDateISO = body.dateISO;
+    }
     if (body.capacity !== undefined) {
       data.capacity = body.capacity ? Number(body.capacity) : null;
     }

@@ -9,12 +9,30 @@ import { Loader2, ArrowUpRight, ArrowLeft } from "lucide-react";
 
 export default function NewEventPage() {
   const router = useRouter();
+  function prettyDate(iso: string) {
+    if (!iso) return "";
+    const d = new Date(iso + "T12:00:00");
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  }
+
+  function prettyTime(t: string) {
+    if (!t) return "";
+    const [h, m] = t.split(":").map(Number);
+    if (isNaN(h)) return t;
+    const suffix = h >= 12 ? "PM" : "AM";
+    const hour = h % 12 === 0 ? 12 : h % 12;
+    return `${hour}:${String(m || 0).padStart(2, "0")} ${suffix}`;
+  }
+
   const [form, setForm] = useState({
     title: "",
     hostName: "",
     tagline: "A Celebration",
     eventDate: "",
-    eventTime: "12:00 PM",
+    dateISO: "",
+    eventTime: "",
+    timeISO: "",
     venue: "",
     address: "",
     capacity: "",
@@ -79,19 +97,32 @@ export default function NewEventPage() {
               <input value={form.hostName} onChange={(e) => set("hostName", e.target.value)} placeholder="Chioma Amadi & Obinna Onyechere" className={inp} />
             </div>
             <div>
-              <label className={lbl}>Tagline</label>
+              <label className={lbl}>Occasion line</label>
               <input value={form.tagline} onChange={(e) => set("tagline", e.target.value)} placeholder="A Celebration of Love" className={inp} />
+              <p className="mt-2 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">Small line shown above the event name on passes and invitations.</p>
             </div>
           </div>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
             <div>
               <label className={lbl}>Date</label>
-              <input value={form.eventDate} onChange={(e) => set("eventDate", e.target.value)} placeholder="Sat, Dec 19, 2026" className={inp} />
+              <input
+                type="date"
+                value={form.dateISO || ""}
+                onChange={(e) => setForm({ ...form, dateISO: e.target.value, eventDate: prettyDate(e.target.value) })}
+                className={`${inp} [color-scheme:dark]`}
+              />
+              {form.eventDate && <p className="mt-2 text-[11px] text-[#c9a227] font-[family-name:var(--font-sans)]">{form.eventDate}</p>}
             </div>
             <div>
               <label className={lbl}>Time</label>
-              <input value={form.eventTime} onChange={(e) => set("eventTime", e.target.value)} placeholder="12:00 PM" className={inp} />
+              <input
+                type="time"
+                value={form.timeISO || ""}
+                onChange={(e) => setForm({ ...form, timeISO: e.target.value, eventTime: prettyTime(e.target.value) })}
+                className={`${inp} [color-scheme:dark]`}
+              />
+              {form.eventTime && <p className="mt-2 text-[11px] text-[#c9a227] font-[family-name:var(--font-sans)]">{form.eventTime}</p>}
             </div>
           </div>
 
