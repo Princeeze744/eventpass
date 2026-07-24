@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
       dressCode: event.dressCode,
       coverImage: event.coverImage,
       logoUrl: event.logoUrl,
+      accentColor: event.accentColor,
     },
   });
 }
