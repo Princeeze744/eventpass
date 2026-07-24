@@ -6,7 +6,7 @@ function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 40);
 }
 
-const EDITABLE = ["title","eventType","hostName","tagline","state","eventDate","eventTime","venue","address","approvalMode"] as const;
+const EDITABLE = ["title","eventType","hostName","tagline","state","accentColor","eventDate","eventTime","venue","address","approvalMode"] as const;
 
 export async function POST(req: NextRequest) {
   const userId = await getSessionOrganizerId();

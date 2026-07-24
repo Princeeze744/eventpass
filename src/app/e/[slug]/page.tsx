@@ -36,14 +36,16 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
     );
   }
 
+  const ac = e.accentColor || "#c9a227";
+
   const heroInner = (
     <>
       {e.logoUrl && (
         <img src={e.logoUrl} alt="" className="mx-auto mb-7 h-24 w-24 rounded-3xl border border-white/12 object-cover shadow-[0_20px_50px_-20px_rgba(0,0,0,0.9)]" />
       )}
-      <p className="text-[10px] uppercase tracking-[0.45em] text-[#c9a227] font-[family-name:var(--font-sans)]">{e.tagline}</p>
+      <p className="text-[10px] uppercase tracking-[0.45em] font-[family-name:var(--font-sans)]" style={{ color: ac }}>{e.tagline}</p>
       <h1 className="mt-5 font-[family-name:var(--font-serif)] text-[13vw] leading-[0.9] sm:text-[7vw]">{e.title}</h1>
-      <div className="mx-auto mt-6 h-px w-28 bg-gradient-to-r from-transparent via-[#c9a227]/70 to-transparent" />
+      <div className="mx-auto mt-6 h-px w-28" style={{ background: `linear-gradient(90deg,transparent,${ac}b0,transparent)` }} />
       <p className="mt-6 text-[14px] text-white/70 font-[family-name:var(--font-sans)]">{e.eventDate} · {e.eventTime}</p>
       <p className="text-[13px] text-white/50 font-[family-name:var(--font-sans)]">{e.venue}{e.address ? ` · ${e.address}` : ""}</p>
       <Countdown date={e.eventDateISO || e.eventDate} />
@@ -61,7 +63,7 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
         <rect width="100%" height="100%" filter="url(#gsite)" />
       </svg>
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[50vh] w-[90vw] sb-glow-green" />
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[50vh] w-[90vw] rounded-full blur-[130px]" style={{ background: `${ac}14` }} />
         <div className="absolute bottom-0 right-0 h-[35vh] w-[50vw] sb-glow-warm" />
       </div>
 
@@ -78,8 +80,8 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
         {e.story && (
           <Reveal>
             <div className={`${card} mt-4 p-8 text-center`}>
-              <ScrollText className="mx-auto h-5 w-5 text-[#c9a227]" strokeWidth={1.6} />
-              <h2 className="mt-4 font-[family-name:var(--font-serif)] text-4xl sb-display">Our <span className="italic text-[#c9a227]">story</span></h2>
+              <ScrollText className="mx-auto h-5 w-5" style={{ color: ac }} strokeWidth={1.6} />
+              <h2 className="mt-4 font-[family-name:var(--font-serif)] text-4xl sb-display">Our <span className="italic" style={{ color: ac }}>story</span></h2>
               <p className="mx-auto mt-5 max-w-2xl whitespace-pre-line text-[14px] leading-relaxed text-white/55 font-[family-name:var(--font-sans)]">{e.story}</p>
             </div>
           </Reveal>
@@ -90,14 +92,14 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {e.dressCode && (
                 <div className={`${card} p-6`}>
-                  <Shirt className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
+                  <Shirt className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
                   <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Dress Code</h3>
                   <p className="mt-2 text-[13px] leading-relaxed text-white/55 font-[family-name:var(--font-sans)]">{e.dressCode}</p>
                 </div>
               )}
               {e.colours && (
                 <div className={`${card} p-6`}>
-                  <Palette className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
+                  <Palette className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
                   <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Colours</h3>
                   <p className="mt-2 text-[13px] leading-relaxed text-white/55 font-[family-name:var(--font-sans)]">{e.colours}</p>
                 </div>
@@ -109,7 +111,7 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
         {(e.ceremonyName || e.ceremonyMap || e.receptionMap) && (
           <Reveal>
             <div className={`${card} mt-4 p-6`}>
-              <MapPin className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
+              <MapPin className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
               <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Directions</h3>
               {e.ceremonyName && <p className="mt-3 text-[13px] text-white/55 font-[family-name:var(--font-sans)]">Ceremony: {e.ceremonyName}</p>}
               <div className="mt-4 flex flex-wrap gap-2">
@@ -135,21 +137,21 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               {e.hotels && (
                 <div className={`${card} p-6`}>
-                  <Hotel className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
+                  <Hotel className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
                   <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Hotels</h3>
                   <List text={e.hotels} />
                 </div>
               )}
               {e.restaurants && (
                 <div className={`${card} p-6`}>
-                  <UtensilsCrossed className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
+                  <UtensilsCrossed className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
                   <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Restaurants</h3>
                   <List text={e.restaurants} />
                 </div>
               )}
               {e.funSpots && (
                 <div className={`${card} p-6`}>
-                  <Sparkles className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
+                  <Sparkles className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
                   <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Fun Spots</h3>
                   <List text={e.funSpots} />
                 </div>
@@ -163,14 +165,14 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {e.programNote && (
                 <div className={`${card} p-6`}>
-                  <CalendarDays className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
+                  <CalendarDays className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
                   <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Programme</h3>
                   <List text={e.programNote} />
                 </div>
               )}
               {e.menuNote && (
                 <div className={`${card} p-6`}>
-                  <UtensilsCrossed className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} />
+                  <UtensilsCrossed className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
                   <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Menu</h3>
                   <List text={e.menuNote} />
                 </div>
@@ -182,8 +184,8 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
         {e.gallery && (
           <Reveal>
             <div className={`${card} mt-4 p-8`}>
-              <Camera className="mx-auto h-5 w-5 text-[#c9a227]" strokeWidth={1.6} />
-              <h3 className="mt-4 text-center font-[family-name:var(--font-serif)] text-4xl sb-display">The <span className="italic text-[#c9a227]">gallery</span></h3>
+              <Camera className="mx-auto h-5 w-5" style={{ color: ac }} strokeWidth={1.6} />
+              <h3 className="mt-4 text-center font-[family-name:var(--font-serif)] text-4xl sb-display">The <span className="italic" style={{ color: ac }}>gallery</span></h3>
               {e.hashtag && <p className="mt-3 text-center text-[12px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">{e.hashtag}</p>}
               <Gallery urls={e.gallery.split(/\r?\n/).map((u) => u.trim()).filter(Boolean)} />
             </div>
@@ -193,12 +195,12 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
         {(e.giftNote || e.bankDetails) && (
           <Reveal>
             <div className={`${card} mt-4 p-8 text-center`}>
-              <Gift className="mx-auto h-5 w-5 text-[#c9a227]" strokeWidth={1.6} />
+              <Gift className="mx-auto h-5 w-5" style={{ color: ac }} strokeWidth={1.6} />
               <h3 className="mt-4 font-[family-name:var(--font-serif)] text-3xl sb-figure">Gifting</h3>
               {e.giftNote && <p className="mx-auto mt-4 max-w-xl whitespace-pre-line text-[13px] leading-relaxed text-white/55 font-[family-name:var(--font-sans)]">{e.giftNote}</p>}
               {e.bankDetails && (
-                <div className="mx-auto mt-5 max-w-md rounded-2xl border border-[#c9a227]/25 bg-[#c9a227]/[0.06] px-6 py-4">
-                  <p className="whitespace-pre-line font-mono text-[13px] text-[#c9a227]">{e.bankDetails}</p>
+                <div className="mx-auto mt-5 max-w-md rounded-2xl px-6 py-4" style={{ border: `1px solid ${ac}40`, background: `${ac}0f` }}>
+                  <p className="whitespace-pre-line font-mono text-[13px]" style={{ color: ac }}>{e.bankDetails}</p>
                 </div>
               )}
             </div>

@@ -29,6 +29,15 @@ export default function EventSettings() {
     const hour = h % 12 === 0 ? 12 : h % 12;
     return `${hour}:${String(m || 0).padStart(2, "0")} ${suffix}`;
   }
+  const PALETTES = [
+    { n: "Champagne Gold", c: "#c9a227" },
+    { n: "Emerald Estate", c: "#2f9e6e" },
+    { n: "Royal Plum", c: "#b78bc9" },
+    { n: "Midnight Navy", c: "#7ba7d9" },
+    { n: "Blush Romance", c: "#e8a0b4" },
+    { n: "Crimson Executive", c: "#d94f4f" },
+  ];
+
   const NG_STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara","FCT Abuja"];
 
   const [loading, setLoading] = useState(true);
@@ -60,6 +69,7 @@ export default function EventSettings() {
           address: d.event.address || "",
           capacity: d.event.capacity ? String(d.event.capacity) : "",
           approvalMode: d.event.approvalMode || "manual",
+          accentColor: d.event.accentColor || "#c9a227",
         });
         setLoading(false);
       })
@@ -182,6 +192,35 @@ export default function EventSettings() {
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <button onClick={() => setForm({ ...form, approvalMode: "manual" })} className={`rounded-xl border px-3 py-3 text-[11px] font-[family-name:var(--font-sans)] ${form.approvalMode === "manual" ? "border-[#c9a227] bg-[#c9a227]/15 text-[#c9a227]" : "border-white/10 bg-black/30 text-white/50"}`}>Host approves</button>
                   <button onClick={() => setForm({ ...form, approvalMode: "auto" })} className={`rounded-xl border px-3 py-3 text-[11px] font-[family-name:var(--font-sans)] ${form.approvalMode === "auto" ? "border-[#c9a227] bg-[#c9a227]/15 text-[#c9a227]" : "border-white/10 bg-black/30 text-white/50"}`}>Auto approve</button>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <label className={lbl}>Event Colour</label>
+                <p className="mt-2 text-[11px] text-white/35 font-[family-name:var(--font-sans)]">Sets the accent colour of the event website. Pick a scheme or choose an exact brand colour.</p>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {PALETTES.map((p) => (
+                    <button
+                      key={p.n}
+                      onClick={() => setForm({ ...form, accentColor: p.c })}
+                      className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-[10px] font-[family-name:var(--font-sans)] ${form.accentColor === p.c ? "border-white/60 bg-white/[0.07] text-white/90" : "border-white/10 bg-black/30 text-white/50"}`}
+                    >
+                      <span className="h-4 w-4 shrink-0 rounded-full border border-white/20" style={{ background: p.c }} />
+                      {p.n}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-3 flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={form.accentColor || "#c9a227"}
+                    onChange={(e) => setForm({ ...form, accentColor: e.target.value })}
+                    className="h-11 w-16 cursor-pointer rounded-xl border border-white/15 bg-black/30 p-1"
+                  />
+                  <div className="flex-1 rounded-xl border border-white/[0.07] bg-black/40 px-4 py-2.5 text-center">
+                    <p className="text-[8px] uppercase tracking-[0.3em] font-[family-name:var(--font-sans)]" style={{ color: form.accentColor || "#c9a227" }}>{form.tagline || "A Celebration"}</p>
+                    <p className="mt-0.5 font-[family-name:var(--font-serif)] text-[14px]" style={{ color: form.accentColor || "#c9a227" }}>{form.title || "Your Event"}</p>
+                  </div>
                 </div>
               </div>
 

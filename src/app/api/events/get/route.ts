@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
       address: event.address,
       capacity: event.capacity,
       approvalMode: event.approvalMode,
+      accentColor: event.accentColor,
     },
   });
 }
