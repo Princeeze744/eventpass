@@ -6,12 +6,15 @@ export async function POST(req: NextRequest) {
 
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ status: "invalid", message: "Event not found." }, { status: 404 });
+  if (event.approval !== "approved") {
+    return NextResponse.json({ status: "invalid", message: "Event not activated." }, { status: 403 });
+  }
   if (usherKey !== event.usherKey) {
     return NextResponse.json({ status: "invalid", message: "Unauthorized." }, { status: 401 });
   }
 
   const guest = await prisma.guest.findFirst({
-    where: { eventId: event.id, passId: String(passId || "").trim().toUpperCase() },
+    where: { deletedAt: null, eventId: event.id, passId: String(passId || "").trim().toUpperCase() },
   });
 
   if (!guest || guest.status === "declined") {

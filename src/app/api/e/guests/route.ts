@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
-  const { slug, adminKey } = await req.json();
+  const body = await req.json().catch(() => ({}));
+  const { slug, adminKey, includeTrash } = body as {
+    slug?: string; adminKey?: string; includeTrash?: boolean;
+  };
+
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
   if (adminKey !== event.adminKey) {
@@ -10,7 +14,10 @@ export async function POST(req: NextRequest) {
   }
 
   const guests = await prisma.guest.findMany({
-    where: { eventId: event.id },
+    where: {
+      eventId: event.id,
+      ...(includeTrash ? {} : { deletedAt: null }),
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -25,8 +32,10 @@ export async function POST(req: NextRequest) {
       tier: g.tier,
       table: g.table,
       status: g.status,
+      rsvpAnswer: g.rsvpAnswer,
       checkedInOnline: g.checkedInOnline,
       checkedIn: g.checkedIn,
+      deletedAt: g.deletedAt,
     })),
   });
 }

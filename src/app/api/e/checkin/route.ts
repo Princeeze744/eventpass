@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
   if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
 
   const guest = await prisma.guest.findFirst({
-    where: { eventId: event.id, passId: String(passId || "").trim() },
+    where: { deletedAt: null, eventId: event.id, passId: String(passId || "").trim() },
   });
   if (!guest) return NextResponse.json({ error: "Pass not found." }, { status: 404 });
   if (guest.status !== "approved") {

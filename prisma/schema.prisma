@@ -14,6 +14,11 @@ model User {
   name         String
   phone        String?
   role         String   @default("planner")
+  isStaff      Boolean  @default(false)
+  staffLevel   String   @default("none")
+  staffSince   DateTime?
+  invitedBy    String?
+  suspended    Boolean  @default(false)
   createdAt    DateTime @default(now())
   events       Event[]
 }
@@ -42,7 +47,34 @@ model Event {
   adminKey String
   usherKey String
 
+  approval      String    @default("pending")
+  approvedAt    DateTime?
+  approvedBy    String?
+  reviewNote    String?
+  paymentStatus String    @default("unpaid")
+  paymentAmount Int?
+  paymentNote   String?
+
+  story        String?
+  dressCode    String?
+  colours      String?
+  hotels       String?
+  restaurants  String?
+  funSpots     String?
+  ceremonyName String?
+  ceremonyMap  String?
+  receptionMap String?
+  livestream   String?
+  programNote  String?
+  menuNote     String?
+  giftNote     String?
+  coverImage   String?
+  gallery      String?
+  hashtag      String?
+  bankDetails  String?
+
   createdAt DateTime @default(now())
+  deletedAt DateTime?
   guests    Guest[]
 }
 
@@ -65,12 +97,15 @@ model Guest {
   seat    String @default("")
 
   status          String    @default("pending")
+  rsvpAnswer      String    @default("yes")
+  declinedAt      DateTime?
   checkedInOnline Boolean   @default(false)
   checkedIn       Boolean   @default(false)
   checkedInAt     DateTime?
   souvenirTaken   Boolean   @default(false)
 
   createdAt DateTime @default(now())
+  deletedAt DateTime?
 
   @@unique([eventId, phone])
   @@index([eventId])

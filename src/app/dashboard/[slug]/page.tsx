@@ -3,6 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { getSessionOrganizerId } from "@/lib/auth";
 import { ArrowLeft, Users, BadgeCheck, DoorOpen, KeyRound } from "lucide-react";
+import SharePanel from "@/components/SharePanel";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,23 @@ export default async function EventConsole({
           {event.eventDate} · {event.eventTime} · {event.venue}
         </p>
 
+        {event.approval !== "approved" && (
+          <div className={`mt-6 rounded-3xl border p-6 ${event.approval === "rejected" ? "border-red-500/30 bg-red-500/[0.05]" : "border-[#c9a227]/30 bg-[#c9a227]/[0.06]"}`}>
+            <p className="text-[10px] uppercase tracking-[0.3em] font-[family-name:var(--font-sans)]" style={{ color: event.approval === "rejected" ? "#f87171" : "#c9a227" }}>
+              {event.approval === "rejected" ? "Not approved" : event.approval === "suspended" ? "Suspended" : "Awaiting activation"}
+            </p>
+            <p className="mt-3 text-[13px] leading-relaxed text-white/60 font-[family-name:var(--font-sans)]">
+              {event.reviewNote
+                ? event.reviewNote
+                : event.approval === "rejected"
+                ? "This event was not approved. Please contact Story Box."
+                : event.approval === "suspended"
+                ? "This event has been suspended. Please contact Story Box."
+                : "Your event is set up and waiting to be activated by Story Box. You can keep building the website and guest list in the meantime — registration and scanning open once it is live."}
+            </p>
+          </div>
+        )}
+
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { k: total, v: "Registered", icon: Users },
@@ -61,33 +79,16 @@ export default async function EventConsole({
           ))}
         </div>
 
-        <div className="mt-3 grid gap-3 lg:grid-cols-2">
-          <div className={`${card} p-6`}>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-[family-name:var(--font-sans)]">Share with guests</p>
-            <p className="mt-3 break-all rounded-xl border border-white/10 bg-black/40 px-4 py-3 font-mono text-[12px] text-[#c9a227]">/e/{event.slug}/rsvp</p>
-            <p className="mt-4 text-[12px] leading-relaxed text-white/45 font-[family-name:var(--font-sans)]">
-              Send this link on WhatsApp or print it on the invitation. Guests register themselves and receive a verified pass.
-            </p>
-          </div>
-
-          <div className={`${card} p-6`}>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-[family-name:var(--font-sans)]">Access keys</p>
-            <div className="mt-3 space-y-2">
-              <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/40 px-4 py-3">
-                <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-[family-name:var(--font-sans)]">Host / Admin</span>
-                <span className="font-mono text-[13px] text-[#c9a227]">{event.adminKey}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/40 px-4 py-3">
-                <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-[family-name:var(--font-sans)]">Ushers / Gate</span>
-                <span className="font-mono text-[13px] text-[#c9a227]">{event.usherKey}</span>
-              </div>
-            </div>
-            <p className="mt-4 text-[12px] leading-relaxed text-white/45 font-[family-name:var(--font-sans)]">
-              Give the admin key only to the host. Give the gate key only to ushers.
-            </p>
-          </div>
+        <div className="mt-3">
+          <SharePanel
+            slug={event.slug}
+            title={event.title}
+            eventDate={event.eventDate}
+            venue={event.venue}
+            adminKey={event.adminKey}
+            usherKey={event.usherKey}
+          />
         </div>
-
         <p className="mt-8 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">
           Registration mode: {event.approvalMode === "auto" ? "Automatic approval" : "Host approves each guest"}
           {event.capacity ? ` · Capacity ${event.capacity}` : ""}

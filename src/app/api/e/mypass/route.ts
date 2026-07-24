@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   }
 
   const guest = await prisma.guest.findFirst({
-    where: { eventId: event.id, phone: cleanPhone },
+    where: { deletedAt: null, eventId: event.id, phone: cleanPhone },
   });
   if (!guest) {
     return NextResponse.json({ error: "No registration found for this number." }, { status: 404 });

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { ShieldCheck, Clock, CheckCheck, Loader2, CalendarDays, MapPin, Armchair } from "lucide-react";
+import { ShieldCheck, Clock, CheckCheck, Loader2, CalendarDays, MapPin, Armchair, XCircle, RotateCcw } from "lucide-react";
 
 type Props = {
   slug: string;
@@ -15,6 +15,7 @@ type Props = {
   section: string;
   partySize: number;
   status: string;
+  rsvpAnswer: string;
   checkedInOnline: boolean;
   event: { title: string; tagline: string; eventDate: string; eventTime: string; venue: string };
 };
@@ -23,12 +24,25 @@ export default function EventPass(p: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
-  const stage = p.checkedInOnline ? "checked" : p.status === "approved" ? "approved" : "pending";
+  const declined = p.rsvpAnswer === "no";
+  const stage = declined ? "declined" : p.checkedInOnline ? "checked" : p.status === "approved" ? "approved" : "pending";
+
+  async function setAnswer(answer: string) {
+    setBusy(true);
+    await fetch("/api/e/decline", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug: p.slug, passId: p.passId, answer }),
+    });
+    router.refresh();
+    setBusy(false);
+  }
 
   const theme = {
     pending: { accent: "#9ca3af", badge: "PENDING APPROVAL", Icon: Clock, note: "Awaiting approval — check back soon" },
     approved: { accent: "#c9a227", badge: "APPROVED", Icon: ShieldCheck, note: "Present at entrance · Single use" },
     checked: { accent: "#34d399", badge: "CHECKED IN", Icon: CheckCheck, note: "Use the express lane at the entrance" },
+    declined: { accent: "#6b7280", badge: "NOT ATTENDING", Icon: XCircle, note: "You let the host know you cannot make it" },
   }[stage];
 
   async function selfCheckIn() {
@@ -112,6 +126,32 @@ export default function EventPass(p: Props) {
           <p className="mt-1 text-[10px] text-white/30 font-[family-name:var(--font-sans)]">{theme.note}</p>
         </div>
       </motion.div>
+
+      {declined && (
+        <motion.button
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+          onClick={() => setAnswer("yes")}
+          disabled={busy}
+          className="relative mt-6 flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/20 px-9 text-[11px] uppercase tracking-[0.2em] text-white/75 font-[family-name:var(--font-sans)] disabled:opacity-60"
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><RotateCcw className="h-4 w-4" /> Actually, I can make it</>}
+        </motion.button>
+      )}
+
+      {!declined && stage !== "checked" && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.4 }}
+          onClick={() => setAnswer("no")}
+          disabled={busy}
+          className="relative mt-4 text-[11px] uppercase tracking-[0.2em] text-white/35 underline-offset-4 hover:text-white/60 hover:underline font-[family-name:var(--font-sans)]"
+        >
+          I cannot attend
+        </motion.button>
+      )}
 
       {stage === "approved" && (
         <motion.button

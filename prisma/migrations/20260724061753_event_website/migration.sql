@@ -1,0 +1,15 @@
+-- AlterTable
+ALTER TABLE "Event" ADD COLUMN     "bankDetails" TEXT,
+ADD COLUMN     "ceremonyMap" TEXT,
+ADD COLUMN     "ceremonyName" TEXT,
+ADD COLUMN     "colours" TEXT,
+ADD COLUMN     "dressCode" TEXT,
+ADD COLUMN     "funSpots" TEXT,
+ADD COLUMN     "giftNote" TEXT,
+ADD COLUMN     "hotels" TEXT,
+ADD COLUMN     "livestream" TEXT,
+ADD COLUMN     "menuNote" TEXT,
+ADD COLUMN     "programNote" TEXT,
+ADD COLUMN     "receptionMap" TEXT,
+ADD COLUMN     "restaurants" TEXT,
+ADD COLUMN     "story" TEXT;
