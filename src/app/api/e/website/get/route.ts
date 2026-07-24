@@ -9,8 +9,8 @@ export async function GET(req: NextRequest) {
   if (!event) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (event.ownerId !== userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { story, dressCode, colours, hotels, restaurants, funSpots, ceremonyName, ceremonyMap, receptionMap, livestream, programNote, menuNote, giftNote, bankDetails, coverImage, gallery, hashtag } = event;
+  const { story, dressCode, colours, hotels, restaurants, funSpots, ceremonyName, ceremonyMap, receptionMap, livestream, programNote, menuNote, giftNote, bankDetails, coverImage, gallery, hashtag, logoUrl } = event;
   return NextResponse.json({
-    event: { story, dressCode, colours, hotels, restaurants, funSpots, ceremonyName, ceremonyMap, receptionMap, livestream, programNote, menuNote, giftNote, bankDetails, coverImage, gallery, hashtag },
+    event: { story, dressCode, colours, hotels, restaurants, funSpots, ceremonyName, ceremonyMap, receptionMap, livestream, programNote, menuNote, giftNote, bankDetails, coverImage, gallery, hashtag, logoUrl },
   });
 }

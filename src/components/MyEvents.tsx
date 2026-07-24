@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Loader2, CalendarDays, MapPin, Ticket, ArrowUpRight, Phone, Clock, Video, Shirt, Truck, Wrench } from "lucide-react";
+import { Loader2, CalendarDays, MapPin, Ticket, ArrowUpRight, Phone, Clock, Video, Shirt, Truck, Wrench, ImageIcon } from "lucide-react";
 
 type Rec = {
   passId: string; status: string; checkedIn: boolean; checkedInOnline: boolean;
@@ -14,6 +14,7 @@ type Rec = {
     venue: string; address: string; ceremonyMap: string | null; receptionMap: string | null;
     livestream: string | null; programNote: string | null; dressCode: string | null;
     vendorBrief?: string | null; loadInTime?: string | null;
+    logoUrl?: string | null; coverImage?: string | null; gallery?: string | null;
   };
 };
 
@@ -111,9 +112,14 @@ const stage = isVendor
               className={`${card} p-6`}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
+                <div className="flex items-start gap-4">
+                  {(r.event.logoUrl || r.event.coverImage) && (
+                    <img src={(r.event.logoUrl || r.event.coverImage) as string} alt="" className="h-14 w-14 shrink-0 rounded-2xl border border-white/10 object-cover" />
+                  )}
+                  <div>
                   <p className="text-[10px] uppercase tracking-[0.35em] text-[#c9a227] font-[family-name:var(--font-sans)]">{r.event.tagline}</p>
                   <h3 className="mt-1 font-[family-name:var(--font-serif)] text-3xl">{r.event.title}</h3>
+                  </div>
                 </div>
                 <span className="rounded-full px-4 py-1.5 text-[10px] uppercase tracking-[0.2em] font-[family-name:var(--font-sans)]" style={{ color: colour, backgroundColor: `${colour}1f` }}>
                   {stage}
@@ -151,6 +157,22 @@ const stage = isVendor
                   {r.vendorNote && <p className="mt-2 text-[12px] leading-relaxed text-white/70 font-[family-name:var(--font-sans)]">{r.vendorNote}</p>}
                   {r.event.vendorBrief && <p className="mt-2 whitespace-pre-line text-[12px] leading-relaxed text-white/45 font-[family-name:var(--font-sans)]">{r.event.vendorBrief}</p>}
                   {r.event.loadInTime && <p className="mt-3 text-[11px] text-[#5eead4] font-[family-name:var(--font-sans)]">Load-in from {r.event.loadInTime}</p>}
+                </div>
+              )}
+
+              {isVendor && r.event.gallery && (
+                <div className="mt-3">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="h-3.5 w-3.5 text-[#5eead4]" strokeWidth={1.6} />
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">Reference pictures</p>
+                  </div>
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                    {r.event.gallery.split(/\r?\n/).map((u) => u.trim()).filter(Boolean).slice(0, 8).map((u, i) => (
+                      <a key={i} href={u} target="_blank" rel="noreferrer" className="shrink-0">
+                        <img src={u} alt="" className="h-20 w-20 rounded-xl border border-white/[0.07] object-cover transition-transform duration-500 hover:scale-105" />
+                      </a>
+                    ))}
+                  </div>
                 </div>
               )}
 

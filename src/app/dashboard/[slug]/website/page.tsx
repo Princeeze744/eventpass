@@ -11,7 +11,8 @@ const GROUPS = [
   {
     title: "Look & Feel",
     fields: [
-      { k: "coverImage", l: "Cover Photo URL", p: "https://... paste any image link" },
+      { k: "logoUrl", l: "Event Logo URL", p: "https://... a square logo or monogram" },
+      { k: "coverImage", l: "Cover Photo URL", p: "https://... a wide hero photograph" },
       { k: "gallery", l: "Gallery Photo URLs", type: "area", p: "One image URL per line" },
       { k: "hashtag", l: "Event Hashtag", p: "#OurBigDay" },
     ],

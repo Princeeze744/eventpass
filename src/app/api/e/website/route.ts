@@ -5,7 +5,7 @@ import { getSessionOrganizerId } from "@/lib/auth";
 const FIELDS = [
   "story","dressCode","colours","hotels","restaurants","funSpots",
   "ceremonyName","ceremonyMap","receptionMap","livestream",
-  "programNote","menuNote","giftNote","bankDetails","coverImage","gallery","hashtag",
+  "programNote","menuNote","giftNote","bankDetails","coverImage","gallery","hashtag","logoUrl",
 ] as const;
 
 export async function POST(req: NextRequest) {

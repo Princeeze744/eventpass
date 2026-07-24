@@ -24,6 +24,7 @@ type Props = {
   vendorNote?: string;
   loadInTime?: string;
   vendorBrief?: string;
+  logoUrl?: string;
   checkedInOnline: boolean;
   event: { title: string; tagline: string; eventDate: string; eventTime: string; venue: string };
 };
@@ -98,6 +99,12 @@ export default function EventPass(p: Props) {
             <T.Icon className="h-3 w-3" /> {T.badge}
           </span>
         </div>
+
+        {p.logoUrl && (
+          <div className="mt-6 flex justify-center">
+            <img src={p.logoUrl} alt="" className="h-16 w-16 rounded-2xl border border-white/10 object-cover" />
+          </div>
+        )}
 
         <div className="mt-7 text-center">
           <p className="text-[9px] uppercase tracking-[0.3em] text-white/35 font-[family-name:var(--font-sans)]">{p.event.tagline}</p>

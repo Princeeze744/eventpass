@@ -10,7 +10,7 @@ import { ArrowLeft, Download, MessageCircle, Loader2, Copy, Check } from "lucide
 type EventData = {
   title: string; tagline: string; hostName: string;
   eventDate: string; eventTime: string; venue: string; address: string;
-  dressCode: string | null; coverImage: string | null;
+  dressCode: string | null; coverImage: string | null; logoUrl: string | null;
 };
 
 const THEMES = [
@@ -24,6 +24,7 @@ export default function InvitePage() {
   const params = useParams();
   const slug = String(params.slug);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [logoImg, setLogoImg] = useState<HTMLImageElement | null>(null);
 
   const [ev, setEv] = useState<EventData | null>(null);
   const [theme, setTheme] = useState(THEMES[0]);
@@ -40,6 +41,15 @@ export default function InvitePage() {
       .then((d) => { setEv(d.event); setLoading(false); })
       .catch(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (!ev?.logoUrl) { setLogoImg(null); return; }
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => setLogoImg(img);
+    img.onerror = () => setLogoImg(null);
+    img.src = ev.logoUrl;
+  }, [ev]);
 
   useEffect(() => {
     if (!ev) return;
@@ -70,17 +80,37 @@ export default function InvitePage() {
 
     ctx.textAlign = "center";
 
+    let topY = 250;
+    if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+      const size = 130;
+      const lx = (W - size) / 2;
+      const ly = 140;
+      ctx.save();
+      ctx.beginPath();
+      const r = 26;
+      ctx.moveTo(lx + r, ly);
+      ctx.arcTo(lx + size, ly, lx + size, ly + size, r);
+      ctx.arcTo(lx + size, ly + size, lx, ly + size, r);
+      ctx.arcTo(lx, ly + size, lx, ly, r);
+      ctx.arcTo(lx, ly, lx + size, ly, r);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(logoImg, lx, ly, size, size);
+      ctx.restore();
+      topY = ly + size + 70;
+    }
+
     ctx.fillStyle = theme.accent;
     ctx.font = "500 26px Georgia, serif";
     ctx.letterSpacing = "10px";
-    ctx.fillText(ev.tagline.toUpperCase(), W / 2, 250);
+ctx.fillText(ev.tagline.toUpperCase(), W / 2, topY);
 
     ctx.letterSpacing = "0px";
     ctx.fillStyle = theme.ink;
     const titleSize = ev.title.length > 22 ? 78 : 104;
     ctx.font = `400 ${titleSize}px Georgia, serif`;
     const words = ev.title.split(" ");
-    let line = "", y = 400;
+let line = "", y = topY + 150;
     const lines: string[] = [];
     words.forEach((w) => {
       const test = line ? `${line} ${w}` : w;
@@ -166,7 +196,7 @@ export default function InvitePage() {
     ctx.letterSpacing = "7px";
     ctx.fillText("POWERED BY STORY BOX", W / 2, footerY);
     ctx.letterSpacing = "0px";
-  }, [ev, theme, note, base, slug]);
+  }, [ev, theme, note, base, slug, logoImg]);
 
   function download() {
     const c = canvasRef.current;

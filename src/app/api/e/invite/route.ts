@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
       address: event.address,
       dressCode: event.dressCode,
       coverImage: event.coverImage,
+      logoUrl: event.logoUrl,
     },
   });
 }

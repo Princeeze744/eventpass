@@ -38,6 +38,9 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
 
   const heroInner = (
     <>
+      {e.logoUrl && (
+        <img src={e.logoUrl} alt="" className="mx-auto mb-7 h-24 w-24 rounded-3xl border border-white/12 object-cover shadow-[0_20px_50px_-20px_rgba(0,0,0,0.9)]" />
+      )}
       <p className="text-[10px] uppercase tracking-[0.45em] text-[#c9a227] font-[family-name:var(--font-sans)]">{e.tagline}</p>
       <h1 className="mt-5 font-[family-name:var(--font-serif)] text-[13vw] leading-[0.9] sm:text-[7vw]">{e.title}</h1>
       <div className="mx-auto mt-6 h-px w-28 bg-gradient-to-r from-transparent via-[#c9a227]/70 to-transparent" />
@@ -63,6 +66,7 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
       </div>
 
       <StickyNav title={e.title} slug={e.slug} />
+      {/* logo also anchors the sticky bar visually */}
 
       {e.coverImage ? (
         <ParallaxCover src={e.coverImage}>{heroInner}</ParallaxCover>

@@ -53,6 +53,7 @@ export default async function PassPage({
       vendorNote={guest.vendorNote}
       loadInTime={event.loadInTime || ""}
       vendorBrief={event.vendorBrief || ""}
+      logoUrl={event.logoUrl || ""}
       checkedInOnline={guest.checkedInOnline}
       event={{
         title: event.title,
