@@ -46,3 +46,8 @@ next-env.d.ts
 
 .env*
 !.env.example
+
+# local admin scripts
+reset-pw.mjs
+make-staff.mjs
+list-users.mjs
