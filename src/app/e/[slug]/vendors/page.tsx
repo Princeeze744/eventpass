@@ -2,12 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import TopBar from "@/components/TopBar";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { EventNav, Crumbs } from "@/components/Nav";
 import { createPortal } from "react-dom";
-import { Loader2, Truck, Plus, X, ArrowLeft, Clock, Check, Trash2, Pencil, MessageCircle } from "lucide-react";
+import TopBar from "@/components/TopBar";
+import { Loader2, Truck, Plus, X, Clock, Check, Trash2, Pencil, MessageCircle } from "lucide-react";
 
 type V = {
   id: string; passId: string; name: string; phone: string | null;
@@ -21,6 +20,7 @@ export default function Vendors() {
   const params = useParams();
   const slug = String(params.slug);
 
+  const [mounted, setMounted] = useState(false);
   const [key, setKey] = useState("");
   const [unlocked, setUnlocked] = useState(false);
   const [tried, setTried] = useState(false);
@@ -31,9 +31,19 @@ export default function Vendors() {
   const [form, setForm] = useState(BLANK);
   const [editing, setEditing] = useState<V | null>(null);
   const [showAdd, setShowAdd] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  const open = showAdd || editing !== null;
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
 
   const load = useCallback(async (k: string) => {
     const res = await fetch("/api/e/vendors", {
@@ -48,14 +58,6 @@ export default function Vendors() {
     setVendors(d.vendors);
     return true;
   }, [slug]);
-
-  useEffect(() => { setMounted(true); }, []);
-  useEffect(() => {
-    if (!showAdd && !editing) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, [showAdd, editing]);
 
   useEffect(() => {
     if (tried) return;
@@ -84,15 +86,73 @@ export default function Vendors() {
     load(key);
   }
 
+  function closeSheet() {
+    setShowAdd(false);
+    setEditing(null);
+    setForm(BLANK);
+  }
+
   const inp = "mt-2 w-full sb-input px-4 py-3 text-[#f5f1ea] font-[family-name:var(--font-sans)]";
   const lbl = "text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]";
+
+  const sheet = (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={closeSheet}
+      className="fixed inset-0 z-[999] flex items-end justify-center bg-[#050504]/94 backdrop-blur-2xl sm:items-center sm:px-5"
+    >
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 30 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[92svh] w-full max-w-[440px] flex-col overflow-hidden rounded-t-[28px] border border-white/[0.09] bg-[#0d0c0b] shadow-[0_-20px_80px_rgba(0,0,0,0.9)] sm:max-h-[88vh] sm:rounded-[28px]"
+      >
+        <div className="flex shrink-0 items-start justify-between border-b border-white/[0.07] px-6 py-5">
+          <div>
+            <h3 className="font-[family-name:var(--font-serif)] text-3xl text-[#c9a227]">{editing ? "Edit vendor" : "Add vendor"}</h3>
+            <p className="mt-1 text-[12px] text-white/40 font-[family-name:var(--font-sans)]">They receive a badge to scan on arrival.</p>
+          </div>
+          <button onClick={closeSheet} className="rounded-full border border-white/12 p-2 text-white/50"><X className="h-4 w-4" /></button>
+        </div>
+
+        <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
+          {[
+            { k: "name", l: "Contact name", p: "Emeka Obi" },
+            { k: "company", l: "Company", p: "Golden Sounds DJ" },
+            { k: "vendorRole", l: "Role", p: "DJ, caterer, photographer" },
+            { k: "callTime", l: "Call time", p: "10:00 AM" },
+            { k: "phone", l: "Phone", p: "0803 123 4567" },
+          ].map((f) => (
+            <div key={f.k}>
+              <label className={lbl}>{f.l}</label>
+              <input value={form[f.k as keyof typeof form]} onChange={(e) => setForm({ ...form, [f.k]: e.target.value })} placeholder={f.p} className={inp} />
+            </div>
+          ))}
+          <div>
+            <label className={lbl}>Note for this vendor</label>
+            <textarea value={form.vendorNote} onChange={(e) => setForm({ ...form, vendorNote: e.target.value })} rows={2} placeholder="Bring extension cables" className={`${inp} resize-y`} />
+          </div>
+        </div>
+
+        <div className="shrink-0 border-t border-white/[0.07] px-6 py-5">
+          <button onClick={() => act(editing ? { action: "update", id: editing.id, ...form } : { action: "add", ...form })} disabled={busy || !form.name.trim()} className="sb-btn sb-sheen w-full min-h-[52px] text-[11px] uppercase tracking-[0.2em] font-semibold font-[family-name:var(--font-sans)] disabled:opacity-40">
+            {busy ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : editing ? "Save changes" : "Add vendor"}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
 
   if (!unlocked) {
     return (
       <main className="min-h-[100svh] bg-[#080807] text-[#f5f1ea] flex flex-col items-center justify-center px-5">
         <div className="sb-surface w-full max-w-[360px] p-6">
           <div className="sb-icon sb-icon-gold"><Truck className="h-4 w-4 text-[#c9a227]" strokeWidth={1.6} /></div>
-          <h1 className="mt-4 font-[family-name:var(--font-serif)] text-3xl text-[#c9a227] sb-display">Vendor Hub</h1>
+          <h1 className="mt-4 font-[family-name:var(--font-serif)] text-3xl text-[#c9a227]">Vendor Hub</h1>
           <input type="password" value={key} onChange={(e) => setKey(e.target.value)} onKeyDown={(e) => e.key === "Enter" && unlock()} placeholder="ADM-XXXXXX" className={`${inp} uppercase tracking-widest`} />
           {msg && <p className="mt-3 text-sm text-red-400 font-[family-name:var(--font-sans)]">{msg}</p>}
           <button onClick={unlock} disabled={busy} className="sb-btn sb-sheen mt-4 w-full min-h-[50px] text-[11px] uppercase tracking-[0.2em] font-semibold font-[family-name:var(--font-sans)]">
@@ -106,20 +166,18 @@ export default function Vendors() {
   const arrived = vendors.filter((v) => v.checkedIn).length;
 
   return (
-    <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-10 sm:px-8">
+    <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-6 sm:px-8">
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -top-32 left-1/4 h-[45vh] w-[55vw] sb-glow-green" />
       </div>
 
       <div className="relative mx-auto max-w-[1100px]">
-        <TopBar back={`/e/${slug}/admin`} backLabel="Guests" />
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <TopBar back={`/e/${slug}/admin`} backLabel="Guests" title={title} />
+
+        <p className="text-[10px] sb-eyebrow text-white/35 font-[family-name:var(--font-sans)]">Vendor Hub</p>
+        <div className="mt-1 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <Link href={`/e/${slug}/admin`} className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">
-              <ArrowLeft className="h-3.5 w-3.5" /> Host terminal
-            </Link>
-            <p className="mt-4 text-[10px] sb-eyebrow text-white/35 font-[family-name:var(--font-sans)]">Vendor Hub</p>
-            <h1 className="mt-1 font-[family-name:var(--font-serif)] text-4xl text-[#c9a227] sb-display">{title}</h1>
+            <h1 className="font-[family-name:var(--font-serif)] text-4xl text-[#c9a227] sb-display">{title}</h1>
             <p className="mt-3 text-[12px] text-white/45 font-[family-name:var(--font-sans)]">{vendors.length} vendors · {arrived} arrived</p>
           </div>
           <button onClick={() => setShowAdd(true)} className="sb-btn sb-sheen flex items-center gap-2 px-6 py-3 text-[10px] uppercase tracking-[0.15em] font-semibold font-[family-name:var(--font-sans)]">
@@ -127,14 +185,14 @@ export default function Vendors() {
           </button>
         </div>
 
-        <EventNav slug={slug} />
-
         <div className="sb-surface mt-6 p-6">
-          <p className={lbl}>Load-in time</p>
+          <label className={lbl}>Load-in time</label>
           <input value={loadIn} onChange={(e) => setLoadIn(e.target.value)} onBlur={() => act({ action: "brief", vendorBrief: brief, loadInTime: loadIn })} placeholder="8:00 AM" className={inp} />
-          <p className={`mt-5 ${lbl}`}>Brief for all vendors</p>
-          <textarea value={brief} onChange={(e) => setBrief(e.target.value)} onBlur={() => act({ action: "brief", vendorBrief: brief, loadInTime: loadIn })} rows={3} placeholder="Parking at rear gate. Power available on stage left. Setup must finish by 11 AM." className={`${inp} resize-y`} />
+          <label className={`mt-5 block ${lbl}`}>Brief for all vendors</label>
+          <textarea value={brief} onChange={(e) => setBrief(e.target.value)} onBlur={() => act({ action: "brief", vendorBrief: brief, loadInTime: loadIn })} rows={3} placeholder="Parking at rear gate. Setup finishes by 11 AM." className={`${inp} resize-y`} />
         </div>
+
+        {msg && <p className="mt-4 text-[12px] text-[#c9a227] font-[family-name:var(--font-sans)]">{msg}</p>}
 
         <div className="mt-4 space-y-3">
           {vendors.length === 0 && (
@@ -159,11 +217,7 @@ export default function Vendors() {
                 </div>
 
                 <div className="flex flex-col items-end gap-2">
-                  {v.callTime && (
-                    <span className="sb-badge sb-badge-gold font-[family-name:var(--font-sans)]">
-                      <Clock className="h-3 w-3" /> {v.callTime}
-                    </span>
-                  )}
+                  {v.callTime && <span className="sb-badge sb-badge-gold font-[family-name:var(--font-sans)]"><Clock className="h-3 w-3" /> {v.callTime}</span>}
                   {v.checkedIn
                     ? <span className="sb-badge sb-badge-green font-[family-name:var(--font-sans)]"><Check className="h-3 w-3" /> Arrived {v.checkedInAt}</span>
                     : <span className="sb-badge text-white/40 font-[family-name:var(--font-sans)]">Not arrived</span>}
@@ -185,49 +239,7 @@ export default function Vendors() {
         </div>
       </div>
 
-      <AnimatePresence>
-        {(showAdd || editing) && mounted && createPortal(
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setShowAdd(false); setEditing(null); setForm(BLANK); }} className="fixed inset-0 z-[100] flex items-end justify-center bg-[#050504]/92 backdrop-blur-xl sm:items-center sm:px-5">
-            <motion.div initial={{ opacity: 0, y: 26, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0 }} onClick={(e) => e.stopPropagation()} className="sb-panel flex max-h-[92svh] w-full max-w-[460px] flex-col overflow-hidden rounded-b-none sm:max-h-[86vh] sm:rounded-[28px]">
-              <div className="flex shrink-0 items-start justify-between border-b border-white/[0.07] px-6 pb-5 pt-6">
-                <div>
-                  <h3 className="font-[family-name:var(--font-serif)] text-3xl text-[#c9a227] sb-display">{editing ? "Edit vendor" : "Add vendor"}</h3>
-                  <p className="mt-1 text-[12px] text-white/40 font-[family-name:var(--font-sans)]">They receive a badge to scan on arrival.</p>
-                </div>
-                <button onClick={() => { setShowAdd(false); setEditing(null); setForm(BLANK); }} className="sb-ghost p-2 text-white/50"><X className="h-4 w-4" /></button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto px-6 py-5">
-
-                {[
-                { k: "name", l: "Contact name", p: "Emeka Obi" },
-                { k: "company", l: "Company", p: "Golden Sounds DJ" },
-                { k: "vendorRole", l: "Role", p: "DJ · Caterer · Photographer" },
-                { k: "callTime", l: "Call time", p: "10:00 AM" },
-                { k: "phone", l: "Phone", p: "0803 123 4567" },
-              ].map((f) => (
-                <div key={f.k} className="mt-4">
-                  <label className={lbl}>{f.l}</label>
-                  <input value={form[f.k as keyof typeof form]} onChange={(e) => setForm({ ...form, [f.k]: e.target.value })} placeholder={f.p} className={inp} />
-                </div>
-              ))}
-
-              <div className="mt-4">
-                  <label className={lbl}>Note for this vendor</label>
-                  <textarea value={form.vendorNote} onChange={(e) => setForm({ ...form, vendorNote: e.target.value })} rows={2} placeholder="Bring extension cables" className={`${inp} resize-y`} />
-                </div>
-              </div>
-
-              <div className="shrink-0 border-t border-white/[0.07] px-6 pb-6 pt-5">
-                <button onClick={() => act(editing ? { action: "update", id: editing.id, ...form } : { action: "add", ...form })} disabled={busy} className="sb-btn sb-sheen w-full min-h-[52px] text-[11px] uppercase tracking-[0.2em] font-semibold font-[family-name:var(--font-sans)]">
-                  {busy ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : editing ? "Save changes" : "Add vendor"}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>,
-          document.body
-        )}
-      </AnimatePresence>
+      {mounted && createPortal(<AnimatePresence>{open && sheet}</AnimatePresence>, document.body)}
     </main>
   );
 }
