@@ -129,7 +129,10 @@ export default function Home() {
                   </span>
                 ))}
                 <span className="block overflow-hidden">
-                  <motion.span custom={2} variants={reveal} initial="hidden" animate="show" className="block italic sb-shimmer">One Platform. Connected Experiences.</motion.span>
+                  <motion.span custom={2} variants={reveal} initial="hidden" animate="show" className="block italic sb-shimmer">One Platform.</motion.span>
+                </span>
+                <span className="block overflow-hidden">
+                  <motion.span custom={3} variants={reveal} initial="hidden" animate="show" className="block italic sb-shimmer">Connected Experiences.</motion.span>
                 </span>
               </h1>
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="mt-6 max-w-lg text-[14px] leading-relaxed text-white/50 font-[family-name:var(--font-sans)]">

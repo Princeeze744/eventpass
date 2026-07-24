@@ -95,7 +95,6 @@ export default function SharePanel({
           <a href={`/e/${slug}/admin`} className="sb-btn sb-sheen px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">Open host terminal</a>
           <a href={`/e/${slug}/scan`} className="sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Open scanner</a>
           <a href={`/dashboard/${slug}/invite`} className="rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Invitation</a>
-          <a href={`/dashboard/${slug}/invite`} className="rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Invitation</a>
           <a href={`/dashboard/${slug}/settings`} className="sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Settings</a>
           <a href={`/dashboard/${slug}/website`} className="rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Edit website</a>
           <a href={`/e/${slug}/live`} className="rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Live board</a>

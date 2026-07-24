@@ -196,8 +196,13 @@ export default function EventSettings() {
               </div>
 
               <div className="mt-6">
-                <label className={lbl}>Event Colour</label>
-                <p className="mt-2 text-[11px] text-white/35 font-[family-name:var(--font-sans)]">Sets the accent colour of the event website. Pick a scheme or choose an exact brand colour.</p>
+                <div className="flex items-center justify-between gap-3">
+                  <label className={lbl}>Event Colour</label>
+                  <span className="rounded-full px-3 py-1.5 text-[10px] uppercase tracking-[0.12em] font-[family-name:var(--font-sans)]" style={{ color: form.accentColor || "#c9a227", background: `${form.accentColor || "#c9a227"}1f`, border: `1px solid ${form.accentColor || "#c9a227"}44` }}>
+                    {PALETTES.find((p) => p.c === (form.accentColor || "#c9a227"))?.n || `Custom ${(form.accentColor || "").toUpperCase()}`}
+                  </span>
+                </div>
+                <p className="mt-2 text-[11px] text-white/35 font-[family-name:var(--font-sans)]">Sets the accent colour of the event website. Pick a scheme or drag the wheel for an exact brand colour &mdash; the name above follows whatever is active.</p>
                 <div className="mt-3 grid grid-cols-3 gap-2">
                   {PALETTES.map((p) => (
                     <button
@@ -221,6 +226,12 @@ export default function EventSettings() {
                     <p className="text-[8px] uppercase tracking-[0.3em] font-[family-name:var(--font-sans)]" style={{ color: form.accentColor || "#c9a227" }}>{form.tagline || "A Celebration"}</p>
                     <p className="mt-0.5 font-[family-name:var(--font-serif)] text-[14px]" style={{ color: form.accentColor || "#c9a227" }}>{form.title || "Your Event"}</p>
                   </div>
+                </div>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <p className="text-[11px] text-amber-400/80 font-[family-name:var(--font-sans)]">Colour is not applied until you save.</p>
+                  <button onClick={() => act("update")} disabled={busy} className="shrink-0 rounded-full px-5 py-2 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60" style={{ background: form.accentColor || "#c9a227" }}>
+                    {saved ? "Saved" : "Save colour"}
+                  </button>
                 </div>
               </div>
 
