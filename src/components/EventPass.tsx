@@ -13,6 +13,7 @@ type Props = {
   tier: string;
   table: string;
   section: string;
+  seat: string;
   partySize: number;
   status: string;
   rsvpAnswer: string;
@@ -102,7 +103,7 @@ export default function EventPass(p: Props) {
           {[
             { Icon: CalendarDays, l: p.event.eventDate, s: p.event.eventTime },
             { Icon: MapPin, l: "Venue", s: p.event.venue },
-            { Icon: Armchair, l: "Seating", s: p.table === "TBA" ? "At entrance" : p.table },
+            { Icon: Armchair, l: p.section ? p.section : "Seating", s: p.table === "TBA" ? "At entrance" : p.seat ? `${p.table} · ${p.seat}` : p.table },
           ].map((d, i) => (
             <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-2 py-3">
               <d.Icon className="mx-auto h-3.5 w-3.5" style={{ color: theme.accent }} strokeWidth={1.6} />

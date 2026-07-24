@@ -91,6 +91,7 @@ export default function SharePanel({
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
+          <a href={`/e/${slug}/host`} className="rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Client view</a>
           <a href={`/e/${slug}/admin`} className="rounded-full bg-[#f5f1ea] px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">Open host terminal</a>
           <a href={`/e/${slug}/scan`} className="rounded-full border border-white/12 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Open scanner</a>
           <a href={`/dashboard/${slug}/invite`} className="rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Invitation</a>

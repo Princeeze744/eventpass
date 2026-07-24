@@ -18,6 +18,7 @@ export default function EventAdmin() {
 
   const [key, setKey] = useState("");
   const [unlocked, setUnlocked] = useState(false);
+  const [tried, setTried] = useState(false);
   const [title, setTitle] = useState("");
   const [guests, setGuests] = useState<G[]>([]);
   const [msg, setMsg] = useState("");
@@ -40,11 +41,31 @@ export default function EventAdmin() {
     return true;
   }, [slug]);
 
+  useEffect(() => {
+    if (tried) return;
+    setTried(true);
+    const saved = typeof window !== "undefined" ? sessionStorage.getItem(`sb_admin_${slug}`) : null;
+    if (saved) {
+      setKey(saved);
+      load(saved).then((ok) => { if (ok) setUnlocked(true); });
+    }
+  }, [tried, slug, load]);
+
+  useEffect(() => {
+    if (tried) return;
+    setTried(true);
+    const saved = typeof window !== "undefined" ? sessionStorage.getItem(`sb_admin_${slug}`) : null;
+    if (saved) {
+      setKey(saved);
+      load(saved).then((ok) => { if (ok) setUnlocked(true); });
+    }
+  }, [tried, slug, load]);
+
   async function unlock() {
     setBusy(true);
     const ok = await load(key);
     setBusy(false);
-    if (ok) setUnlocked(true);
+    if (ok) { setUnlocked(true); sessionStorage.setItem(`sb_admin_${slug}`, key); }
     else setMsg("Wrong admin key.");
   }
 
@@ -147,7 +168,10 @@ export default function EventAdmin() {
           </div>
         </div>
 
-        <div className="mt-6"><ImportPanel slug={slug} adminKey={key} onDone={() => load(key)} /></div>
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <ImportPanel slug={slug} adminKey={key} onDone={() => load(key)} />
+          <a href={`/e/${slug}/seating`} className="flex items-center gap-2 rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Seating plan</a>
+        </div>
 
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, phone or pass ID" className={`flex-1 ${inp}`} />

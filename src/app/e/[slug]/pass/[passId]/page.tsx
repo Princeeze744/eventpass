@@ -42,6 +42,7 @@ export default async function PassPage({
       tier={guest.tier}
       table={guest.table}
       section={guest.section}
+      seat={guest.seat}
       partySize={guest.partySize}
       status={guest.status}
       rsvpAnswer={guest.rsvpAnswer}

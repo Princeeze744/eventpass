@@ -76,6 +76,23 @@ model Event {
   createdAt DateTime @default(now())
   deletedAt DateTime?
   guests    Guest[]
+  tables    SeatTable[]
+}
+
+model SeatTable {
+  id       String @id @default(cuid())
+  eventId  String
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  name     String
+  section  String @default("Main")
+  capacity Int    @default(10)
+  note     String @default("")
+  position Int    @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@index([eventId])
 }
 
 model Guest {
@@ -93,6 +110,7 @@ model Guest {
   partyUsed Int @default(0)
 
   section String @default("")
+  wristband String @default("")
   table   String @default("TBA")
   seat    String @default("")
 
