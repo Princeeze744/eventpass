@@ -24,7 +24,7 @@ export async function GET() {
   return NextResponse.json({
     user: { name: user.name, role: user.role, phone: user.phone },
     records: records
-      .filter((g) => !g.event.deletedAt)
+      .filter((g) => !g.event.deletedAt && g.event.ownerId !== userId)
       .map((g) => ({
         passId: g.passId,
         status: g.status,
