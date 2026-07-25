@@ -58,6 +58,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, name: target.name, level: lvl });
   }
 
+  if (action === "deleteUser") {
+    if (!(await requireLevel("owner"))) return NextResponse.json({ error: "Owner only." }, { status: 403 });
+    const u = await prisma.user.findUnique({
+      where: { id: String(userId) },
+      include: { _count: { select: { events: true } } },
+    });
+    if (!u) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (u.email.toLowerCase() === (process.env.OWNER_EMAIL || "").toLowerCase()) {
+      return NextResponse.json({ error: "The owner account cannot be deleted." }, { status: 403 });
+    }
+    if (u._count.events > 0 && body.confirmCascade !== true) {
+      return NextResponse.json({
+        needsCascade: true,
+        eventCount: u._count.events,
+        error: `This account owns ${u._count.events} event(s). Deleting it erases those events and all their guests permanently.`,
+      }, { status: 409 });
+    }
+    await prisma.user.delete({ where: { id: u.id } });
+    return NextResponse.json({ ok: true, deleted: u.name });
+  }
+
   if (action === "toggleSuspend") {
     if (!(await requireLevel("admin"))) return NextResponse.json({ error: "Admins only." }, { status: 403 });
     const u = await prisma.user.findUnique({ where: { id: String(userId) } });

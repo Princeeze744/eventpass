@@ -15,12 +15,12 @@ function List({ text }: { text: string }) {
       {text.split(/\r?\n/).filter(Boolean).map((l, i) => {
         const m = l.match(/https?:\/\/\S+/);
         if (!m) {
-          return <p key={i} className="text-[13px] leading-relaxed text-white/60 font-[family-name:var(--font-sans)]">{l}</p>;
+          return <p key={i} className="break-words text-[13px] leading-relaxed text-white/60 font-[family-name:var(--font-sans)]" style={{ overflowWrap: "anywhere" }}>{l}</p>;
         }
         const url = m[0];
         const label = l.replace(url, "").replace(/[\s:,-]+$/, "").trim();
         return (
-          <a key={i} href={url} target="_blank" rel="noreferrer" className="block text-[13px] leading-relaxed text-white/70 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white font-[family-name:var(--font-sans)]">
+          <a key={i} href={url} target="_blank" rel="noreferrer" className="block break-words text-[13px] leading-relaxed text-white/70 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white font-[family-name:var(--font-sans)]" style={{ overflowWrap: "anywhere" }}>
             {label || url}
           </a>
         );

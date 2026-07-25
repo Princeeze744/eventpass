@@ -37,6 +37,9 @@ export default function StaffPanel() {
   const [note, setNote] = useState("");
   const [amount, setAmount] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
+  const [delUser, setDelUser] = useState<Usr | null>(null);
+  const [delText, setDelText] = useState("");
+  const [delCascade, setDelCascade] = useState(0);
   const [inviteLevel, setInviteLevel] = useState("reviewer");
   const [msg, setMsg] = useState("");
   const [busy, setBusy] = useState(false);
@@ -60,8 +63,15 @@ export default function StaffPanel() {
     });
     const d = await res.json();
     setBusy(false);
-    if (!res.ok) { setMsg(d.error || "Something went wrong."); return; }
+    if (!res.ok) {
+      if (d.needsCascade) { setDelCascade(d.eventCount); return; }
+      setMsg(d.error || "Something went wrong.");
+      setDelUser(null); setDelText(""); setDelCascade(0);
+      return;
+    }
+    setDelUser(null); setDelText(""); setDelCascade(0);
     if (d.name) setMsg(`${d.name} is now ${d.level === "none" ? "removed from the team" : d.level}.`);
+    if (d.deleted) setMsg(`${d.deleted} has been permanently deleted.`);
     setReview(null); setNote(""); setAmount(""); setInviteEmail("");
     load();
   }
@@ -239,9 +249,14 @@ export default function StaffPanel() {
                         : <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-[10px] text-emerald-400">Active</span>}
                     </td>
                     <td className="px-5 py-3.5">
-                      {isAdmin && (
-                        <button onClick={() => act({ action: "toggleSuspend", userId: u.id })} className="rounded-full border border-red-500/30 px-4 py-1.5 text-[10px] text-red-400">{u.suspended ? "Unsuspend" : "Suspend"}</button>
-                      )}
+                      <div className="flex gap-2">
+                        {isAdmin && (
+                          <button onClick={() => act({ action: "toggleSuspend", userId: u.id })} className="rounded-full border border-red-500/30 px-4 py-1.5 text-[10px] text-red-400">{u.suspended ? "Unsuspend" : "Suspend"}</button>
+                        )}
+                        {isOwner && (
+                          <button onClick={() => { setDelUser(u); setDelText(""); setDelCascade(0); }} className="rounded-full bg-red-600/80 px-4 py-1.5 text-[10px] font-semibold text-white">Delete</button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -309,6 +324,29 @@ export default function StaffPanel() {
       </div>
 
       <AnimatePresence>
+        {delUser && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-5 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="w-full max-w-[440px] sb-panel p-6">
+              <div className="flex items-start justify-between">
+                <h3 className="font-[family-name:var(--font-serif)] text-2xl text-red-400">Delete {delUser.name}?</h3>
+                <button onClick={() => { setDelUser(null); setDelText(""); setDelCascade(0); }} className="rounded-full border border-white/10 p-2 text-white/50"><X className="h-4 w-4" /></button>
+              </div>
+              <p className="mt-3 text-[13px] leading-relaxed text-white/55 font-[family-name:var(--font-sans)]">
+                {delUser.email} will be permanently removed and can sign up again fresh.
+                {delCascade > 0 && <span className="mt-2 block text-red-400">Warning: this account owns {delCascade} event(s). Deleting it erases those events and every guest record in them, forever.</span>}
+              </p>
+              <label className="mt-5 block text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">Type DELETE to confirm</label>
+              <input value={delText} onChange={(e) => setDelText(e.target.value)} placeholder="DELETE" className={`mt-2 ${inp}`} />
+              <button
+                onClick={() => act({ action: "deleteUser", userId: delUser.id, confirmCascade: delCascade > 0 })}
+                disabled={busy || delText !== "DELETE"}
+                className="mt-5 flex w-full min-h-[48px] items-center justify-center rounded-full bg-red-600 text-[11px] uppercase tracking-[0.2em] font-semibold text-white font-[family-name:var(--font-sans)] disabled:opacity-30"
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : delCascade > 0 ? `Delete account + ${delCascade} event(s)` : "Delete permanently"}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
         {review && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-5 backdrop-blur-sm">
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="w-full max-w-[480px] sb-panel p-6">

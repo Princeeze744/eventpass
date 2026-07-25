@@ -83,8 +83,8 @@ export default async function DashboardPage() {
 
             <div className="mt-12 sb-hairline" />
             <div className="mt-8">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-white/35 font-[family-name:var(--font-sans)]">Your own passes</p>
-              <p className="mt-1 text-[11px] text-white/25 font-[family-name:var(--font-sans)]">Events where your phone number is registered as a guest or vendor.</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-white/35 font-[family-name:var(--font-sans)]">Events you are attending</p>
+              <p className="mt-1 text-[11px] text-white/25 font-[family-name:var(--font-sans)]">Separate from the events you manage above: these are events where you personally registered as a guest or vendor with your phone number. &ldquo;Pending&rdquo; here means the host has not yet approved your own registration.</p>
               <MyEvents role={user.role} />
             </div>
           </>
