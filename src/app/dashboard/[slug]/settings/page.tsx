@@ -38,6 +38,15 @@ export default function EventSettings() {
     { n: "Crimson Executive", c: "#d94f4f" },
   ];
 
+  const TYPE_TAGS: Record<string, string> = {
+    "White Wedding": "A Celebration of Love", "Traditional Wedding": "A Union of Families",
+    "Birthday": "A Celebration", "Conference": "Ideas Worth Gathering For",
+    "Corporate Event": "A Company Gathering", "Brand Launch": "Something New Begins",
+    "Concert": "A Night of Music", "Church Program": "A Gathering of Faith",
+    "Gala / Awards": "An Evening of Excellence", "Private Dinner": "An Intimate Evening",
+    "Funeral / Memorial": "In Loving Memory", "Other": "A Celebration",
+  };
+
   const NG_STATES = ["Abia","Adamawa","Akwa Ibom","Anambra","Bauchi","Bayelsa","Benue","Borno","Cross River","Delta","Ebonyi","Edo","Ekiti","Enugu","Gombe","Imo","Jigawa","Kaduna","Kano","Katsina","Kebbi","Kogi","Kwara","Lagos","Nasarawa","Niger","Ogun","Ondo","Osun","Oyo","Plateau","Rivers","Sokoto","Taraba","Yobe","Zamfara","FCT Abuja"];
 
   const [loading, setLoading] = useState(true);
@@ -57,7 +66,7 @@ export default function EventSettings() {
         }
         setForm({
           title: d.event.title || "",
-          eventType: d.event.eventType || "Wedding",
+          eventType: d.event.eventType || "White Wedding",
           hostName: d.event.hostName || "",
           tagline: d.event.tagline || "",
           eventDate: d.event.eventDate || "",
@@ -126,11 +135,11 @@ export default function EventSettings() {
               <div className="mt-5">
                 <label className={lbl}>Event Type</label>
                 <select
-                  value={form.eventType || "Wedding"}
-                  onChange={(e) => setForm({ ...form, eventType: e.target.value })}
+                  value={form.eventType || "White Wedding"}
+                  onChange={(e) => setForm({ ...form, eventType: e.target.value, tagline: TYPE_TAGS[e.target.value] || form.tagline })}
                   className={`${inp} [color-scheme:dark] cursor-pointer`}
                 >
-                  {["Wedding","Traditional Wedding","Birthday","Conference","Corporate Event","Brand Launch","Concert","Church Program","Gala / Awards","Private Dinner","Funeral / Memorial","Other"].map((t) => (
+                  {["White Wedding","Traditional Wedding","Birthday","Conference","Corporate Event","Brand Launch","Concert","Church Program","Gala / Awards","Private Dinner","Funeral / Memorial","Other"].map((t) => (
                     <option key={t} value={t} className="bg-[#0d0c0b]">{t}</option>
                   ))}
                 </select>
@@ -139,7 +148,6 @@ export default function EventSettings() {
               {[
                 { k: "title", l: "Event Title" },
                 { k: "hostName", l: "Host / Client Name" },
-                { k: "tagline", l: "Occasion Line — small text shown above the event title" },
 
                 { k: "venue", l: "Venue" },
                 { k: "address", l: "Address" },

@@ -12,9 +12,19 @@ const card = "sb-surface sb-lift";
 function List({ text }: { text: string }) {
   return (
     <div className="mt-3 space-y-1.5">
-      {text.split(/\r?\n/).filter(Boolean).map((l, i) => (
-        <p key={i} className="text-[13px] leading-relaxed text-white/60 font-[family-name:var(--font-sans)]">{l}</p>
-      ))}
+      {text.split(/\r?\n/).filter(Boolean).map((l, i) => {
+        const m = l.match(/https?:\/\/\S+/);
+        if (!m) {
+          return <p key={i} className="text-[13px] leading-relaxed text-white/60 font-[family-name:var(--font-sans)]">{l}</p>;
+        }
+        const url = m[0];
+        const label = l.replace(url, "").replace(/[\s:,-]+$/, "").trim();
+        return (
+          <a key={i} href={url} target="_blank" rel="noreferrer" className="block text-[13px] leading-relaxed text-white/70 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white font-[family-name:var(--font-sans)]">
+            {label || url}
+          </a>
+        );
+      })}
     </div>
   );
 }
@@ -48,6 +58,7 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
       <div className="mx-auto mt-6 h-px w-28" style={{ background: `linear-gradient(90deg,transparent,${ac}b0,transparent)` }} />
       <p className="mt-6 text-[14px] text-white/70 font-[family-name:var(--font-sans)]">{e.eventDate} · {e.eventTime}</p>
       <p className="text-[13px] text-white/50 font-[family-name:var(--font-sans)]">{e.venue}{e.address ? ` · ${e.address}` : ""}</p>
+      {e.hashtag && <p className="mt-3 text-[12px] uppercase tracking-[0.3em] font-[family-name:var(--font-sans)]" style={{ color: ac }}>{e.hashtag}</p>}
       <Countdown date={e.eventDateISO || e.eventDate} />
       <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row">
         <Link href={`/e/${e.slug}/rsvp`} className="flex min-h-[54px] w-full items-center justify-center gap-2 sb-btn px-9 text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] sm:w-auto">Register &amp; Get Pass <ArrowUpRight className="h-4 w-4" /></Link>
@@ -108,12 +119,11 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
           </Reveal>
         )}
 
-        {(e.ceremonyName || e.ceremonyMap || e.receptionMap) && (
+        {(e.ceremonyMap || e.receptionMap) && (
           <Reveal>
             <div className={`${card} mt-4 p-6`}>
               <MapPin className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
               <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Directions</h3>
-              {e.ceremonyName && <p className="mt-3 text-[13px] text-white/55 font-[family-name:var(--font-sans)]">Ceremony: {e.ceremonyName}</p>}
               <div className="mt-4 flex flex-wrap gap-2">
                 {e.ceremonyMap && <a href={e.ceremonyMap} target="_blank" rel="noreferrer" className="sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Ceremony map</a>}
                 {e.receptionMap && <a href={e.receptionMap} target="_blank" rel="noreferrer" className="sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">Reception map</a>}

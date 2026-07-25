@@ -5,30 +5,27 @@ import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowLeft, Loader2, Check, ExternalLink } from "lucide-react";
+import { upload } from "@vercel/blob/client";
+import { ArrowLeft, Loader2, Check, ExternalLink, UploadCloud, X, ImageIcon } from "lucide-react";
 
 const GROUPS = [
   {
     title: "Look & Feel",
     fields: [
-      { k: "logoUrl", l: "Event Logo URL", p: "https://... a square logo or monogram" },
-      { k: "coverImage", l: "Cover Photo URL", p: "https://... a wide hero photograph" },
-      { k: "gallery", l: "Gallery Photo URLs", type: "area", p: "One image URL per line" },
       { k: "hashtag", l: "Event Hashtag", p: "#OurBigDay" },
     ],
   },
   {
     title: "The Story",
     fields: [
-      { k: "story", l: "Love / Brand Story", type: "area", p: "Tell your guests how it began…" },
-      { k: "dressCode", l: "Dress Code", p: "Traditional attire · Black tie" },
+      { k: "story", l: "Love / Brand Story", type: "area", p: "Tell your guests how it began\u2026" },
+      { k: "dressCode", l: "Dress Code", p: "Traditional attire \u00B7 Black tie" },
       { k: "colours", l: "Event Colours", p: "Emerald green, gold, ivory" },
     ],
   },
   {
     title: "Getting There",
     fields: [
-      { k: "ceremonyName", l: "Ceremony Venue", p: "St. Mary's Cathedral, Port Harcourt" },
       { k: "ceremonyMap", l: "Ceremony Map Link", p: "https://maps.google.com/..." },
       { k: "receptionMap", l: "Reception Map Link", p: "https://maps.google.com/..." },
       { k: "livestream", l: "Livestream Link", p: "YouTube or Instagram live URL" },
@@ -37,7 +34,7 @@ const GROUPS = [
   {
     title: "For Travelling Guests",
     fields: [
-      { k: "hotels", l: "Hotels", type: "area", p: "One per line: Hotel Presidential — 5 mins from venue" },
+      { k: "hotels", l: "Hotels", type: "area", p: "One per line: Hotel Presidential \u2014 5 mins from venue" },
       { k: "restaurants", l: "Restaurants", type: "area", p: "One per line" },
       { k: "funSpots", l: "Fun Spots", type: "area", p: "One per line" },
     ],
@@ -46,14 +43,14 @@ const GROUPS = [
     title: "On The Day",
     fields: [
       { k: "programNote", l: "Programme", type: "area", p: "2:00 PM Arrival\n3:00 PM Ceremony\n5:00 PM Reception" },
-      { k: "menuNote", l: "Menu", type: "area", p: "Jollof rice, pepper soup, small chops…" },
+      { k: "menuNote", l: "Menu", type: "area", p: "Jollof rice, pepper soup, small chops\u2026" },
     ],
   },
   {
     title: "Gifting",
     fields: [
-      { k: "giftNote", l: "Gift Message", type: "area", p: "Your presence is our present, but if you wish…" },
-      { k: "bankDetails", l: "Bank / Registry Details", type: "area", p: "GTBank · 0123456789 · Chioma Amadi" },
+      { k: "giftNote", l: "Gift Message", type: "area", p: "Your presence is our present, but if you wish\u2026" },
+      { k: "bankDetails", l: "Bank / Registry Details", type: "area", p: "GTBank \u00B7 0123456789 \u00B7 Chioma Amadi" },
     ],
   },
 ];
@@ -67,6 +64,8 @@ export default function WebsiteEditor() {
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState("");
+  const [err, setErr] = useState("");
 
   useEffect(() => {
     fetch(`/api/e/website/get?slug=${slug}`)
@@ -87,9 +86,42 @@ export default function WebsiteEditor() {
     setTimeout(() => setSaved(false), 2200);
   }
 
+  async function doUpload(field: string, files: FileList | null, append: boolean) {
+    if (!files || files.length === 0) return;
+    setErr("");
+    setUploading(field);
+    try {
+      const urls: string[] = [];
+      for (const file of Array.from(files)) {
+        const blob = await upload(`${slug}/${field}/${file.name}`, file, {
+          access: "public",
+          handleUploadUrl: "/api/upload",
+        });
+        urls.push(blob.url);
+      }
+      if (append) {
+        const existing = (form[field] || "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+        setForm({ ...form, [field]: [...existing, ...urls].join("\n") });
+      } else {
+        setForm({ ...form, [field]: urls[0] });
+      }
+    } catch (e) {
+      setErr((e as Error).message || "Upload failed. Please try again.");
+    }
+    setUploading("");
+  }
+
+  function removeGalleryUrl(url: string) {
+    const rest = (form.gallery || "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean).filter((u) => u !== url);
+    setForm({ ...form, gallery: rest.join("\n") });
+  }
+
+  const galleryUrls = (form.gallery || "").split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+
   const card = "sb-surface sb-lift";
   const inp = "mt-2 w-full sb-input px-4 py-3 text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
   const lbl = "text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]";
+  const upBtn = "flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-[#c9a227]/40 bg-[#c9a227]/[0.05] px-5 py-4 text-[10px] uppercase tracking-[0.2em] text-[#c9a227] transition-colors hover:bg-[#c9a227]/[0.1] font-[family-name:var(--font-sans)]";
 
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-10 sm:px-8">
@@ -119,6 +151,80 @@ export default function WebsiteEditor() {
           <div className="mt-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-[#c9a227]" /></div>
         ) : (
           <>
+            {err && <p className="mt-5 rounded-2xl border border-red-500/25 bg-red-500/[0.06] px-5 py-3 text-[12px] text-red-400 font-[family-name:var(--font-sans)]">{err}</p>}
+
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`${card} mt-7 p-6`}>
+              <p className="text-[10px] uppercase tracking-[0.35em] text-[#c9a227] font-[family-name:var(--font-sans)]">Photos</p>
+
+              <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label className={lbl}>Event Logo</label>
+                  <div className="mt-2 flex items-center gap-4">
+                    {form.logoUrl ? (
+                      <div className="relative">
+                        <img src={form.logoUrl} alt="" className="h-20 w-20 rounded-2xl border border-white/12 object-cover" />
+                        <button onClick={() => setForm({ ...form, logoUrl: "" })} className="absolute -right-2 -top-2 rounded-full border border-white/20 bg-[#080807] p-1 text-white/60 hover:text-red-400"><X className="h-3 w-3" /></button>
+                      </div>
+                    ) : (
+                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/10 bg-black/30"><ImageIcon className="h-5 w-5 text-white/20" /></div>
+                    )}
+                    <label className={`flex-1 ${upBtn}`}>
+                      {uploading === "logoUrl" ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                      {uploading === "logoUrl" ? "Uploading..." : form.logoUrl ? "Replace" : "Upload logo"}
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => doUpload("logoUrl", e.target.files, false)} disabled={!!uploading} />
+                    </label>
+                  </div>
+                  <p className="mt-2 text-[10px] text-white/30 font-[family-name:var(--font-sans)]">Square works best. JPG, PNG or WebP, up to 8MB.</p>
+                </div>
+
+                <div>
+                  <label className={lbl}>Cover Photo</label>
+                  <div className="mt-2">
+                    {form.coverImage ? (
+                      <div className="relative">
+                        <img src={form.coverImage} alt="" className="h-28 w-full rounded-2xl border border-white/12 object-cover" />
+                        <button onClick={() => setForm({ ...form, coverImage: "" })} className="absolute right-2 top-2 rounded-full border border-white/20 bg-[#080807]/80 p-1.5 text-white/70 hover:text-red-400"><X className="h-3 w-3" /></button>
+                      </div>
+                    ) : (
+                      <label className={upBtn}>
+                        {uploading === "coverImage" ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                        {uploading === "coverImage" ? "Uploading..." : "Upload cover photo"}
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => doUpload("coverImage", e.target.files, false)} disabled={!!uploading} />
+                      </label>
+                    )}
+                    {form.coverImage && (
+                      <label className={`mt-2 ${upBtn}`}>
+                        {uploading === "coverImage" ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                        Replace cover
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => doUpload("coverImage", e.target.files, false)} disabled={!!uploading} />
+                      </label>
+                    )}
+                  </div>
+                  <p className="mt-2 text-[10px] text-white/30 font-[family-name:var(--font-sans)]">Wide landscape photo. This sits behind your event title.</p>
+                </div>
+              </div>
+
+              <div className="mt-7">
+                <label className={lbl}>Gallery</label>
+                {galleryUrls.length > 0 && (
+                  <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    {galleryUrls.map((u) => (
+                      <div key={u} className="relative">
+                        <img src={u} alt="" className="h-24 w-full rounded-xl border border-white/10 object-cover" />
+                        <button onClick={() => removeGalleryUrl(u)} className="absolute right-1.5 top-1.5 rounded-full border border-white/20 bg-[#080807]/80 p-1 text-white/70 hover:text-red-400"><X className="h-3 w-3" /></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <label className={`mt-3 ${upBtn}`}>
+                  {uploading === "gallery" ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                  {uploading === "gallery" ? "Uploading..." : "Add gallery photos"}
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => doUpload("gallery", e.target.files, true)} disabled={!!uploading} />
+                </label>
+                <p className="mt-2 text-[10px] text-white/30 font-[family-name:var(--font-sans)]">Select several at once. Remember to press Save Website when you are done.</p>
+              </div>
+            </motion.div>
+
             {GROUPS.map((g, gi) => (
               <motion.div
                 key={g.title}
@@ -153,7 +259,7 @@ export default function WebsiteEditor() {
             ))}
 
             <div className="sticky bottom-5 mt-6">
-              <button onClick={save} disabled={busy} className="flex w-full min-h-[56px] items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] shadow-[0_10px_40px_rgba(0,0,0,0.6)] font-[family-name:var(--font-sans)] disabled:opacity-60">
+              <button onClick={save} disabled={busy || !!uploading} className="flex w-full min-h-[56px] items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] shadow-[0_10px_40px_rgba(0,0,0,0.6)] font-[family-name:var(--font-sans)] disabled:opacity-60">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <><Check className="h-4 w-4" /> Saved</> : "Save Website"}
               </button>
             </div>

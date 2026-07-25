@@ -26,7 +26,7 @@ export default function NewEventPage() {
   }
 
   const EVENT_TYPES = [
-    { v: "Wedding", tagline: "A Celebration of Love" },
+    { v: "White Wedding", tagline: "A Celebration of Love" },
     { v: "Traditional Wedding", tagline: "A Union of Families" },
     { v: "Birthday", tagline: "A Celebration" },
     { v: "Conference", tagline: "Ideas Worth Gathering For" },
@@ -44,7 +44,7 @@ export default function NewEventPage() {
 
   const [form, setForm] = useState({
     title: "",
-    eventType: "Wedding",
+    eventType: "White Wedding",
     hostName: "",
     tagline: "A Celebration",
     eventDate: "",
@@ -124,25 +124,14 @@ export default function NewEventPage() {
               <option key={t.v} value={t.v} className="bg-[#0d0c0b]">{t.v}</option>
             ))}
           </select>
-          <p className="mt-2 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">Sets a suggested occasion line, which you can still edit.</p>
+
 
           <label className={`mt-6 block ${lbl}`}>Event Title</label>
           <input value={form.title} onChange={(e) => set("title", e.target.value)} placeholder="Chioma & Obinna" className={inp} />
 
-          <div className="mt-6 grid gap-5 sm:grid-cols-2">
-            <div>
-              <label className={lbl}>Host / Client Name</label>
-              <input value={form.hostName} onChange={(e) => set("hostName", e.target.value)} placeholder="Chioma Amadi & Obinna Onyechere" className={inp} />
-            </div>
-            <div>
-              <label className={lbl}>Occasion line</label>
-              <input value={form.tagline} onChange={(e) => set("tagline", e.target.value)} placeholder="A Celebration of Love" className={inp} />
-              <div className="mt-3 rounded-xl border border-white/[0.07] bg-black/40 px-4 py-3 text-center">
-                <p className="text-[8px] uppercase tracking-[0.3em] text-[#c9a227] font-[family-name:var(--font-sans)]">{form.tagline || "A Celebration"}</p>
-                <p className="mt-1 font-[family-name:var(--font-serif)] text-[15px] text-[#f5f1ea]">{form.title || "Your Event Title"}</p>
-                <p className="mt-1.5 text-[9px] text-white/25 font-[family-name:var(--font-sans)]">How it appears on the website, invitation and passes</p>
-              </div>
-            </div>
+          <div className="mt-6">
+            <label className={lbl}>Host / Client Name</label>
+            <input value={form.hostName} onChange={(e) => set("hostName", e.target.value)} placeholder="Chioma Amadi & Obinna Onyechere" className={inp} />
           </div>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
