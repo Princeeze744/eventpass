@@ -89,7 +89,9 @@ export function BrandBar({ right }: { right?: React.ReactNode }) {
   return (
     <div className="mb-6 flex items-center justify-between">
       <Link href="/dashboard" className="group flex items-center gap-3">
-        <Image src="/brand/logo-mark.jpg" alt="Story Box" width={30} height={30} className="rounded-lg transition-transform duration-500 group-hover:scale-105" />
+        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#f5f1ea] p-1.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_6px_18px_-6px_rgba(0,0,0,0.7)] transition-transform duration-500 group-hover:scale-105">
+          <Image src="/brand/logo-white.jpg" alt="Story Box" width={30} height={30} className="rounded-xl" />
+        </span>
         <span className="text-[10px] uppercase tracking-[0.4em] text-white/45 transition-colors group-hover:text-[#c9a227] font-[family-name:var(--font-sans)]">Story&nbsp;Box</span>
       </Link>
       {right}
