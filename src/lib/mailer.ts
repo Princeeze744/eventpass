@@ -4,7 +4,8 @@ const FROM = "Story Box <hello@storyboxnigeria.com>";
 
 export async function sendWelcomeEmail(to: string, name: string, role: string) {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return; // email not configured; skip silently
+  console.log("[MAILER] key present:", !!key, "| length:", key ? key.length : 0);
+  if (!key) { console.log("[MAILER] NO KEY - skipping email"); return; }
   const resend = new Resend(key);
 
   const roleLine =
