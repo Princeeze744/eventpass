@@ -39,7 +39,7 @@ export default function TopBar({
         <div className="flex items-center gap-3">
           {right}
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/brand/logo-mark.jpg" alt="Story Box" width={26} height={26} className="rounded-md" />
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#f5f1ea] p-1 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_4px_12px_-4px_rgba(0,0,0,0.6)]"><Image src="/brand/logo-white.jpg" alt="Story Box" width={26} height={26} className="rounded-lg" /></span>
           </Link>
         </div>
       </div>

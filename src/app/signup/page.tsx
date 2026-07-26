@@ -57,7 +57,7 @@ function SignupInner() {
 
       <div className="relative w-full max-w-[440px]">
         <Link href="/" className="flex items-center gap-3">
-          <Image src="/brand/logo-mark.jpg" alt="Story Box" width={32} height={32} className="rounded-lg" />
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#f5f1ea] p-1.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_6px_18px_-6px_rgba(0,0,0,0.7)]"><Image src="/brand/logo-white.jpg" alt="Story Box" width={32} height={32} className="rounded-xl" /></span>
           <span className="text-[10px] sb-eyebrow text-white/60 font-[family-name:var(--font-sans)]">Story&nbsp;Box</span>
         </Link>
 
