@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { hashPassword, createToken, SESSION_COOKIE, SESSION_MAX_AGE } from "@/lib/auth";
+import { sendWelcomeEmail } from "@/lib/mailer";
 
 const ROLES = ["planner", "host", "guest", "vendor"];
 
@@ -31,6 +32,8 @@ export async function POST(req: NextRequest) {
       passwordHash: await hashPassword(String(password)),
     },
   });
+
+  await sendWelcomeEmail(user.email, user.name, user.role);
 
   const res = NextResponse.json({ ok: true, role: user.role });
   res.cookies.set(SESSION_COOKIE, createToken(user.id), {
