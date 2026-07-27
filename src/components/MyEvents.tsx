@@ -18,8 +18,11 @@ type Rec = {
   };
 };
 
+type HostedEv = { slug: string; title: string; tagline: string; eventDate: string; venue: string; accentColor: string | null };
+
 export default function MyEvents({ role }: { role: string }) {
   const [records, setRecords] = useState<Rec[]>([]);
+  const [hosting, setHosting] = useState<HostedEv[]>([]);
   const [phone, setPhone] = useState("");
   const [hasPhone, setHasPhone] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -31,6 +34,7 @@ export default function MyEvents({ role }: { role: string }) {
     if (!res.ok) { setLoading(false); return; }
     const d = await res.json();
     setRecords(d.records || []);
+    setHosting(d.hosting || []);
     setHasPhone(Boolean(d.user?.phone));
     setLoading(false);
   }
@@ -82,6 +86,23 @@ export default function MyEvents({ role }: { role: string }) {
             </button>
           </div>
           {msg && <p className="mt-3 text-[12px] text-[#c9a227] font-[family-name:var(--font-sans)]">{msg}</p>}
+        </div>
+      )}
+
+      {hosting.length > 0 && (
+        <div className="mb-8">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-[#c9a227] font-[family-name:var(--font-sans)]">Events you are hosting</p>
+          <p className="mt-1 text-[11px] text-white/25 font-[family-name:var(--font-sans)]">Set up for you by your planner. Open one to watch guests arrive, manage seating and track gifts.</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {hosting.map((ev) => (
+              <a key={ev.slug} href={`/e/${ev.slug}/host`} className="sb-surface sb-lift block p-5">
+                <p className="text-[9px] uppercase tracking-[0.25em]" style={{ color: ev.accentColor || "#c9a227" }}>{ev.tagline}</p>
+                <h3 className="mt-2 font-[family-name:var(--font-serif)] text-xl text-[#f5f1ea]">{ev.title}</h3>
+                <p className="mt-2 text-[11px] text-white/40 font-[family-name:var(--font-sans)]">{ev.eventDate} &middot; {ev.venue}</p>
+                <p className="mt-3 inline-block rounded-full border border-[#c9a227]/30 px-4 py-1.5 text-[9px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Open host view</p>
+              </a>
+            ))}
+          </div>
         </div>
       )}
 

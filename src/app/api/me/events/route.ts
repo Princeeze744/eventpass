@@ -15,6 +15,14 @@ export async function GET() {
   const phone = normPhone(user.phone);
   if (!phone) return NextResponse.json({ user: { name: user.name, role: user.role, phone: user.phone }, records: [] });
 
+  const hosting = user.email
+    ? await prisma.event.findMany({
+        where: { hostEmail: user.email.toLowerCase(), deletedAt: null, ownerId: { not: userId } },
+        orderBy: { createdAt: "desc" },
+        select: { slug: true, title: true, tagline: true, eventDate: true, venue: true, accentColor: true },
+      })
+    : [];
+
   const records = await prisma.guest.findMany({
     where: { phone, deletedAt: null },
     include: { event: true },
@@ -23,6 +31,7 @@ export async function GET() {
 
   return NextResponse.json({
     user: { name: user.name, role: user.role, phone: user.phone },
+    hosting,
     records: records
       .filter((g) => !g.event.deletedAt && g.event.ownerId !== userId)
       .map((g) => ({
