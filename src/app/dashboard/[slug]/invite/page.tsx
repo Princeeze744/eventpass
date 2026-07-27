@@ -260,7 +260,9 @@ export default function InvitePage() {
 
     let flow = ny + (ev.address ? 200 : 170);
 
-    if (ev.dressCode) {
+    const footerTop = H - 220;
+
+    if (ev.dressCode && flow < footerTop - 40) {
       ctx.fillStyle = accent + "cc";
       ctx.font = "400 19px Helvetica, Arial, sans-serif";
       ctx.letterSpacing = "5px";
@@ -273,7 +275,9 @@ export default function InvitePage() {
         else dl = test;
       });
       dLines.push(dl);
-      dLines.forEach((l, i) => ctx.fillText(l, W / 2, flow + i * 34));
+      dLines.forEach((l, i) => {
+        if (flow + i * 34 < footerTop) ctx.fillText(l, W / 2, flow + i * 34);
+      });
       flow += dLines.length * 34 + 30;
     }
 
@@ -349,22 +353,32 @@ export default function InvitePage() {
 
                 <div className="mt-4">
                   <label className="text-[10px] uppercase tracking-[0.2em] text-white/50 font-[family-name:var(--font-sans)]">Background colour</label>
-                  <div className="mt-2 flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={bg}
-                      onChange={(e) => pickBg(e.target.value)}
-                      className="h-10 w-14 shrink-0 cursor-pointer rounded-xl border border-white/15 bg-black/30 p-1"
-                    />
-                    <div className="flex flex-1 gap-1.5">
-                      {BG_PRESETS.map((p) => (
-                        <button
-                          key={p.label}
-                          onClick={() => pickBg(p.c)}
-                          title={p.label}
-                          className={`h-8 flex-1 rounded-lg border transition-all ${bg === p.c ? "border-white/70 scale-105" : "border-white/15"}`}
-                          style={{ background: p.c }}
+                  <div className="mt-2 flex items-center gap-3">
+                    <label className="flex shrink-0 cursor-pointer flex-col items-center gap-1">
+                      <span className="rounded-xl p-[2px]" style={{ background: "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" }}>
+                        <input
+                          type="color"
+                          value={bg}
+                          onChange={(e) => pickBg(e.target.value)}
+                          className="block h-9 w-12 cursor-pointer rounded-[10px] border-0 bg-black/30 p-1"
                         />
+                      </span>
+                      <span className="text-[8px] uppercase tracking-[0.15em] text-white/40 font-[family-name:var(--font-sans)]">Custom</span>
+                    </label>
+                    <div className="h-10 w-px shrink-0 bg-white/10" />
+                    <div className="flex flex-1 gap-2">
+                      {BG_PRESETS.map((p) => (
+                        <button key={p.label} onClick={() => pickBg(p.c)} className="flex flex-1 flex-col items-center gap-1">
+                          <span
+                            className={`relative flex h-9 w-full items-center justify-center rounded-lg border transition-all ${bg === p.c ? "border-white/80" : "border-white/15"}`}
+                            style={{ background: p.c }}
+                          >
+                            {bg === p.c && (
+                              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke={luminance(p.c) > 0.35 ? "#141311" : "#f5f1ea"} strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>
+                            )}
+                          </span>
+                          <span className={`text-[8px] uppercase tracking-[0.12em] font-[family-name:var(--font-sans)] ${bg === p.c ? "text-white/70" : "text-white/35"}`}>{p.label}</span>
+                        </button>
                       ))}
                     </div>
                   </div>

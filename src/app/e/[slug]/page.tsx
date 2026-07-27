@@ -9,19 +9,52 @@ export const dynamic = "force-dynamic";
 
 const card = "sb-surface sb-lift";
 
-function List({ text }: { text: string }) {
+function Lines({ text }: { text: string }) {
   return (
     <div className="mt-3 space-y-1.5">
+      {text.split(/\r?\n/).filter(Boolean).map((l, i) => (
+        <p key={i} className="text-[13px] leading-relaxed text-white/60 font-[family-name:var(--font-sans)]">{l}</p>
+      ))}
+    </div>
+  );
+}
+
+function List({ text, ac }: { text: string; ac: string }) {
+  return (
+    <div className="mt-4 space-y-2.5">
       {text.split(/\r?\n/).filter(Boolean).map((l, i) => {
-        const m = l.match(/https?:\/\/\S+/);
-        if (!m) {
-          return <p key={i} className="break-words text-[13px] leading-relaxed text-white/60 font-[family-name:var(--font-sans)]" style={{ overflowWrap: "anywhere" }}>{l}</p>;
+        let url = "";
+        let label = "";
+        if (l.includes("|")) {
+          const [nm, ...rest] = l.split("|");
+          label = nm.trim();
+          url = rest.join("|").trim();
+          if (!url) {
+            return <p key={i} className="break-words text-[13px] leading-relaxed text-white/60 font-[family-name:var(--font-sans)]" style={{ overflowWrap: "anywhere" }}>{label}</p>;
+          }
+        } else {
+          const m = l.match(/https?:\/\/\S+/);
+          if (!m) {
+            return <p key={i} className="break-words text-[13px] leading-relaxed text-white/60 font-[family-name:var(--font-sans)]" style={{ overflowWrap: "anywhere" }}>{l}</p>;
+          }
+          url = m[0];
+          label = l.replace(url, "").replace(/[\s:,\u2014-]+$/, "").trim();
         }
-        const url = m[0];
-        const label = l.replace(url, "").replace(/[\s:,-]+$/, "").trim();
         return (
-          <a key={i} href={url} target="_blank" rel="noreferrer" className="block break-words text-[13px] leading-relaxed text-white/70 underline decoration-white/30 underline-offset-4 transition-colors hover:text-white font-[family-name:var(--font-sans)]" style={{ overflowWrap: "anywhere" }}>
-            {label || url}
+          <a
+            key={i}
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className="group flex items-center justify-between gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.03] px-5 py-4 text-left transition-all hover:border-white/20 hover:bg-white/[0.06]"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13px] text-white/80 font-[family-name:var(--font-sans)]">{label || "View location"}</span>
+            </span>
+            <span className="flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[9px] uppercase tracking-[0.15em] font-[family-name:var(--font-sans)]" style={{ color: ac, background: `${ac}14`, border: `1px solid ${ac}35` }}>
+              View map
+              <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17L17 7M17 7H8M17 7v9"/></svg>
+            </span>
           </a>
         );
       })}
@@ -29,50 +62,36 @@ function List({ text }: { text: string }) {
   );
 }
 
+export const revalidate = 0;
+
 export default async function EventSite({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const e = await prisma.event.findUnique({ where: { slug } });
   if (!e || e.deletedAt) notFound();
 
-  if (e.approval !== "approved") {
-    return (
-      <main className="min-h-[100svh] bg-[#080807] text-[#f5f1ea] flex flex-col items-center justify-center px-6 text-center">
-        <p className="text-[10px] sb-eyebrow text-[#c9a227] font-[family-name:var(--font-sans)]">Story Box</p>
-        <h1 className="mt-5 font-[family-name:var(--font-serif)] text-4xl sb-display">This event is not live yet</h1>
-        <p className="mt-4 max-w-md text-[13px] leading-relaxed text-white/45 font-[family-name:var(--font-sans)]">
-          The organiser is still finalising arrangements. Please check back shortly or contact them directly.
-        </p>
-      </main>
-    );
-  }
-
   const ac = e.accentColor || "#c9a227";
 
   const heroInner = (
-    <>
+    <div className="relative mx-auto max-w-[900px] px-6 text-center">
       {e.logoUrl && (
-        <img src={e.logoUrl} alt="" className="mx-auto mb-7 h-24 w-24 rounded-3xl border border-white/12 object-cover shadow-[0_20px_50px_-20px_rgba(0,0,0,0.9)]" />
+        <img src={e.logoUrl} alt="" className="mx-auto mb-6 h-20 w-20 rounded-2xl border border-white/15 object-cover shadow-[0_10px_40px_rgba(0,0,0,0.5)]" />
       )}
       <p className="text-[10px] uppercase tracking-[0.45em] font-[family-name:var(--font-sans)]" style={{ color: ac }}>{e.tagline}</p>
-      <h1 className="mt-5 font-[family-name:var(--font-serif)] text-[13vw] leading-[0.9] sm:text-[7vw]">{e.title}</h1>
+      <h1 className="mt-5 font-[family-name:var(--font-serif)] text-[13vw] leading-[0.95] text-[#f5f1ea] sm:text-[80px] sb-display">{e.title}</h1>
       <div className="mx-auto mt-6 h-px w-28" style={{ background: `linear-gradient(90deg,transparent,${ac}b0,transparent)` }} />
-      <p className="mt-6 text-[14px] text-white/70 font-[family-name:var(--font-sans)]">{e.eventDate} · {e.eventTime}</p>
-      <p className="text-[13px] text-white/50 font-[family-name:var(--font-sans)]">{e.venue}{e.address ? ` · ${e.address}` : ""}</p>
+      <p className="mt-6 text-[13px] uppercase tracking-[0.3em] text-white/70 font-[family-name:var(--font-sans)]">{e.eventDate} &middot; {e.eventTime}</p>
+      <p className="mt-2 text-[12px] uppercase tracking-[0.25em] text-white/45 font-[family-name:var(--font-sans)]">{e.venue}{e.address ? ` \u00B7 ${e.address}` : ""}</p>
       {e.hashtag && <p className="mt-3 text-[12px] uppercase tracking-[0.3em] font-[family-name:var(--font-sans)]" style={{ color: ac }}>{e.hashtag}</p>}
       <Countdown date={e.eventDateISO || e.eventDate} />
-      <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row">
-        <Link href={`/e/${e.slug}/rsvp`} className="flex min-h-[54px] w-full items-center justify-center gap-2 sb-btn px-9 text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] sm:w-auto">Register &amp; Get Pass <ArrowUpRight className="h-4 w-4" /></Link>
-        <Link href={`/e/${e.slug}/mypass`} className="flex min-h-[54px] w-full items-center justify-center rounded-full border border-white/25 px-9 text-[11px] uppercase tracking-[0.2em] text-white/85 backdrop-blur-sm font-[family-name:var(--font-sans)] sm:w-auto">My Pass</Link>
+      <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
+        <Link href={`/e/${slug}/rsvp`} className="sb-btn px-8 py-4 text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">Register &amp; Get Pass</Link>
+        <Link href={`/e/${slug}/mypass`} className="sb-ghost px-8 py-4 text-[11px] uppercase tracking-[0.2em] text-white/75 font-[family-name:var(--font-sans)]">My Pass</Link>
       </div>
-    </>
+    </div>
   );
 
   return (
-    <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea]">
-      <svg className="pointer-events-none fixed inset-0 z-50 h-full w-full opacity-[0.05]">
-        <filter id="gsite"><feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" /></filter>
-        <rect width="100%" height="100%" filter="url(#gsite)" />
-      </svg>
+    <main className="relative min-h-[100svh] overflow-x-hidden bg-[#080807] text-[#f5f1ea]">
       <div className="pointer-events-none fixed inset-0">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[50vh] w-[90vw] rounded-full blur-[130px]" style={{ background: `${ac}14` }} />
         <div className="absolute bottom-0 right-0 h-[35vh] w-[50vw] sb-glow-warm" />
@@ -149,21 +168,21 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
                 <div className={`${card} p-6`}>
                   <Hotel className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
                   <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Hotels</h3>
-                  <List text={e.hotels} />
+                  <List text={e.hotels} ac={ac} />
                 </div>
               )}
               {e.restaurants && (
                 <div className={`${card} p-6`}>
                   <UtensilsCrossed className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
                   <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Restaurants</h3>
-                  <List text={e.restaurants} />
+                  <List text={e.restaurants} ac={ac} />
                 </div>
               )}
               {e.funSpots && (
                 <div className={`${card} p-6`}>
                   <Sparkles className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
                   <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Fun Spots</h3>
-                  <List text={e.funSpots} />
+                  <List text={e.funSpots} ac={ac} />
                 </div>
               )}
             </div>
@@ -177,14 +196,14 @@ export default async function EventSite({ params }: { params: Promise<{ slug: st
                 <div className={`${card} p-6`}>
                   <CalendarDays className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
                   <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Programme</h3>
-                  <List text={e.programNote} />
+                  <List text={e.programNote} ac={ac} />
                 </div>
               )}
               {e.menuNote && (
                 <div className={`${card} p-6`}>
                   <UtensilsCrossed className="h-4 w-4" style={{ color: ac }} strokeWidth={1.6} />
                   <h3 className="mt-4 font-[family-name:var(--font-serif)] text-2xl">Menu</h3>
-                  <List text={e.menuNote} />
+                  <List text={e.menuNote} ac={ac} />
                 </div>
               )}
             </div>

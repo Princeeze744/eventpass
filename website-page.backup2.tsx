@@ -32,6 +32,14 @@ const GROUPS = [
     ],
   },
   {
+    title: "For Travelling Guests",
+    fields: [
+      { k: "hotels", l: "Hotels", type: "area", p: "One per line: Hotel Presidential \u2014 5 mins from venue" },
+      { k: "restaurants", l: "Restaurants", type: "area", p: "One per line" },
+      { k: "funSpots", l: "Fun Spots", type: "area", p: "One per line" },
+    ],
+  },
+  {
     title: "On The Day",
     fields: [
       { k: "programNote", l: "Programme", type: "area", p: "2:00 PM Arrival\n3:00 PM Ceremony\n5:00 PM Reception" },
@@ -48,75 +56,6 @@ const GROUPS = [
 ];
 
 type Form = Record<string, string>;
-
-type PlaceRow = { name: string; url: string };
-
-function parsePlaces(text: string): PlaceRow[] {
-  return (text || "")
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean)
-    .map((l) => {
-      if (l.includes("|")) {
-        const [name, ...rest] = l.split("|");
-        return { name: name.trim(), url: rest.join("|").trim() };
-      }
-      const m = l.match(/https?:\/\/\S+/);
-      if (m) return { name: l.replace(m[0], "").replace(/[\s:,\u2014-]+$/, "").trim(), url: m[0] };
-      return { name: l, url: "" };
-    });
-}
-
-function serializePlaces(rows: PlaceRow[]): string {
-  return rows
-    .filter((r) => r.name.trim() || r.url.trim())
-    .map((r) => `${r.name.trim()} | ${r.url.trim()}`)
-    .join("\n");
-}
-
-function PlacesEditor({ label, hint, value, onChange }: { label: string; hint: string; value: string; onChange: (v: string) => void }) {
-  const rows = parsePlaces(value);
-  const shown = rows.length ? rows : [{ name: "", url: "" }];
-
-  function update(i: number, patch: Partial<PlaceRow>) {
-    const next = shown.map((r, j) => (j === i ? { ...r, ...patch } : r));
-    onChange(serializePlaces(next));
-  }
-  function add() {
-    onChange(serializePlaces([...shown, { name: "", url: "" }]) + (shown.some((r) => r.name || r.url) ? "" : ""));
-    const next = [...shown, { name: " ", url: "" }];
-    onChange(serializePlaces(next));
-  }
-  function remove(i: number) {
-    onChange(serializePlaces(shown.filter((_, j) => j !== i)));
-  }
-
-  const lbl = "text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]";
-  const inp = "w-full sb-input px-4 py-3 text-[13px] text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]";
-
-  return (
-    <div className="mt-5">
-      <label className={lbl}>{label}</label>
-      <p className="mt-1.5 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">{hint}</p>
-      <div className="mt-3 space-y-2.5">
-        {shown.map((r, i) => (
-          <div key={i} className="flex items-start gap-2">
-            <div className="grid flex-1 gap-2 sm:grid-cols-2">
-              <input value={r.name} onChange={(e) => update(i, { name: e.target.value })} placeholder="Name (e.g. Hotel Presidential)" className={inp} />
-              <input value={r.url} onChange={(e) => update(i, { url: e.target.value })} placeholder="Google Maps link (optional)" className={inp} />
-            </div>
-            <button onClick={() => remove(i)} title="Remove" className="mt-1.5 rounded-full border border-white/10 p-2 text-white/40 transition-colors hover:border-red-500/40 hover:text-red-400">
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
-      </div>
-      <button onClick={add} className="mt-3 rounded-full border border-dashed border-[#c9a227]/40 px-5 py-2 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] transition-colors hover:bg-[#c9a227]/[0.08] font-[family-name:var(--font-sans)]">
-        + Add another
-      </button>
-    </div>
-  );
-}
 
 export default function WebsiteEditor() {
   const params = useParams();
@@ -284,13 +223,6 @@ export default function WebsiteEditor() {
                 </label>
                 <p className="mt-2 text-[10px] text-white/30 font-[family-name:var(--font-sans)]">Select several at once. Remember to press Save Website when you are done.</p>
               </div>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`${card} mt-4 p-6`}>
-              <p className="text-[10px] uppercase tracking-[0.35em] text-[#c9a227] font-[family-name:var(--font-sans)]">For Travelling Guests</p>
-              <PlacesEditor label="Hotels" hint="Each becomes a named button guests can tap to open the map." value={form.hotels || ""} onChange={(v) => setForm({ ...form, hotels: v })} />
-              <PlacesEditor label="Restaurants" hint="Great spots to eat nearby." value={form.restaurants || ""} onChange={(v) => setForm({ ...form, restaurants: v })} />
-              <PlacesEditor label="Fun Spots" hint="Things to do around the venue." value={form.funSpots || ""} onChange={(v) => setForm({ ...form, funSpots: v })} />
             </motion.div>
 
             {GROUPS.map((g, gi) => (
