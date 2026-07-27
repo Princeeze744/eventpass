@@ -99,6 +99,7 @@ export default function EventSettings() {
     if (!res.ok) { setMsg(data.error || "Something went wrong."); return; }
     if (action === "trash" || data.destroyed) { router.push("/dashboard"); router.refresh(); return; }
     if (data.newSlug) { router.push(`/dashboard/${data.newSlug}/settings`); router.refresh(); return; }
+    if (data.invited) { setMsg(`Invitation sent to ${data.invited} \u2014 the event will appear on their dashboard once they sign in with that email.`); return; }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     if (action === "rotateKeys") setMsg("New keys generated. Share them with your team.");

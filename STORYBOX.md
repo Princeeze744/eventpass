@@ -185,3 +185,22 @@ rotated key after exposure. Client thrilled throughout.
   of shrapnel-fixing. Line-number surgery or full-file rewrite only.
 - A lone <a on its own line gets eaten by clipboard paste (happened again).
   Always write <a inline with its first attribute.
+  ## SESSION NOTE — 27 Jul 2026
+- HOST SYSTEM COMPLETE (client's big ask): Event.hostEmail in schema · "Host access" card
+  in event Settings (invite by email) · branded "Claim my event" email via Resend ·
+  /api/me/events returns `hosting` list · MyEvents.tsx renders "Events you are hosting"
+  cards · /api/e/host auto-unlocks (no ADM key) when signed-in email matches hostEmail
+  or user owns the event. Full flow tested live end-to-end. ✅
+- Invitation designer: TWO pickers only (Background + Text) with WCAG auto-contrast,
+  rainbow "Custom" ring vs named preset swatches with ✓. Footer collision guard
+  (safeBottom H-240) — overlap bugs dead.
+- Hotels/Restaurants/FunSpots: structured Name+Link rows in editor ("+ Add another"),
+  named "View map ↗" cards on the site (Name | URL line format, backwards compatible).
+- Milk favicon. Location cards. Event page survived a regex war and was rebuilt healthy.
+- HARD LESSONS ADDED: (1) never greedy multiline regex on files with similar functions —
+  line-number surgery or full rewrite only. (2) always re-pull a file fresh before
+  patching; a stale paste caused every failed anchor today. (3) dashboard/page.tsx is a
+  97-line server shell; the client logic lives in src/components/MyEvents.tsx.
+- STILL OPEN: unified nav bar (deferred, design with host flow bedded in) · admin swap
+  (needs admin@storyboxnigeria.com account first) · souvenir tracking next · OG image
+  for WhatsApp link previews · transparent logo PNG from designer.
