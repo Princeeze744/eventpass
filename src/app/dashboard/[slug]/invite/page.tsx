@@ -242,6 +242,8 @@ export default function InvitePage() {
     ctx.textAlign = "center";
 
     ny += 110;
+    const safeBottom = H - 240;
+    if (ny + 200 > safeBottom) ny = Math.max(y + 130, safeBottom - 200);
     ctx.fillStyle = accent;
     ctx.font = "500 22px Helvetica, Arial, sans-serif";
     ctx.letterSpacing = "8px";
@@ -252,7 +254,7 @@ export default function InvitePage() {
     ctx.fillStyle = ink + "cc";
     ctx.font = "400 26px Helvetica, Arial, sans-serif";
     ctx.fillText(ev.venue, W / 2, ny + 116);
-    if (ev.address) {
+    if (ev.address && ny + 154 < safeBottom) {
       ctx.fillStyle = ink + "88";
       ctx.font = "400 20px Helvetica, Arial, sans-serif";
       ctx.fillText(ev.address.slice(0, 60), W / 2, ny + 154);
