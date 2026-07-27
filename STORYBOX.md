@@ -180,3 +180,8 @@ text overflow fix · "Events you are attending" clarified + excludes own events 
 delete-user · client added as admin · cream-tile logo site-wide · FULL EMAIL: bought
 storyboxnigeria.com, DNS, Resend, welcome email live (debugged a truncated-key issue),
 rotated key after exposure. Client thrilled throughout.
+- NEVER use greedy multiline regex ((?s).*?) to replace functions in files with
+  multiple similar functions — it silently ate half a file once and cost an hour
+  of shrapnel-fixing. Line-number surgery or full-file rewrite only.
+- A lone <a on its own line gets eaten by clipboard paste (happened again).
+  Always write <a inline with its first attribute.

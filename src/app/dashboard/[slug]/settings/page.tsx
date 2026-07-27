@@ -68,6 +68,7 @@ export default function EventSettings() {
           title: d.event.title || "",
           eventType: d.event.eventType || "White Wedding",
           hostName: d.event.hostName || "",
+          hostEmail: d.event.hostEmail || "",
           tagline: d.event.tagline || "",
           eventDate: d.event.eventDate || "",
           dateISO: d.event.eventDateISO || "",
@@ -246,6 +247,29 @@ export default function EventSettings() {
               <button onClick={() => act("update")} disabled={busy} className="mt-6 flex w-full min-h-[52px] items-center justify-center gap-2 sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : saved ? <><Check className="h-4 w-4" /> Saved</> : "Save Changes"}
               </button>
+            </div>
+
+            <div className={`${card} mt-4 p-6`}>
+              <p className="text-[10px] uppercase tracking-[0.35em] text-[#c9a227] font-[family-name:var(--font-sans)]">Host access</p>
+              <p className="mt-3 text-[13px] leading-relaxed text-white/50 font-[family-name:var(--font-sans)]">
+                Invite the host (the couple, celebrant or company) by email. They get a branded invitation,
+                and when they sign in with that email this event appears on their own dashboard automatically.
+              </p>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <input
+                  value={form.hostEmail || ""}
+                  onChange={(e) => setForm({ ...form, hostEmail: e.target.value })}
+                  placeholder="host@email.com"
+                  className={`${inp} flex-1`}
+                />
+                <button
+                  onClick={() => act("inviteHost", { hostEmail: form.hostEmail })}
+                  disabled={busy}
+                  className="shrink-0 rounded-full bg-[#c9a227] px-6 py-3 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60"
+                >
+                  Send invite
+                </button>
+              </div>
             </div>
 
             <div className={`${card} mt-4 p-6`}>

@@ -32,6 +32,7 @@ model Event {
   title      String
   eventType  String @default("Wedding")
   hostName   String  @default("")
+  hostEmail  String  @default("")
   tagline    String  @default("A Celebration")
   eventDate  String
   eventDateISO String @default("")

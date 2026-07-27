@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
       title: event.title,
       eventType: event.eventType,
       hostName: event.hostName,
+      hostEmail: event.hostEmail,
       tagline: event.tagline,
       eventDate: event.eventDate,
       eventDateISO: event.eventDateISO,

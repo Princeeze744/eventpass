@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getSessionOrganizerId } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   const { slug, adminKey } = await req.json();

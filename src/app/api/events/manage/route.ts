@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { sendHostInviteEmail } from "@/lib/mailer";
 import { getSessionOrganizerId } from "@/lib/auth";
 
 function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 40);
 }
 
-const EDITABLE = ["title","eventType","hostName","tagline","state","accentColor","eventDate","eventTime","venue","address","approvalMode"] as const;
+const EDITABLE = ["title","eventType","hostName","hostEmail","tagline","state","accentColor","eventDate","eventTime","venue","address","approvalMode"] as const;
 
 export async function POST(req: NextRequest) {
   const userId = await getSessionOrganizerId();
@@ -50,6 +51,17 @@ export async function POST(req: NextRequest) {
     }
     await prisma.event.update({ where: { id: event.id }, data });
     return NextResponse.json({ ok: true });
+  }
+
+  if (action === "inviteHost") {
+    const email = String(body.hostEmail || "").trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      return NextResponse.json({ error: "Enter a valid email address for the host." }, { status: 400 });
+    }
+    const planner = await prisma.user.findUnique({ where: { id: userId } });
+    await prisma.event.update({ where: { id: event.id }, data: { hostEmail: email } });
+    await sendHostInviteEmail(email, event.title, planner?.name || "Your planner", event.slug);
+    return NextResponse.json({ ok: true, invited: email });
   }
 
   if (action === "updateSlug") {
