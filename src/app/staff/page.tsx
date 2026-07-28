@@ -95,7 +95,7 @@ export default function StaffPanel() {
   }
 
   const events = (data?.events || []).filter((e) => filter === "all" || e.approval === filter);
-  const planners = (data?.users || []).filter((u) => u.role === "planner" || u.role === "host");
+  const planners = (data?.users || []); // show ALL accounts - vendors and guests too, so nothing can hide from the admin
   const team = (data?.users || []).filter((u) => u.level !== "none");
 
   return (
