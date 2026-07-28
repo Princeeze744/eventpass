@@ -100,6 +100,9 @@ export default function EventPass(p: Props) {
           </span>
         </div>
 
+        {!p.logoUrl && (
+          <img src="/brand/logo-white.jpg" alt="Story Box" className="h-16 w-16 rounded-2xl border border-white/10 bg-[#f5f1ea] object-contain p-1.5" />
+        )}
         {p.logoUrl && (
           <div className="mt-6 flex justify-center">
             <img src={p.logoUrl} alt="" className="h-16 w-16 rounded-2xl border border-white/10 object-cover" />
@@ -132,7 +135,7 @@ export default function EventPass(p: Props) {
             : [
                 { Icon: CalendarDays, l: p.event.eventDate, s: p.event.eventTime },
                 { Icon: MapPin, l: "Venue", s: p.event.venue },
-                { Icon: Armchair, l: p.section ? p.section : "Seating", s: p.table === "TBA" ? "At entrance" : p.seat ? `${p.table} · ${p.seat}` : p.table },
+                { Icon: Armchair, l: p.section ? p.section : "Seating", s: p.table === "TBA" ? "TBA" : p.seat ? `${p.table} · ${p.seat}` : p.table },
               ]
           ).map((d, i) => (
             <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-2 py-3">

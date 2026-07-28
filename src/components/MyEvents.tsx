@@ -161,7 +161,7 @@ const stage = isVendor
                 <div className="rounded-2xl border border-white/[0.06] bg-black/30 px-4 py-3">
                   {isVendor ? <Clock className="h-3.5 w-3.5 text-[#5eead4]" strokeWidth={1.6} /> : <Ticket className="h-3.5 w-3.5 text-[#c9a227]" strokeWidth={1.6} />}
                   <p className="mt-2 text-[12px] text-white/80 font-[family-name:var(--font-sans)]">
-                    {isVendor ? (r.callTime || r.event.loadInTime || "Call time TBC") : r.table === "TBA" ? "Seat at entrance" : r.table}
+                    {isVendor ? (r.callTime || r.event.loadInTime || "Call time TBC") : r.table === "TBA" ? "Seat TBA" : r.table}
                   </p>
                   <p className="text-[11px] text-white/40 font-[family-name:var(--font-sans)]">
                     {isVendor ? (r.vendorRole || "Vendor") : r.partySize > 1 ? `Party of ${r.partySize}` : r.tier}

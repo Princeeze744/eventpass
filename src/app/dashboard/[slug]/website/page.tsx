@@ -75,20 +75,25 @@ function serializePlaces(rows: PlaceRow[]): string {
 }
 
 function PlacesEditor({ label, hint, value, onChange }: { label: string; hint: string; value: string; onChange: (v: string) => void }) {
-  const rows = parsePlaces(value);
-  const shown = rows.length ? rows : [{ name: "", url: "" }];
+  const [rows, setRows] = useState<PlaceRow[]>(() => {
+    const parsed = parsePlaces(value);
+    return parsed.length ? parsed : [{ name: "", url: "" }];
+  });
+
+  function commit(next: PlaceRow[]) {
+    setRows(next);
+    onChange(next.filter((r) => r.name.trim() || r.url.trim()).map((r) => `${r.name.trim()} | ${r.url.trim()}`).join("\n"));
+  }
 
   function update(i: number, patch: Partial<PlaceRow>) {
-    const next = shown.map((r, j) => (j === i ? { ...r, ...patch } : r));
-    onChange(serializePlaces(next));
+    commit(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   }
   function add() {
-    onChange(serializePlaces([...shown, { name: "", url: "" }]) + (shown.some((r) => r.name || r.url) ? "" : ""));
-    const next = [...shown, { name: " ", url: "" }];
-    onChange(serializePlaces(next));
+    setRows([...rows, { name: "", url: "" }]);
   }
   function remove(i: number) {
-    onChange(serializePlaces(shown.filter((_, j) => j !== i)));
+    const next = rows.filter((_, j) => j !== i);
+    commit(next.length ? next : [{ name: "", url: "" }]);
   }
 
   const lbl = "text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]";
@@ -99,7 +104,7 @@ function PlacesEditor({ label, hint, value, onChange }: { label: string; hint: s
       <label className={lbl}>{label}</label>
       <p className="mt-1.5 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">{hint}</p>
       <div className="mt-3 space-y-2.5">
-        {shown.map((r, i) => (
+        {rows.map((r, i) => (
           <div key={i} className="flex items-start gap-2">
             <div className="grid flex-1 gap-2 sm:grid-cols-2">
               <input value={r.name} onChange={(e) => update(i, { name: e.target.value })} placeholder="Name (e.g. Hotel Presidential)" className={inp} />
@@ -117,7 +122,6 @@ function PlacesEditor({ label, hint, value, onChange }: { label: string; hint: s
     </div>
   );
 }
-
 export default function WebsiteEditor() {
   const params = useParams();
   const slug = String(params.slug);
