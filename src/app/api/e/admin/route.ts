@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { canManageEvent } from "@/lib/eventAccess";
 
 export async function POST(req: NextRequest) {
   const { slug, adminKey, action, guestId, status } = await req.json();

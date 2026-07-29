@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { canManageEvent } from "@/lib/eventAccess";
 import { normPhone, generatePassId } from "@/lib/ids";
 
 export async function POST(req: NextRequest) {
