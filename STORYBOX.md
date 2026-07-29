@@ -204,3 +204,20 @@ rotated key after exposure. Client thrilled throughout.
 - STILL OPEN: unified nav bar (deferred, design with host flow bedded in) · admin swap
   (needs admin@storyboxnigeria.com account first) · souvenir tracking next · OG image
   for WhatsApp link previews · transparent logo PNG from designer.
+  ## SESSION NOTE — 28 Jul 2026
+- KEYLESS EVENT MANAGEMENT (client voice note): new src/lib/eventAccess.ts →
+  canManageEvent(event, key) = valid ADM key OR signed-in owner OR signed-in invited
+  host. Wired into /api/e/admin (GET+POST), /api/e/seating, /api/e/vendors.
+  Front-end admin/seating/vendors pages now try load("") on mount (session attempt)
+  before showing the key screen; empty-key failure falls back silently. Tested live:
+  owner keyless ✓ invited host keyless ✓ strangers gated ✓ usher keys unchanged ✓.
+- Staff panel blind-spot fix (27 Jul): Planners tab was filtering to planner/host roles
+  only — vendors/guests invisible (caused the vibecheque mystery; account found via
+  Prisma forensics, deleted by script). Now shows ALL accounts.
+- Admin swap done: admin@storyboxnigeria.com = admin, 38Seconds removed, owner unchanged.
+- PlacesEditor: state-based rows (spaces + Add-another bugs fixed). TBA seat labels.
+  Story Box milk logo fallback on passes. Host-invite success message.
+- LESSON: sessionStorage key-gate pages need session-first entry; pattern reusable.
+STILL OPEN: souvenir tracking · password reset (no forgot-password exists!) · role
+switcher · unified nav · OG image · test-account cleanup · storyboxnigeria@gmail.com
+ownership unconfirmed.
