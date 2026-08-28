@@ -12,7 +12,6 @@ export default function RsvpPage() {
   const slug = String(params.slug);
 
   const [form, setForm] = useState({ name: "", phone: "", partySize: "1" });
-  const [customParty, setCustomParty] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -58,42 +57,6 @@ export default function RsvpPage() {
 
           <label className={`mt-5 block ${lbl}`}>Phone (WhatsApp)</label>
           <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="0803 123 4567" inputMode="tel" className={inp} />
-
-          <label className={`mt-5 block ${lbl}`}>How many of you are coming?</label>
-          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {[
-              { v: "1", t: "Just me" },
-              { v: "2", t: "Me + 1 guest" },
-              { v: "3", t: "Me + 2 guests" },
-              { v: "4", t: "Me + 3 guests" },
-              { v: "5", t: "Me + 4 guests" },
-            ].map((n) => (
-              <button key={n.v} onClick={() => { setCustomParty(false); setForm({ ...form, partySize: n.v }); }} className={`rounded-xl border py-3 text-[12px] font-[family-name:var(--font-sans)] ${!customParty && form.partySize === n.v ? "border-[#c9a227] bg-[#c9a227]/15 text-[#c9a227]" : "border-white/10 bg-black/30 text-white/50"}`}>
-                {n.t}
-              </button>
-            ))}
-            <button onClick={() => { setCustomParty(true); setForm({ ...form, partySize: "6" }); }} className={`rounded-xl border py-3 text-[12px] font-[family-name:var(--font-sans)] ${customParty ? "border-[#c9a227] bg-[#c9a227]/15 text-[#c9a227]" : "border-white/10 bg-black/30 text-white/50"}`}>
-              More
-            </button>
-          </div>
-          {customParty && (
-            <div className="mt-3">
-              <label className={lbl}>Total number attending (including you)</label>
-              <input
-                type="number"
-                min={6}
-                max={20}
-                value={form.partySize}
-                onChange={(e) => setForm({ ...form, partySize: e.target.value })}
-                onBlur={(e) => {
-                  const v = Math.max(6, Math.min(20, Number(e.target.value) || 6));
-                  setForm({ ...form, partySize: String(v) });
-                }}
-                className={`${inp} [color-scheme:dark]`}
-              />
-              <p className="mt-2 text-[11px] text-white/35 font-[family-name:var(--font-sans)]">Up to 20 people on one pass. For larger groups, contact the host.</p>
-            </div>
-          )}
 
           {error && <p className="mt-4 text-sm text-red-400 font-[family-name:var(--font-sans)]">{error}</p>}
 
