@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { sendApprovalEmail } from "@/lib/mailer";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -42,6 +43,29 @@ export async function POST(req: NextRequest) {
       where: { eventId: event.id, id: { in: idList } },
       data: { status },
     });
+    if (status === "approved") {
+      const approved = await prisma.guest.findMany({
+        where: { eventId: event.id, id: { in: idList }, email: { not: null }, passSentAt: null },
+      });
+      for (const g of approved) {
+        await sendApprovalEmail({
+          to: g.email as string,
+          guestName: g.name,
+          eventTitle: event.title,
+          tagline: event.tagline,
+          slug: event.slug,
+          passId: g.passId,
+          eventDate: event.eventDate,
+          eventDateISO: event.eventDateISO,
+          eventTime: event.eventTime,
+          venue: event.venue,
+          address: event.address,
+          table: g.table,
+        });
+        await prisma.guest.update({ where: { id: g.id }, data: { passSentAt: new Date() } }).catch(() => {});
+      }
+    }
+
     return NextResponse.json({ ok: true, count: idList.length });
   }
 
