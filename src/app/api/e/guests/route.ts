@@ -29,6 +29,8 @@ export async function POST(req: NextRequest) {
       passId: g.passId,
       name: g.name,
       phone: g.phone,
+      email: g.email,
+      passSentAt: g.passSentAt,
       partySize: g.partySize,
       tier: g.tier,
       table: g.table,

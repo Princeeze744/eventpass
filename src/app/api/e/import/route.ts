@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
   const lines = String(list).split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 
   let added = 0;
+  let updated = 0;
   let skipped = 0;
   const errors: string[] = [];
 
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
       : rawTier.startsWith("ven") ? "Vendor"
       : "Guest";
     const partySize = Math.max(1, Math.min(10, Number(parts[3]) || 1));
+    const email = (parts[4] || "").trim().toLowerCase();
 
     if (!name || name.length < 2) {
       skipped++;
@@ -49,9 +51,13 @@ export async function POST(req: NextRequest) {
       },
     });
     if (exists) {
-      if (exists.deletedAt) {
-        await prisma.guest.update({ where: { id: exists.id }, data: { deletedAt: null } });
-        added++;
+      const patch: { deletedAt?: null; email?: string } = {};
+      if (exists.deletedAt) patch.deletedAt = null;
+      if (email && !exists.email) patch.email = email;
+      if (Object.keys(patch).length) {
+        await prisma.guest.update({ where: { id: exists.id }, data: patch });
+        if (patch.email) updated++;
+        if (patch.deletedAt === null) added++;
       } else {
         skipped++;
       }
@@ -68,6 +74,7 @@ export async function POST(req: NextRequest) {
           passId,
           name,
           phone: phone || null,
+          email: email || null,
           tier: TIERS.includes(tier) ? tier : "Guest",
           partySize,
           status: autoApprove ? "approved" : "pending",
@@ -80,5 +87,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ added, skipped, total: lines.length, errors: errors.slice(0, 5) });
+  return NextResponse.json({ added, updated, skipped, total: lines.length, errors: errors.slice(0, 5) });
 }
