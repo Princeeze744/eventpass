@@ -11,7 +11,7 @@ export default function RsvpPage() {
   const params = useParams();
   const slug = String(params.slug);
 
-  const [form, setForm] = useState({ name: "", phone: "", partySize: "1" });
+  const [form, setForm] = useState({ name: "", phone: "", email: "", partySize: "1" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 

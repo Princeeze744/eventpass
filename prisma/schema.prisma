@@ -127,6 +127,7 @@ model Guest {
   passId   String  @unique
   name     String
   phone    String?
+  email    String?
   category String  @default("Guest")
   tier     String  @default("Guest")
 
@@ -150,6 +151,7 @@ model Guest {
   checkedIn       Boolean   @default(false)
   checkedInAt     DateTime?
   souvenirTaken   Boolean   @default(false)
+  passSentAt      DateTime?
 
   createdAt DateTime @default(now())
   deletedAt DateTime?

@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { normPhone, generatePassId } from "@/lib/ids";
 import { getSessionOrganizerId } from "@/lib/auth";
+import { sendRegistrationEmail } from "@/lib/mailer";
 
 export async function POST(req: NextRequest) {
-  const { slug, name, phone, partySize } = await req.json();
+  const { slug, name, phone, email, partySize } = await req.json();
 
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
@@ -61,10 +62,27 @@ export async function POST(req: NextRequest) {
       passId,
       name: String(name).trim().replace(/\s+/g, " "),
       phone: cleanPhone,
+      email: String(email || "").trim().toLowerCase() || null,
       partySize: Math.max(1, Math.min(10, Number(partySize) || 1)),
       status: event.approvalMode === "auto" ? "approved" : "pending",
     },
   });
+
+  if (guest.email) {
+    await sendRegistrationEmail({
+      to: guest.email,
+      guestName: guest.name,
+      eventTitle: event.title,
+      tagline: event.tagline,
+      slug: event.slug,
+      passId: guest.passId,
+      eventDate: event.eventDate,
+      eventTime: event.eventTime,
+      venue: event.venue,
+      autoApproved: event.approvalMode === "auto",
+    });
+    await prisma.guest.update({ where: { id: guest.id }, data: { passSentAt: new Date() } }).catch(() => {});
+  }
 
   return NextResponse.json({ passId: guest.passId });
 }
