@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { canManageEvent } from "@/lib/eventAccess";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
@@ -9,7 +10,7 @@ export async function POST(req: NextRequest) {
 
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
-  if (adminKey !== event.adminKey) {
+  if (!(await canManageEvent(event, String(adminKey || "")))) {
     return NextResponse.json({ error: "Wrong admin key." }, { status: 401 });
   }
 
