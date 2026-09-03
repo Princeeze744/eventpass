@@ -61,6 +61,8 @@ export default async function PassPage({
         eventDate: event.eventDate,
         eventTime: event.eventTime,
         venue: event.venue,
+        eventDateISO: event.eventDateISO,
+        address: event.address,
       }}
     />
   );

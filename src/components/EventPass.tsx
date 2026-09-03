@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { ShieldCheck, Clock, CheckCheck, Loader2, CalendarDays, MapPin, Armchair, XCircle, RotateCcw, Truck, Wrench } from "lucide-react";
+import { ShieldCheck, Clock, CheckCheck, Loader2, CalendarDays, MapPin, Armchair, XCircle, RotateCcw, Truck, Wrench, CalendarPlus } from "lucide-react";
 
 type Props = {
   slug: string;
@@ -26,7 +26,7 @@ type Props = {
   vendorBrief?: string;
   logoUrl?: string;
   checkedInOnline: boolean;
-  event: { title: string; tagline: string; eventDate: string; eventTime: string; venue: string };
+  event: { title: string; tagline: string; eventDate: string; eventTime: string; venue: string; eventDateISO?: string; address?: string };
 };
 
 export default function EventPass(p: Props) {
@@ -57,6 +57,37 @@ export default function EventPass(p: Props) {
 
   const vendorTheme = { accent: "#5eead4", badge: "VENDOR ACCESS", Icon: Truck, note: "Show this at the service entrance" };
   const T = vendor ? vendorTheme : theme;
+
+  function addToCalendar() {
+    const iso = p.event.eventDateISO;
+    if (!iso) return;
+    const base = new Date(iso);
+    if (isNaN(base.getTime())) return;
+    const m = String(p.event.eventTime || "").trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i);
+    let h = m ? Number(m[1]) : 12;
+    const mm = m && m[2] ? Number(m[2]) : 0;
+    const ap = m && m[3] ? m[3].toLowerCase() : "";
+    if (ap === "pm" && h < 12) h += 12;
+    if (ap === "am" && h === 12) h = 0;
+    const start = new Date(base); start.setHours(h, mm, 0, 0);
+    const end = new Date(start); end.setHours(end.getHours() + 6);
+    const z = (n: number) => String(n).padStart(2, "0");
+    const st = (d: Date) => `${d.getUTCFullYear()}${z(d.getUTCMonth() + 1)}${z(d.getUTCDate())}T${z(d.getUTCHours())}${z(d.getUTCMinutes())}00Z`;
+    const loc = [p.event.venue, p.event.address].filter(Boolean).join(", ");
+    const ics = [
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Story Box//EN", "BEGIN:VEVENT",
+      `UID:${p.passId}@storyboxnigeria.com`, `DTSTAMP:${st(new Date())}`,
+      `DTSTART:${st(start)}`, `DTEND:${st(end)}`,
+      `SUMMARY:${p.event.title}`, loc ? `LOCATION:${loc}` : "",
+      "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", `DESCRIPTION:${p.event.title}`, "END:VALARM",
+      "END:VEVENT", "END:VCALENDAR",
+    ].filter(Boolean).join("\r\n");
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `${p.slug}.ics`; a.click();
+    URL.revokeObjectURL(url);
+  }
 
   async function selfCheckIn() {
     setBusy(true);
@@ -188,6 +219,18 @@ export default function EventPass(p: Props) {
           className="relative mt-6 flex min-h-[52px] items-center justify-center gap-2 rounded-full border border-white/20 px-9 text-[11px] uppercase tracking-[0.2em] text-white/75 font-[family-name:var(--font-sans)] disabled:opacity-60"
         >
           {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><RotateCcw className="h-4 w-4" /> Actually, I can make it</>}
+        </motion.button>
+      )}
+
+      {p.event.eventDateISO && !declined && (
+        <motion.button
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.2 }}
+          onClick={addToCalendar}
+          className="relative mt-5 flex min-h-[48px] items-center justify-center gap-2 rounded-full border border-white/20 px-8 text-[11px] uppercase tracking-[0.2em] text-white/70 font-[family-name:var(--font-sans)]"
+        >
+          <CalendarPlus className="h-4 w-4" /> Add to calendar
         </motion.button>
       )}
 
