@@ -10,7 +10,7 @@ import { ShieldCheck, RefreshCw, Loader2, Trash2, RotateCcw, Pencil, X, Check } 
 import ImportPanel from "@/components/ImportPanel";
 
 type G = {
-  id: string; passId: string; name: string; phone?: string | null;
+  id: string; passId: string; name: string; phone?: string | null; email?: string | null; passSentAt?: string | null;
   partySize: number; tier: string; table: string; status: string; rsvpAnswer?: string;
   checkedInOnline: boolean; checkedIn: boolean; deletedAt?: string | null;
 };
@@ -90,6 +90,25 @@ export default function EventAdmin() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ slug, adminKey: key, id, status }),
     });
+    load(key);
+  }
+
+  async function sendPass(g: G) {
+    let target = g.email || "";
+    if (!target) {
+      const typed = window.prompt(`No email on file for ${g.name}. Enter one to send their pass:`);
+      if (!typed) return;
+      target = typed.trim();
+    }
+    setBusy(true);
+    const res = await fetch("/api/e/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, adminKey: key, id: g.id, action: "sendPass", email: target }),
+    });
+    const d = await res.json();
+    setBusy(false);
+    setMsg(res.ok ? `Pass sent to ${d.sent}` : d.error || "Could not send.");
     load(key);
   }
 
@@ -238,7 +257,10 @@ export default function EventAdmin() {
                     <span className="font-[family-name:var(--font-serif)] text-base">{g.name}</span>
                     <span className="ml-2 text-[11px] text-white/30">{g.tier}{g.partySize > 1 ? ` +${g.partySize - 1}` : ""} · {g.table}</span>
                   </td>
-                  <td className="px-4 py-3.5 text-white/45">{g.phone || "-"}</td>
+                  <td className="px-4 py-3.5 text-white/45">
+                    {g.phone || "-"}
+                    <span className="mt-0.5 block text-[11px] text-white/25">{g.email || "no email"}</span>
+                  </td>
                   <td className="px-4 py-3.5 font-mono text-[11px] text-white/45">{g.passId}</td>
                   <td className="px-4 py-3.5">
                     {g.deletedAt ? <span className="rounded-full bg-white/[0.07] px-3 py-1 text-[10px] text-white/40">Removed</span>
@@ -257,6 +279,9 @@ export default function EventAdmin() {
                         <>
                           {g.status !== "approved" && <button onClick={() => setStatus(g.id, "approved")} className="rounded-full border border-emerald-500/40 px-3 py-1 text-[10px] text-emerald-400">Approve</button>}
                           {g.status !== "declined" && <button onClick={() => setStatus(g.id, "declined")} className="rounded-full border border-red-500/40 px-3 py-1 text-[10px] text-red-400">Decline</button>}
+                          <button onClick={() => sendPass(g)} disabled={busy} className={`rounded-full border px-3 py-1 text-[10px] font-[family-name:var(--font-sans)] ${g.passSentAt ? "border-emerald-500/30 text-emerald-400/70" : "border-[#c9a227]/40 text-[#c9a227]"}`}>
+                            {g.passSentAt ? "Sent \u2713" : "Send pass"}
+                          </button>
                           <button onClick={() => setEditing(g)} className="sb-ghost px-3 py-1 text-[10px] text-white/55"><Pencil className="h-3 w-3" /></button>
                         </>
                       )}
