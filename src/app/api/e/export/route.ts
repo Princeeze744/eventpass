@@ -14,10 +14,11 @@ export async function POST(req: NextRequest) {
   });
 
   const esc = (v: string) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const header = ["Name", "Phone", "Category", "Party Size", "Pass ID", "Status", "Table", "Checked In", "Arrival Time"];
+  const header = ["Name", "Phone", "Email", "Category", "Party Size", "Pass ID", "Status", "Table", "Checked In", "Arrival Time"];
   const rows = guests.map((g) => [
     esc(g.name),
     esc(g.phone || ""),
+    esc(g.email || ""),
     esc(g.tier),
     g.partySize,
     esc(g.passId),

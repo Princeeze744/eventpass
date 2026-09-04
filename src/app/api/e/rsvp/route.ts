@@ -21,6 +21,10 @@ export async function POST(req: NextRequest) {
   if (!name || String(name).trim().length < 3) {
     return NextResponse.json({ error: "Please enter your full name." }, { status: 400 });
   }
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  if (!cleanEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cleanEmail)) {
+    return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
+  }
   const cleanPhone = normPhone(phone);
   const sessionUserId = await getSessionOrganizerId();
   if (sessionUserId && cleanPhone) {
@@ -62,7 +66,7 @@ export async function POST(req: NextRequest) {
       passId,
       name: String(name).trim().replace(/\s+/g, " "),
       phone: cleanPhone,
-      email: String(email || "").trim().toLowerCase() || null,
+      email: cleanEmail,
       partySize: Math.max(1, Math.min(10, Number(partySize) || 1)),
       status: event.approvalMode === "auto" ? "approved" : "pending",
     },

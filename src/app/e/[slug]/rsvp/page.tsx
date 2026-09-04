@@ -58,7 +58,7 @@ export default function RsvpPage() {
           <label className={`mt-5 block ${lbl}`}>Phone (WhatsApp)</label>
           <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="0803 123 4567" inputMode="tel" className={inp} />
 
-          <label className={`mt-5 block ${lbl}`}>Email</label>
+          <label className={`mt-5 block ${lbl}`}>Email (required)</label>
           <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="amara@email.com" inputMode="email" type="email" className={inp} />
           <p className="mt-2 text-[11px] leading-relaxed text-white/30 font-[family-name:var(--font-sans)]">We send your pass here, and let you know the moment it is approved.</p>
 
