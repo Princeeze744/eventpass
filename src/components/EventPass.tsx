@@ -222,6 +222,19 @@ export default function EventPass(p: Props) {
         </motion.button>
       )}
 
+      {!declined && (stage === "approved" || stage === "checked" || vendor) && (
+        <motion.a
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.1 }}
+          href={`/e/${p.slug}`}
+          className="relative mt-6 flex min-h-[48px] w-full max-w-[370px] items-center justify-center gap-2 rounded-full border px-8 text-[11px] uppercase tracking-[0.2em] font-[family-name:var(--font-sans)]"
+          style={{ borderColor: `${T.accent}55`, color: T.accent }}
+        >
+          <MapPin className="h-4 w-4" /> View event details
+        </motion.a>
+      )}
+
       {p.event.eventDateISO && !declined && (
         <motion.button
           initial={{ opacity: 0, y: 14 }}

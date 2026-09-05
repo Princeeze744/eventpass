@@ -305,6 +305,12 @@ export async function sendApprovalEmail(opts: {
         ${detailRow("Pass ID", opts.passId)}
       </div>
       ${button(passUrl, "Open my pass")}
+      <p style="margin:20px 0 0;">
+        <a href="${SITE}/e/${opts.slug}" style="display:inline-block;color:#c9a227;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(201,162,39,0.4);padding-bottom:3px;">View event details</a>
+      </p>
+      <p style="margin:14px 0 0;font-size:12px;line-height:1.6;color:rgba(245,241,234,0.4);">
+        Dress code, directions, where to stay and everything else you need for the day.
+      </p>
       <p style="margin:18px 0 0;font-size:12px;color:rgba(245,241,234,0.4);">
         ${ics ? "The attached calendar file will add this to your phone so you are reminded closer to the day." : "Save this email so your pass is easy to find on the day."}
       </p>
