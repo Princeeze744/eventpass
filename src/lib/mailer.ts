@@ -333,3 +333,152 @@ export async function sendApprovalEmail(opts: {
     console.error("Approval email failed:", e);
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  Table assigned                                                     */
+/* ------------------------------------------------------------------ */
+
+export async function sendTableEmail(opts: {
+  to: string;
+  guestName: string;
+  eventTitle: string;
+  tagline: string;
+  slug: string;
+  passId: string;
+  section: string;
+  table: string;
+  seat?: string;
+  eventDate: string;
+  eventDateISO: string;
+  eventTime: string;
+  venue: string;
+  address?: string;
+}) {
+  const key = process.env.RESEND_API_KEY;
+  if (!key || !opts.to) return;
+  const resend = new Resend(key);
+
+  const passUrl = `${SITE}/e/${opts.slug}/pass/${opts.passId}`;
+
+  const ics = buildIcs({
+    title: opts.eventTitle,
+    eventDateISO: opts.eventDateISO,
+    eventTime: opts.eventTime,
+    venue: opts.venue,
+    address: opts.address,
+    passUrl,
+    uid: `${opts.passId}-table`,
+  });
+
+  const html = shell(
+    card(`
+      <p style="margin:0;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#c9a227;">Your seat is reserved</p>
+      <h1 style="margin:14px 0 0;font-family:Georgia,serif;font-size:28px;color:#f5f1ea;">${opts.eventTitle}</h1>
+      ${rule()}
+      <p style="margin:0;font-size:15px;line-height:1.7;color:rgba(245,241,234,0.7);">
+        Great news, ${opts.guestName.split(" ")[0]} &mdash; your table has been assigned.
+        Make your way there when you arrive and the ushers will show you through.
+      </p>
+      <div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(245,241,234,0.08);">
+        ${detailRow("Section", opts.section || "Main")}
+        ${detailRow("Table", opts.seat ? `${opts.table} \u00B7 ${opts.seat}` : opts.table)}
+        ${detailRow("Date", [opts.eventDate, opts.eventTime].filter(Boolean).join(" &middot; "))}
+        ${detailRow("Venue", opts.venue)}
+      </div>
+      ${button(passUrl, "Open my pass")}
+      <p style="margin:20px 0 0;">
+        <a href="${SITE}/e/${opts.slug}" style="display:inline-block;color:#c9a227;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(201,162,39,0.4);padding-bottom:3px;">View event details</a>
+      </p>
+    `)
+  );
+
+  const attachments = ics
+    ? [{ filename: `${opts.slug}.ics`, content: Buffer.from(ics).toString("base64") }]
+    : undefined;
+
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: opts.to,
+      subject: `Reservations \u2014 ${opts.eventTitle}`,
+      html,
+      attachments,
+    });
+  } catch (e) {
+    console.error("Table email failed:", e);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Vendor badge                                                       */
+/* ------------------------------------------------------------------ */
+
+export async function sendVendorBadgeEmail(opts: {
+  to: string;
+  vendorName: string;
+  eventTitle: string;
+  slug: string;
+  passId: string;
+  vendorRole?: string;
+  company?: string;
+  callTime?: string;
+  vendorNote?: string;
+  loadInTime?: string;
+  eventDate: string;
+  eventDateISO: string;
+  eventTime: string;
+  venue: string;
+  address?: string;
+}) {
+  const key = process.env.RESEND_API_KEY;
+  if (!key || !opts.to) return;
+  const resend = new Resend(key);
+
+  const passUrl = `${SITE}/e/${opts.slug}/pass/${opts.passId}`;
+
+  const ics = buildIcs({
+    title: `${opts.eventTitle} (vendor)`,
+    eventDateISO: opts.eventDateISO,
+    eventTime: opts.callTime || opts.loadInTime || opts.eventTime,
+    venue: opts.venue,
+    address: opts.address,
+    passUrl,
+    uid: `${opts.passId}-vendor`,
+  });
+
+  const html = shell(
+    card(`
+      <p style="margin:0;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#5eead4;">You are booked for</p>
+      <h1 style="margin:14px 0 0;font-family:Georgia,serif;font-size:28px;color:#f5f1ea;">${opts.eventTitle}</h1>
+      ${rule()}
+      <p style="margin:0;font-size:15px;line-height:1.7;color:rgba(245,241,234,0.7);">
+        Hello ${opts.vendorName.split(" ")[0]}. Your vendor badge is ready.
+        Show it at the service entrance on arrival.
+      </p>
+      <div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(245,241,234,0.08);">
+        ${detailRow("Role", [opts.vendorRole, opts.company].filter(Boolean).join(" \u00B7 "))}
+        ${detailRow("Call time", opts.callTime || opts.loadInTime || "To be confirmed")}
+        ${detailRow("Date", [opts.eventDate, opts.eventTime].filter(Boolean).join(" &middot; "))}
+        ${detailRow("Venue", opts.venue)}
+        ${opts.vendorNote ? detailRow("Note", opts.vendorNote) : ""}
+      </div>
+      ${button(passUrl, "Open my badge")}
+    `)
+  );
+
+  const attachments = ics
+    ? [{ filename: `${opts.slug}-vendor.ics`, content: Buffer.from(ics).toString("base64") }]
+    : undefined;
+
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: opts.to,
+      subject: `Your vendor badge \u2014 ${opts.eventTitle}`,
+      html,
+      attachments,
+    });
+  } catch (e) {
+    console.error("Vendor badge email failed:", e);
+  }
+}

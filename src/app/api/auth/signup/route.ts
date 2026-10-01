@@ -6,7 +6,7 @@ import { sendWelcomeEmail } from "@/lib/mailer";
 const ROLES = ["planner", "host", "guest", "vendor"];
 
 export async function POST(req: NextRequest) {
-  const { name, email, password, role, phone } = await req.json();
+  const { name, email, password, role, phone, serviceType } = await req.json();
 
   if (!name || !email || !password) {
     return NextResponse.json({ error: "All fields are required." }, { status: 400 });
@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
       email: clean,
       phone: phone ? String(phone).trim() : null,
       role: chosenRole,
+      serviceType: chosenRole === "vendor" ? String(serviceType || "").trim() : "",
       passwordHash: await hashPassword(String(password)),
     },
   });

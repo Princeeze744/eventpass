@@ -9,12 +9,12 @@ import TopBar from "@/components/TopBar";
 import { Loader2, Truck, Plus, X, Clock, Check, Trash2, Pencil, MessageCircle } from "lucide-react";
 
 type V = {
-  id: string; passId: string; name: string; phone: string | null;
+  id: string; passId: string; name: string; phone: string | null; email?: string | null;
   company: string; vendorRole: string; callTime: string; vendorNote: string;
   checkedIn: boolean; checkedInAt: string | null;
 };
 
-const BLANK = { name: "", company: "", vendorRole: "", callTime: "", phone: "", vendorNote: "" };
+const BLANK = { name: "", company: "", vendorRole: "", callTime: "", phone: "", email: "", vendorNote: "" };
 
 export default function Vendors() {
   const params = useParams();
@@ -126,6 +126,7 @@ export default function Vendors() {
             { k: "vendorRole", l: "Role", p: "DJ, caterer, photographer" },
             { k: "callTime", l: "Call time", p: "10:00 AM" },
             { k: "phone", l: "Phone", p: "0803 123 4567" },
+            { k: "email", l: "Email (required)", p: "vendor@email.com" },
           ].map((f) => (
             <div key={f.k}>
               <label className={lbl}>{f.l}</label>
@@ -139,7 +140,7 @@ export default function Vendors() {
         </div>
 
         <div className="shrink-0 border-t border-white/[0.07] px-6 py-5">
-          <button onClick={() => act(editing ? { action: "update", id: editing.id, ...form } : { action: "add", ...form })} disabled={busy || !form.name.trim()} className="sb-btn sb-sheen w-full min-h-[52px] text-[11px] uppercase tracking-[0.2em] font-semibold font-[family-name:var(--font-sans)] disabled:opacity-40">
+          <button onClick={() => act(editing ? { action: "update", id: editing.id, ...form } : { action: "add", ...form })} disabled={busy || !form.name.trim() || !form.email.trim()} className="sb-btn sb-sheen w-full min-h-[52px] text-[11px] uppercase tracking-[0.2em] font-semibold font-[family-name:var(--font-sans)] disabled:opacity-40">
             {busy ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : editing ? "Save changes" : "Add vendor"}
           </button>
         </div>
@@ -231,7 +232,7 @@ export default function Vendors() {
                     <MessageCircle className="h-3 w-3" /> WhatsApp
                   </a>
                 )}
-                <button onClick={() => { setEditing(v); setForm({ name: v.name, company: v.company, vendorRole: v.vendorRole, callTime: v.callTime, phone: v.phone || "", vendorNote: v.vendorNote }); }} className="sb-ghost px-4 py-2.5 text-[10px] text-white/60"><Pencil className="h-3 w-3" /></button>
+                <button onClick={() => { setEditing(v); setForm({ name: v.name, company: v.company, vendorRole: v.vendorRole, callTime: v.callTime, phone: v.phone || "", email: v.email || "", vendorNote: v.vendorNote }); }} className="sb-ghost px-4 py-2.5 text-[10px] text-white/60"><Pencil className="h-3 w-3" /></button>
                 <button onClick={() => act({ action: "remove", id: v.id })} className="rounded-full border border-red-500/30 px-4 py-2.5 text-[10px] text-red-400"><Trash2 className="h-3 w-3" /></button>
               </div>
             </motion.div>

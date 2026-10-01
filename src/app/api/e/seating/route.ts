@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { sendTableEmail } from "@/lib/mailer";
 import { canManageEvent } from "@/lib/eventAccess";
 
 export async function POST(req: NextRequest) {
@@ -96,6 +97,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
+  if (action === "notifyAll") {
+    const seated = await prisma.guest.findMany({
+      where: { eventId: event.id, deletedAt: null, status: "approved", email: { not: null }, NOT: { table: "TBA" } },
+    });
+    let sent = 0;
+    for (const g of seated) {
+      await sendTableEmail({
+        to: g.email as string, guestName: g.name, eventTitle: event.title, tagline: event.tagline,
+        slug: event.slug, passId: g.passId, section: g.section, table: g.table, seat: g.seat,
+        eventDate: event.eventDate, eventDateISO: event.eventDateISO, eventTime: event.eventTime,
+        venue: event.venue, address: event.address,
+      });
+      sent++;
+    }
+    return NextResponse.json({ ok: true, sent });
+  }
+
   if (action === "seat") {
     const table = body.tableId ? await prisma.seatTable.findUnique({ where: { id: String(body.tableId) } }) : null;
     await prisma.guest.update({
@@ -107,6 +125,17 @@ export async function POST(req: NextRequest) {
         wristband: typeof body.wristband === "string" ? body.wristband.trim() : undefined,
       },
     });
+    const seatedGuest = await prisma.guest.findUnique({ where: { id: String(body.guestId) } });
+    if (seatedGuest && seatedGuest.email && body.tableId && body.notify !== false) {
+      await sendTableEmail({
+        to: seatedGuest.email, guestName: seatedGuest.name, eventTitle: event.title, tagline: event.tagline,
+        slug: event.slug, passId: seatedGuest.passId, section: seatedGuest.section,
+        table: seatedGuest.table, seat: seatedGuest.seat,
+        eventDate: event.eventDate, eventDateISO: event.eventDateISO, eventTime: event.eventTime,
+        venue: event.venue, address: event.address,
+      });
+    }
+
     return NextResponse.json({ ok: true });
   }
 

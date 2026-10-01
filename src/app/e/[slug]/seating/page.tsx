@@ -78,6 +78,7 @@ export default function SeatingPlan() {
     const d = await res.json();
     setBusy(false);
     if (d.error) { setMsg(d.error); return; }
+    if (d.sent !== undefined) setMsg(`Emailed ${d.sent} seated guests.`);
     if (d.placed !== undefined) setMsg(`Seated ${d.placed} guests${d.left ? ` · ${d.left} still need space` : ""}.`);
     setPicking(null);
     setShowAdd(false);
@@ -122,6 +123,7 @@ export default function SeatingPlan() {
           <div className="flex flex-wrap gap-2">
             <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]"><Plus className="h-3.5 w-3.5 text-[#c9a227]" /> Add tables</button>
             <button onClick={() => act({ action: "autoSeat" })} disabled={busy} className="flex items-center gap-2 sb-btn px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]"><Sparkles className="h-3.5 w-3.5" /> Auto seat</button>
+            <button onClick={() => { if (confirm("Email every seated guest their table? Only guests with an email address will receive one.")) act({ action: "notifyAll" }); }} disabled={busy} className="flex items-center gap-2 sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]"><Users className="h-3.5 w-3.5 text-[#c9a227]" /> Notify seated</button>
             <button onClick={() => window.print()} className="flex items-center gap-2 sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]"><Printer className="h-3.5 w-3.5 text-[#c9a227]" /> Print</button>
           </div>
         </div>

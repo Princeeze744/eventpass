@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { canManageEvent } from "@/lib/eventAccess";
 import { normPhone, generatePassId } from "@/lib/ids";
+import { sendVendorBadgeEmail } from "@/lib/mailer";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       event: { title: event.title, vendorBrief: event.vendorBrief, loadInTime: event.loadInTime },
       vendors: vendors.map((v) => ({
-        id: v.id, passId: v.passId, name: v.name, phone: v.phone,
+        id: v.id, passId: v.passId, name: v.name, phone: v.phone, email: v.email,
         company: v.company, vendorRole: v.vendorRole, callTime: v.callTime,
         vendorNote: v.vendorNote, status: v.status, checkedIn: v.checkedIn,
         checkedInAt: v.checkedInAt ? new Date(v.checkedInAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : null,
@@ -32,13 +33,17 @@ export async function POST(req: NextRequest) {
     if (!body.name || String(body.name).trim().length < 2) {
       return NextResponse.json({ error: "Enter the vendor name." }, { status: 400 });
     }
+    const vEmail = String(body.email || "").trim().toLowerCase();
+    if (!vEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(vEmail)) {
+      return NextResponse.json({ error: "Enter a valid email address for the vendor." }, { status: 400 });
+    }
 
     const existing = phone ? await prisma.guest.findFirst({ where: { eventId: event.id, phone } }) : null;
     if (existing) {
       await prisma.guest.update({
         where: { id: existing.id },
         data: {
-          isVendor: true, tier: "Vendor", status: "approved", deletedAt: null,
+          isVendor: true, tier: "Vendor", status: "approved", deletedAt: null, email: vEmail,
           company: String(body.company || "").trim(),
           vendorRole: String(body.vendorRole || "").trim(),
           callTime: String(body.callTime || "").trim(),
@@ -56,13 +61,25 @@ export async function POST(req: NextRequest) {
         eventId: event.id, passId,
         name: String(body.name).trim(),
         phone: phone || null,
-        isVendor: true, tier: "Vendor", status: "approved",
+        isVendor: true, tier: "Vendor", status: "approved", email: vEmail,
         company: String(body.company || "").trim(),
         vendorRole: String(body.vendorRole || "").trim(),
         callTime: String(body.callTime || "").trim(),
         vendorNote: String(body.vendorNote || "").trim(),
       },
     });
+    const created = await prisma.guest.findUnique({ where: { passId } });
+    if (created) {
+      await sendVendorBadgeEmail({
+        to: vEmail, vendorName: created.name, eventTitle: event.title, slug: event.slug,
+        passId: created.passId, vendorRole: created.vendorRole, company: created.company,
+        callTime: created.callTime, vendorNote: created.vendorNote,
+        loadInTime: event.loadInTime || "", eventDate: event.eventDate,
+        eventDateISO: event.eventDateISO, eventTime: event.eventTime,
+        venue: event.venue, address: event.address,
+      });
+    }
+
     return NextResponse.json({ ok: true });
   }
 

@@ -18,7 +18,7 @@ function SignupInner() {
   const router = useRouter();
   const params = useSearchParams();
   const [role, setRole] = useState(params.get("role") || "planner");
-  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", serviceType: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -74,6 +74,13 @@ function SignupInner() {
               </button>
             ))}
           </div>
+
+          {role === "vendor" && (
+            <>
+              <label className={`mt-6 block ${lbl}`}>What service do you provide?</label>
+              <input value={form.serviceType} onChange={(e) => setForm({ ...form, serviceType: e.target.value })} placeholder="DJ, caterer, photographer, decorator" className={inp} />
+            </>
+          )}
 
           <label className={`mt-6 block ${lbl}`}>Full Name</label>
           <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Prince Ochidi" className={inp} />
