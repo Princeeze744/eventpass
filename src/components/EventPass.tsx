@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { ShieldCheck, Clock, CheckCheck, Loader2, CalendarDays, MapPin, Armchair, XCircle, RotateCcw, Truck, Wrench, CalendarPlus } from "lucide-react";
+import { ShieldCheck, Clock, CheckCheck, Loader2, CalendarDays, MapPin, UtensilsCrossed, XCircle, RotateCcw, Truck, Wrench, CalendarPlus } from "lucide-react";
 
 type Props = {
   slug: string;
@@ -166,7 +166,7 @@ export default function EventPass(p: Props) {
             : [
                 { Icon: CalendarDays, l: p.event.eventDate, s: p.event.eventTime },
                 { Icon: MapPin, l: "Venue", s: p.event.venue },
-                { Icon: Armchair, l: p.section ? p.section : "Seating", s: p.table === "TBA" ? "TBA" : p.seat ? `${p.table} · ${p.seat}` : p.table },
+                { Icon: UtensilsCrossed, l: p.section ? p.section : "Seating", s: p.table === "TBA" ? "TBA" : p.seat ? `${p.table} · ${p.seat}` : p.table },
               ]
           ).map((d, i) => (
             <div key={i} className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-2 py-3">

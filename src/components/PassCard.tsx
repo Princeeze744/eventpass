@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { BadgeCheck, MapPin, CalendarDays, Armchair, Clock, CheckCheck, Loader2 } from "lucide-react";
+import { BadgeCheck, MapPin, CalendarDays, UtensilsCrossed, Clock, CheckCheck, Loader2 } from "lucide-react";
 
 type PassGuest = {
   passId: string;
@@ -140,7 +140,7 @@ export default function PassCard({
           {[
             { icon: CalendarDays, label: eventInfo.date, sub: eventInfo.time },
             { icon: MapPin, label: "Venue", sub: eventInfo.venue },
-            { icon: Armchair, label: "Seating", sub: guest.table === "TBA" ? "TBA" : guest.table },
+            { icon: UtensilsCrossed, label: "Seating", sub: guest.table === "TBA" ? "TBA" : guest.table },
           ].map((d, i) => (
             <div key={i} className="rounded-2xl border border-white/5 bg-white/[0.03] px-2 py-3">
               <d.icon className="mx-auto h-4 w-4" style={{ color: theme.accent }} />
