@@ -227,7 +227,7 @@ export default function Vendors() {
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link href={`/e/${slug}/pass/${v.passId}`} className="sb-ghost px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-white/70 font-[family-name:var(--font-sans)]">View badge</Link>
                 {v.phone && (
-                  <a href={`https://wa.me/234${v.phone.replace(/^0/, "")}?text=${encodeURIComponent(`Hello ${v.name}, here is your vendor badge for ${title}. Call time: ${v.callTime || "TBC"}.`)}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-emerald-500/90 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
+                  <a href={`https://wa.me/234${String(v.phone || "").replace(/\D/g, "").replace(/^0+/, "").slice(-10)}?text=${encodeURIComponent(`Hello ${v.name}, here is your vendor badge for ${title}.\n\nCall time: ${v.callTime || "TBC"}\n\nOpen your badge: https://storyboxnigeria.com/e/${slug}/pass/${v.passId}`)}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-emerald-500/90 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
                     <MessageCircle className="h-3 w-3" /> WhatsApp
                   </a>
                 )}
