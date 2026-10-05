@@ -85,6 +85,38 @@ model Event {
   guests    Guest[]
   tables    SeatTable[]
   gifts     Gift[]
+  days      EventDay[]
+}
+
+model EventDay {
+  id       String @id @default(cuid())
+  eventId  String
+  event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  label    String @default("")
+  dateISO  String @default("")
+  dateText String @default("")
+  time     String @default("")
+  position Int    @default(0)
+
+  createdAt DateTime @default(now())
+  guestDays GuestDay[]
+
+  @@index([eventId])
+}
+
+model GuestDay {
+  id      String @id @default(cuid())
+  guestId String
+  guest   Guest  @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  dayId   String
+  day     EventDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+
+  callTime String @default("")
+
+  @@unique([guestId, dayId])
+  @@index([guestId])
+  @@index([dayId])
 }
 
 model SeatTable {
@@ -156,6 +188,7 @@ model Guest {
 
   createdAt DateTime @default(now())
   deletedAt DateTime?
+  days      GuestDay[]
 
   @@unique([eventId, phone])
   @@index([eventId])

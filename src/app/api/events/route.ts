@@ -61,5 +61,33 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  // Multi-day: create a row per day. Falls back to a single day from the main date.
+  const incoming = Array.isArray(body.days) ? body.days : [];
+  const dayRows = incoming
+    .filter((d: { dateISO?: string }) => d && String(d.dateISO || "").trim())
+    .map((d: { label?: string; dateISO?: string; dateText?: string; time?: string }, i: number) => ({
+      eventId: event.id,
+      label: String(d.label || "").trim() || `Day ${i + 1}`,
+      dateISO: String(d.dateISO || "").trim(),
+      dateText: String(d.dateText || "").trim(),
+      time: String(d.time || "").trim(),
+      position: i,
+    }));
+
+  if (dayRows.length) {
+    await prisma.eventDay.createMany({ data: dayRows });
+  } else {
+    await prisma.eventDay.create({
+      data: {
+        eventId: event.id,
+        label: event.eventType || "Event day",
+        dateISO: event.eventDateISO,
+        dateText: event.eventDate,
+        time: event.eventTime,
+        position: 0,
+      },
+    });
+  }
+
   return NextResponse.json({ ok: true, slug: event.slug });
 }

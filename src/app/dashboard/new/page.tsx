@@ -57,8 +57,20 @@ export default function NewEventPage() {
     capacity: "",
     approvalMode: "manual",
   });
+  const [days, setDays] = useState([{ label: "", dateISO: "", dateText: "", time: "", timeISO: "" }]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  function setDayCount(n: number) {
+    const next = [...days];
+    while (next.length < n) next.push({ label: "", dateISO: "", dateText: "", time: "", timeISO: "" });
+    while (next.length > n) next.pop();
+    setDays(next);
+  }
+
+  function setDay(i: number, patch: Partial<(typeof days)[0]>) {
+    setDays(days.map((d, j) => (j === i ? { ...d, ...patch } : d)));
+  }
 
   function set(k: string, v: string) {
     setForm({ ...form, [k]: v });
@@ -71,11 +83,21 @@ export default function NewEventPage() {
       setError("Please select the state where the event holds.");
       return;
     }
+    if (!days[0].dateISO) {
+      setError("Please set the date for day one.");
+      return;
+    }
     setLoading(true);
     const res = await fetch("/api/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        ...form,
+        eventDate: days[0].dateText || form.eventDate,
+        dateISO: days[0].dateISO || form.dateISO,
+        eventTime: days[0].time || form.eventTime,
+        days: days.map((d, i) => ({ label: d.label || (days.length > 1 ? `Day ${i + 1}` : form.eventType), dateISO: d.dateISO, dateText: d.dateText, time: d.time })),
+      }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -134,29 +156,42 @@ export default function NewEventPage() {
             <input value={form.hostName} onChange={(e) => set("hostName", e.target.value)} placeholder="Chioma Amadi & Obinna Onyechere" className={inp} />
           </div>
 
-          <div className="mt-6 grid gap-5 sm:grid-cols-2">
-            <div>
-              <label className={lbl}>Date</label>
-              <input
-                type="date"
-                value={form.dateISO || ""}
-                onChange={(e) => setForm({ ...form, dateISO: e.target.value, eventDate: prettyDate(e.target.value) })}
-                className={`${inp} [color-scheme:dark]`}
-              />
-              {form.eventDate && <p className="mt-2 text-[11px] text-[#c9a227] font-[family-name:var(--font-sans)]">{form.eventDate}</p>}
+          <div className="mt-6">
+            <label className={lbl}>How many days does this event run?</label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                <button key={n} onClick={() => setDayCount(n)} className={`h-11 w-11 rounded-xl border text-[13px] font-[family-name:var(--font-sans)] ${days.length === n ? "border-[#c9a227] bg-[#c9a227]/15 text-[#c9a227]" : "border-white/10 bg-black/30 text-white/45"}`}>{n}</button>
+              ))}
+              <button onClick={() => setDayCount(days.length + 1)} className="h-11 rounded-xl border border-dashed border-[#c9a227]/40 px-4 text-[11px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">+ More</button>
             </div>
-            <div>
-              <label className={lbl}>Time</label>
-              <input
-                type="time"
-                value={form.timeISO || ""}
-                onChange={(e) => setForm({ ...form, timeISO: e.target.value, eventTime: prettyTime(e.target.value) })}
-                className={`${inp} [color-scheme:dark]`}
-              />
-              {form.eventTime && <p className="mt-2 text-[11px] text-[#c9a227] font-[family-name:var(--font-sans)]">{form.eventTime}</p>}
-            </div>
+            <p className="mt-2 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">A traditional and white wedding, a three-day conference, a week-long programme &mdash; set each day below.</p>
           </div>
 
+          {days.map((d, i) => (
+            <div key={i} className="mt-5 rounded-2xl border border-white/[0.07] bg-black/20 p-5">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-[#c9a227] font-[family-name:var(--font-sans)]">Day {i + 1}</p>
+
+              {days.length > 1 && (
+                <>
+                  <label className={`mt-4 block ${lbl}`}>What is this day called?</label>
+                  <input value={d.label} onChange={(e) => setDay(i, { label: e.target.value })} placeholder={i === 0 ? "Traditional Wedding" : "White Wedding"} className={inp} />
+                </>
+              )}
+
+              <div className="mt-4 grid gap-5 sm:grid-cols-2">
+                <div>
+                  <label className={lbl}>Date</label>
+                  <input type="date" value={d.dateISO} onChange={(e) => setDay(i, { dateISO: e.target.value, dateText: prettyDate(e.target.value) })} className={`${inp} [color-scheme:dark]`} />
+                  {d.dateText && <p className="mt-2 text-[11px] text-[#c9a227] font-[family-name:var(--font-sans)]">{d.dateText}</p>}
+                </div>
+                <div>
+                  <label className={lbl}>Time</label>
+                  <input type="time" value={d.timeISO} onChange={(e) => setDay(i, { timeISO: e.target.value, time: prettyTime(e.target.value) })} className={`${inp} [color-scheme:dark]`} />
+                  {d.time && <p className="mt-2 text-[11px] text-[#c9a227] font-[family-name:var(--font-sans)]">{d.time}</p>}
+                </div>
+              </div>
+            </div>
+          ))}
           <div className="mt-6">
             <label className={lbl}>Venue</label>
             <input value={form.venue} onChange={(e) => set("venue", e.target.value)} placeholder="Aztech Arcum Event Center" className={inp} />
