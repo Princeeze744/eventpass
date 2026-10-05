@@ -93,6 +93,22 @@ export default function EventAdmin() {
     load(key);
   }
 
+  async function remindAll() {
+    const live = guests.filter((g) => !g.deletedAt && g.status === "approved" && g.rsvpAnswer !== "no" && g.email);
+    if (!live.length) { setMsg("No approved guests with an email address yet."); return; }
+    const note = window.prompt(`Send a reminder to ${live.length} approved guests. Add a short note (optional):`, "");
+    if (note === null) return;
+    setBusy(true);
+    const res = await fetch("/api/e/manage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, adminKey: key, action: "remindAll", ids: [], note }),
+    });
+    const d = await res.json();
+    setBusy(false);
+    setMsg(res.ok ? `Reminder sent to ${d.sent} guests.` : d.error || "Could not send reminders.");
+  }
+
   async function sendPass(g: G) {
     let target = g.email || "";
     if (!target) {
@@ -195,10 +211,13 @@ export default function EventAdmin() {
 
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <ImportPanel slug={slug} adminKey={key} onDone={() => load(key)} />
+          <button onClick={remindAll} disabled={busy} className="flex items-center gap-2 rounded-full bg-[#c9a227] px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">Send reminder</button>
           <a href={`/e/${slug}/host`} className="flex items-center gap-2 rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Host view</a>
           <a href={`/e/${slug}/vendors`} className="flex items-center gap-2 rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Vendors</a>
           <a href={`/e/${slug}/seating`} className="flex items-center gap-2 rounded-full border border-[#c9a227]/40 px-5 py-2.5 text-[10px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">Seating plan</a>
         </div>
+
+        {msg && <p className="mt-4 rounded-2xl border border-[#c9a227]/25 bg-[#c9a227]/[0.07] px-5 py-3 text-[12px] text-[#c9a227] font-[family-name:var(--font-sans)]">{msg}</p>}
 
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search name, phone or pass ID" className={`flex-1 ${inp}`} />

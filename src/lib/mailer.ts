@@ -482,3 +482,80 @@ export async function sendVendorBadgeEmail(opts: {
     console.error("Vendor badge email failed:", e);
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  Event reminder                                                     */
+/* ------------------------------------------------------------------ */
+
+export async function sendReminderEmail(opts: {
+  to: string;
+  guestName: string;
+  eventTitle: string;
+  tagline: string;
+  slug: string;
+  passId: string;
+  eventDate: string;
+  eventDateISO: string;
+  eventTime: string;
+  venue: string;
+  address?: string;
+  table?: string;
+  note?: string;
+}) {
+  const key = process.env.RESEND_API_KEY;
+  if (!key || !opts.to) return;
+  const resend = new Resend(key);
+
+  const passUrl = `${SITE}/e/${opts.slug}/pass/${opts.passId}`;
+
+  const ics = buildIcs({
+    title: opts.eventTitle,
+    eventDateISO: opts.eventDateISO,
+    eventTime: opts.eventTime,
+    venue: opts.venue,
+    address: opts.address,
+    passUrl,
+    uid: `${opts.passId}-reminder`,
+  });
+
+  const seatLine = opts.table && opts.table !== "TBA" ? detailRow("Seating", opts.table) : "";
+
+  const html = shell(
+    card(`
+      <p style="margin:0;font-size:11px;letter-spacing:4px;text-transform:uppercase;color:#c9a227;">A gentle reminder</p>
+      <h1 style="margin:14px 0 0;font-family:Georgia,serif;font-size:28px;color:#f5f1ea;">${opts.eventTitle}</h1>
+      ${rule()}
+      <p style="margin:0;font-size:15px;line-height:1.7;color:rgba(245,241,234,0.7);">
+        Hello ${opts.guestName.split(" ")[0]} &mdash; we are looking forward to seeing you.
+        Your pass is ready; simply present it at the entrance.
+      </p>
+      ${opts.note ? `<p style="margin:16px 0 0;font-size:14px;line-height:1.7;color:rgba(245,241,234,0.6);">${opts.note}</p>` : ""}
+      <div style="margin-top:22px;padding-top:18px;border-top:1px solid rgba(245,241,234,0.08);">
+        ${detailRow("Date", [opts.eventDate, opts.eventTime].filter(Boolean).join(" &middot; "))}
+        ${detailRow("Venue", opts.venue)}
+        ${seatLine}
+        ${detailRow("Pass ID", opts.passId)}
+      </div>
+      ${button(passUrl, "Open my pass")}
+      <p style="margin:20px 0 0;">
+        <a href="${SITE}/e/${opts.slug}" style="display:inline-block;color:#c9a227;text-decoration:none;font-size:12px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(201,162,39,0.4);padding-bottom:3px;">View event details</a>
+      </p>
+    `)
+  );
+
+  const attachments = ics
+    ? [{ filename: `${opts.slug}.ics`, content: Buffer.from(ics).toString("base64") }]
+    : undefined;
+
+  try {
+    await resend.emails.send({
+      from: FROM,
+      to: opts.to,
+      subject: `Reminder \u2014 ${opts.eventTitle}`,
+      html,
+      attachments,
+    });
+  } catch (e) {
+    console.error("Reminder email failed:", e);
+  }
+}
