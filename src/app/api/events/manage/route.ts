@@ -85,12 +85,13 @@ export async function POST(req: NextRequest) {
     const incoming = Array.isArray(body.days) ? body.days : [];
     const rows = incoming
       .filter((d: { dateISO?: string }) => d && String(d.dateISO || "").trim())
-      .map((d: { label?: string; dateISO?: string; dateText?: string; time?: string }, i: number) => ({
+      .map((d: { label?: string; dateISO?: string; dateText?: string; time?: string; capacity?: string }, i: number) => ({
         eventId: event.id,
         label: String(d.label || "").trim() || `Day ${i + 1}`,
         dateISO: String(d.dateISO || "").trim(),
         dateText: String(d.dateText || "").trim(),
         time: String(d.time || "").trim(),
+        capacity: d.capacity ? Number(d.capacity) : null,
         position: i,
       }));
 

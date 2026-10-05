@@ -57,13 +57,13 @@ export default function NewEventPage() {
     capacity: "",
     approvalMode: "manual",
   });
-  const [days, setDays] = useState([{ label: "", dateISO: "", dateText: "", time: "", timeISO: "" }]);
+  const [days, setDays] = useState([{ label: "", dateISO: "", dateText: "", time: "", timeISO: "", capacity: "" }]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   function setDayCount(n: number) {
     const next = [...days];
-    while (next.length < n) next.push({ label: "", dateISO: "", dateText: "", time: "", timeISO: "" });
+    while (next.length < n) next.push({ label: "", dateISO: "", dateText: "", time: "", timeISO: "", capacity: "" });
     while (next.length > n) next.pop();
     setDays(next);
   }
@@ -96,7 +96,7 @@ export default function NewEventPage() {
         eventDate: days[0].dateText || form.eventDate,
         dateISO: days[0].dateISO || form.dateISO,
         eventTime: days[0].time || form.eventTime,
-        days: days.map((d, i) => ({ label: d.label || (days.length > 1 ? `Day ${i + 1}` : form.eventType), dateISO: d.dateISO, dateText: d.dateText, time: d.time })),
+        days: days.map((d, i) => ({ label: d.label || (days.length > 1 ? `Day ${i + 1}` : form.eventType), dateISO: d.dateISO, dateText: d.dateText, time: d.time, capacity: d.capacity })),
       }),
     });
     const data = await res.json();

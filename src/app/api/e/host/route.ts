@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
         label: d.label,
         dateText: d.dateText,
         time: d.time,
+        capacity: d.capacity,
         guests: onDay.length,
         heads: onDay.reduce((a, g) => a + g.partySize, 0),
         vendors: vendorsOnDay.length,
