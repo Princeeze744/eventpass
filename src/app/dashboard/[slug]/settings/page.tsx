@@ -82,18 +82,18 @@ export default function EventSettings() {
           accentColor: d.event.accentColor || "#c9a227",
         });
         if (Array.isArray(d.days) && d.days.length) {
-          setDays(d.days.map((x: { label: string; dateISO: string; dateText: string; time: string }) => ({ label: x.label, dateISO: x.dateISO, dateText: x.dateText, time: x.time })));
+          setDays(d.days.map((x: { label: string; dateISO: string; dateText: string; time: string; capacity: number | null }) => ({ label: x.label, dateISO: x.dateISO, dateText: x.dateText, time: x.time, capacity: x.capacity ? String(x.capacity) : "" })));
         }
         setLoading(false);
       })
       .catch(() => { setMsg("Network error."); setLoading(false); });
   }, [slug]);
 
-  const [days, setDays] = useState<{ label: string; dateISO: string; dateText: string; time: string }[]>([]);
+  const [days, setDays] = useState<{ label: string; dateISO: string; dateText: string; time: string; capacity: string }[]>([]);
 
   function setDayCount(n: number) {
     const next = [...days];
-    while (next.length < n) next.push({ label: "", dateISO: "", dateText: "", time: "" });
+    while (next.length < n) next.push({ label: "", dateISO: "", dateText: "", time: "", capacity: "" });
     while (next.length > n) next.pop();
     setDays(next);
   }
@@ -313,6 +313,7 @@ export default function EventSettings() {
                     <input type="date" value={d.dateISO} onChange={(e) => setDay(i, { dateISO: e.target.value, dateText: prettyDate(e.target.value) })} className={`${inp} [color-scheme:dark]`} />
                     <input value={d.time} onChange={(e) => setDay(i, { time: e.target.value })} placeholder="2:00 PM" className={inp} />
                   </div>
+                  <input value={d.capacity} onChange={(e) => setDay(i, { capacity: e.target.value })} placeholder="Capacity for this day (leave empty for no limit)" inputMode="numeric" className={`mt-3 ${inp}`} />
                 </div>
               ))}
               <button onClick={saveDays} disabled={busy} className="mt-4 rounded-full bg-[#c9a227] px-6 py-3 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">Save days</button>
