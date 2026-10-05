@@ -16,13 +16,17 @@ export async function POST(req: NextRequest) {
     const vendors = await prisma.guest.findMany({
       where: { eventId: event.id, isVendor: true, deletedAt: null },
       orderBy: { callTime: "asc" },
+      include: { days: { include: { day: true } } },
     });
+    const evDays = await prisma.eventDay.findMany({ where: { eventId: event.id }, orderBy: { position: "asc" } });
     return NextResponse.json({
       event: { title: event.title, vendorBrief: event.vendorBrief, loadInTime: event.loadInTime },
+      eventDays: evDays.map((d) => ({ id: d.id, label: d.label, dateText: d.dateText, time: d.time })),
       vendors: vendors.map((v) => ({
         id: v.id, passId: v.passId, name: v.name, phone: v.phone, email: v.email,
         company: v.company, vendorRole: v.vendorRole, callTime: v.callTime,
         vendorNote: v.vendorNote, status: v.status, checkedIn: v.checkedIn,
+        days: v.days.sort((a, b) => a.day.position - b.day.position).map((gd) => ({ dayId: gd.dayId, label: gd.day.label, callTime: gd.callTime })),
         checkedInAt: v.checkedInAt ? new Date(v.checkedInAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : null,
       })),
     });
@@ -69,6 +73,21 @@ export async function POST(req: NextRequest) {
       },
     });
     const created = await prisma.guest.findUnique({ where: { passId } });
+
+    // Which days this vendor works, each with its own call time
+    const vDays = Array.isArray(body.vendorDays) ? body.vendorDays : [];
+    const eventDays = await prisma.eventDay.findMany({ where: { eventId: event.id }, orderBy: { position: "asc" } });
+    if (created && eventDays.length) {
+      const rows = vDays.length
+        ? eventDays.filter((d) => vDays.some((x: { dayId?: string }) => x && x.dayId === d.id))
+            .map((d) => ({
+              guestId: created.id,
+              dayId: d.id,
+              callTime: String(vDays.find((x: { dayId?: string; callTime?: string }) => x.dayId === d.id)?.callTime || "").trim(),
+            }))
+        : eventDays.map((d) => ({ guestId: created.id, dayId: d.id, callTime: String(body.callTime || "").trim() }));
+      if (rows.length) await prisma.guestDay.createMany({ data: rows, skipDuplicates: true });
+    }
     if (created) {
       await sendVendorBadgeEmail({
         to: vEmail, vendorName: created.name, eventTitle: event.title, slug: event.slug,

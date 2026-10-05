@@ -28,6 +28,15 @@ export default function Vendors() {
   const [brief, setBrief] = useState("");
   const [loadIn, setLoadIn] = useState("");
   const [vendors, setVendors] = useState<V[]>([]);
+  const [eventDays, setEventDays] = useState<{ id: string; label: string; dateText: string; time: string }[]>([]);
+  const [vDays, setVDays] = useState<{ dayId: string; callTime: string }[]>([]);
+
+  function toggleVDay(id: string) {
+    setVDays(vDays.some((x) => x.dayId === id) ? vDays.filter((x) => x.dayId !== id) : [...vDays, { dayId: id, callTime: "" }]);
+  }
+  function setVDayTime(id: string, t: string) {
+    setVDays(vDays.map((x) => (x.dayId === id ? { ...x, callTime: t } : x)));
+  }
   const [form, setForm] = useState(BLANK);
   const [editing, setEditing] = useState<V | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -56,6 +65,7 @@ export default function Vendors() {
     setBrief(d.event.vendorBrief || "");
     setLoadIn(d.event.loadInTime || "");
     setVendors(d.vendors);
+    setEventDays(d.eventDays || []);
     return true;
   }, [slug]);
 
@@ -133,6 +143,36 @@ export default function Vendors() {
               <input value={form[f.k as keyof typeof form]} onChange={(e) => setForm({ ...form, [f.k]: e.target.value })} placeholder={f.p} className={inp} />
             </div>
           ))}
+          {eventDays.length > 1 && !editing && (
+            <div>
+              <label className={lbl}>Which days are they working?</label>
+              <div className="mt-2 space-y-2">
+                {eventDays.map((d) => {
+                  const on = vDays.some((x) => x.dayId === d.id);
+                  return (
+                    <div key={d.id} className={`rounded-2xl border px-4 py-3 ${on ? "border-[#c9a227]/50 bg-[#c9a227]/[0.07]" : "border-white/10 bg-black/25"}`}>
+                      <button onClick={() => toggleVDay(d.id)} className="flex w-full items-center gap-3 text-left">
+                        <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${on ? "border-[#c9a227] bg-[#c9a227] text-[#080807]" : "border-white/25"}`}>{on ? "\u2713" : ""}</span>
+                        <span>
+                          <span className="block text-[13px] text-[#f5f1ea] font-[family-name:var(--font-sans)]">{d.label}</span>
+                          <span className="block text-[11px] text-white/40 font-[family-name:var(--font-sans)]">{d.dateText}</span>
+                        </span>
+                      </button>
+                      {on && (
+                        <input
+                          value={vDays.find((x) => x.dayId === d.id)?.callTime || ""}
+                          onChange={(e) => setVDayTime(d.id, e.target.value)}
+                          placeholder="Call time for this day, e.g. 8:00 AM"
+                          className="mt-3 w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-[12px] text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div>
             <label className={lbl}>Note for this vendor</label>
             <textarea value={form.vendorNote} onChange={(e) => setForm({ ...form, vendorNote: e.target.value })} rows={2} placeholder="Bring extension cables" className={`${inp} resize-y`} />
@@ -140,7 +180,7 @@ export default function Vendors() {
         </div>
 
         <div className="shrink-0 border-t border-white/[0.07] px-6 py-5">
-          <button onClick={() => act(editing ? { action: "update", id: editing.id, ...form } : { action: "add", ...form })} disabled={busy || !form.name.trim() || !form.email.trim()} className="sb-btn sb-sheen w-full min-h-[52px] text-[11px] uppercase tracking-[0.2em] font-semibold font-[family-name:var(--font-sans)] disabled:opacity-40">
+          <button onClick={() => act(editing ? { action: "update", id: editing.id, ...form } : { action: "add", ...form, vendorDays: vDays })} disabled={busy || !form.name.trim() || !form.email.trim()} className="sb-btn sb-sheen w-full min-h-[52px] text-[11px] uppercase tracking-[0.2em] font-semibold font-[family-name:var(--font-sans)] disabled:opacity-40">
             {busy ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : editing ? "Save changes" : "Add vendor"}
           </button>
         </div>
