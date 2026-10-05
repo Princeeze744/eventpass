@@ -4,8 +4,19 @@ import { normPhone, generatePassId } from "@/lib/ids";
 import { getSessionOrganizerId } from "@/lib/auth";
 import { sendRegistrationEmail } from "@/lib/mailer";
 
+export async function GET(req: NextRequest) {
+  const slug = req.nextUrl.searchParams.get("slug") || "";
+  const event = await prisma.event.findUnique({ where: { slug } });
+  if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
+  const days = await prisma.eventDay.findMany({ where: { eventId: event.id }, orderBy: { position: "asc" } });
+  return NextResponse.json({
+    title: event.title,
+    days: days.map((d) => ({ id: d.id, label: d.label, dateText: d.dateText, time: d.time })),
+  });
+}
+
 export async function POST(req: NextRequest) {
-  const { slug, name, phone, email, partySize } = await req.json();
+  const { slug, name, phone, email, partySize, dayIds } = await req.json();
 
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
@@ -71,6 +82,18 @@ export async function POST(req: NextRequest) {
       status: event.approvalMode === "auto" ? "approved" : "pending",
     },
   });
+
+  // Days: save what they ticked, or every day if they ticked nothing
+  const allDays = await prisma.eventDay.findMany({ where: { eventId: event.id }, orderBy: { position: "asc" } });
+  if (allDays.length) {
+    const chosen = Array.isArray(dayIds) && dayIds.length
+      ? allDays.filter((d) => dayIds.includes(d.id))
+      : allDays;
+    await prisma.guestDay.createMany({
+      data: chosen.map((d) => ({ guestId: guest.id, dayId: d.id })),
+      skipDuplicates: true,
+    });
+  }
 
   if (guest.email) {
     await sendRegistrationEmail({

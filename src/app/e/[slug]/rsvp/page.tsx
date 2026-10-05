@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
@@ -13,6 +13,25 @@ export default function RsvpPage() {
 
   const [form, setForm] = useState({ name: "", phone: "", email: "", partySize: "1" });
   const [error, setError] = useState("");
+
+  const [days, setDays] = useState<{ id: string; label: string; dateText: string; time: string }[]>([]);
+  const [picked, setPicked] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch(`/api/e/rsvp?slug=${slug}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.days) && d.days.length > 1) {
+          setDays(d.days);
+          setPicked(d.days.map((x: { id: string }) => x.id));
+        }
+      })
+      .catch(() => {});
+  }, [slug]);
+
+  function toggleDay(id: string) {
+    setPicked(picked.includes(id) ? picked.filter((x) => x !== id) : [...picked, id]);
+  }
   const [loading, setLoading] = useState(false);
 
   async function submit() {
@@ -22,7 +41,7 @@ export default function RsvpPage() {
     const res = await fetch("/api/e/rsvp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, ...form }),
+      body: JSON.stringify({ slug, ...form, dayIds: picked }),
     });
     const data = await res.json();
     if (!res.ok) {
@@ -61,6 +80,26 @@ export default function RsvpPage() {
           <label className={`mt-5 block ${lbl}`}>Email (required)</label>
           <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="amara@email.com" inputMode="email" type="email" className={inp} />
           <p className="mt-2 text-[11px] leading-relaxed text-white/30 font-[family-name:var(--font-sans)]">We send your pass here, and let you know the moment it is approved.</p>
+
+          {days.length > 1 && (
+            <div className="mt-6">
+              <label className={lbl}>Which days will you attend?</label>
+              <div className="mt-3 space-y-2">
+                {days.map((d) => (
+                  <button key={d.id} onClick={() => toggleDay(d.id)} className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left font-[family-name:var(--font-sans)] ${picked.includes(d.id) ? "border-[#c9a227]/60 bg-[#c9a227]/[0.08]" : "border-white/10 bg-black/25"}`}>
+                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${picked.includes(d.id) ? "border-[#c9a227] bg-[#c9a227] text-[#080807]" : "border-white/25"}`}>
+                      {picked.includes(d.id) ? "\u2713" : ""}
+                    </span>
+                    <span>
+                      <span className="block text-[13px] text-[#f5f1ea]">{d.label}</span>
+                      <span className="block text-[11px] text-white/40">{d.dateText}{d.time ? ` \u00B7 ${d.time}` : ""}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">Untick any day you will not be attending.</p>
+            </div>
+          )}
 
           {error && <p className="mt-4 text-sm text-red-400 font-[family-name:var(--font-sans)]">{error}</p>}
 
