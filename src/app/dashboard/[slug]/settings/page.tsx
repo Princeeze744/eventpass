@@ -81,10 +81,29 @@ export default function EventSettings() {
           approvalMode: d.event.approvalMode || "manual",
           accentColor: d.event.accentColor || "#c9a227",
         });
+        if (Array.isArray(d.days) && d.days.length) {
+          setDays(d.days.map((x: { label: string; dateISO: string; dateText: string; time: string }) => ({ label: x.label, dateISO: x.dateISO, dateText: x.dateText, time: x.time })));
+        }
         setLoading(false);
       })
       .catch(() => { setMsg("Network error."); setLoading(false); });
   }, [slug]);
+
+  const [days, setDays] = useState<{ label: string; dateISO: string; dateText: string; time: string }[]>([]);
+
+  function setDayCount(n: number) {
+    const next = [...days];
+    while (next.length < n) next.push({ label: "", dateISO: "", dateText: "", time: "" });
+    while (next.length > n) next.pop();
+    setDays(next);
+  }
+  function setDay(i: number, patch: Partial<(typeof days)[0]>) {
+    setDays(days.map((d, j) => (j === i ? { ...d, ...patch } : d)));
+  }
+  async function saveDays() {
+    if (days.length > 1 && !confirm("Changing the days will reset which days your guests selected. They will be marked as attending all days and can be adjusted afterwards. Continue?")) return;
+    await act("setDays", { days });
+  }
 
   async function act(action: string, extra: Record<string, unknown> = {}) {
     setBusy(true);
@@ -271,6 +290,32 @@ export default function EventSettings() {
                   Send invite
                 </button>
               </div>
+            </div>
+
+            <div className={`${card} mt-4 p-6`}>
+              <p className="text-[10px] uppercase tracking-[0.35em] text-[#c9a227] font-[family-name:var(--font-sans)]">Event days</p>
+              <p className="mt-3 text-[13px] leading-relaxed text-white/50 font-[family-name:var(--font-sans)]">
+                How many days this event runs. Guests choose which days they will attend when they register.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                  <button key={n} onClick={() => setDayCount(n)} className={`h-11 w-11 rounded-xl border text-[13px] font-[family-name:var(--font-sans)] ${days.length === n ? "border-[#c9a227] bg-[#c9a227]/15 text-[#c9a227]" : "border-white/10 bg-black/30 text-white/45"}`}>{n}</button>
+                ))}
+                <button onClick={() => setDayCount(days.length + 1)} className="h-11 rounded-xl border border-dashed border-[#c9a227]/40 px-4 text-[11px] uppercase tracking-[0.15em] text-[#c9a227] font-[family-name:var(--font-sans)]">+ More</button>
+              </div>
+              {days.map((d, i) => (
+                <div key={i} className="mt-4 rounded-2xl border border-white/[0.07] bg-black/20 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-[#c9a227] font-[family-name:var(--font-sans)]">Day {i + 1}</p>
+                  {days.length > 1 && (
+                    <input value={d.label} onChange={(e) => setDay(i, { label: e.target.value })} placeholder={i === 0 ? "Traditional Wedding" : "White Wedding"} className={`mt-3 ${inp}`} />
+                  )}
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <input type="date" value={d.dateISO} onChange={(e) => setDay(i, { dateISO: e.target.value, dateText: prettyDate(e.target.value) })} className={`${inp} [color-scheme:dark]`} />
+                    <input value={d.time} onChange={(e) => setDay(i, { time: e.target.value })} placeholder="2:00 PM" className={inp} />
+                  </div>
+                </div>
+              ))}
+              <button onClick={saveDays} disabled={busy} className="mt-4 rounded-full bg-[#c9a227] px-6 py-3 text-[10px] uppercase tracking-[0.15em] font-semibold text-[#080807] font-[family-name:var(--font-sans)] disabled:opacity-60">Save days</button>
             </div>
 
             <div className={`${card} mt-4 p-6`}>
