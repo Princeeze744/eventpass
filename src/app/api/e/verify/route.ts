@@ -27,6 +27,26 @@ export async function POST(req: NextRequest) {
       guest: { name: guest.name, tier: guest.tier, table: guest.table },
     });
   }
+  // Multi-day: is this guest admitted today?
+  const eventDays = await prisma.eventDay.findMany({ where: { eventId: event.id }, orderBy: { position: "asc" } });
+  if (eventDays.length > 1) {
+    const today = new Date();
+    const todayISO = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const todayDay = eventDays.find((d) => d.dateISO === todayISO);
+    if (todayDay) {
+      const allowed = await prisma.guestDay.findFirst({ where: { guestId: guest.id, dayId: todayDay.id } });
+      if (!allowed) {
+        const theirs = await prisma.guestDay.findMany({ where: { guestId: guest.id }, include: { day: true } });
+        const labels = theirs.sort((a, b) => a.day.position - b.day.position).map((x) => x.day.label).join(", ");
+        return NextResponse.json({
+          status: "wrongday",
+          message: `Not registered for ${todayDay.label}.`,
+          guest: { name: guest.name, tier: guest.tier, table: guest.table, validFor: labels || "no days selected" },
+        });
+      }
+    }
+  }
+
   if (guest.checkedIn) {
     return NextResponse.json({
       status: "duplicate",

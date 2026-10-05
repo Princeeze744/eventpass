@@ -68,6 +68,19 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Per-day capacity
+  const dayList = await prisma.eventDay.findMany({ where: { eventId: event.id }, orderBy: { position: "asc" } });
+  if (dayList.length) {
+    const wanted = Array.isArray(dayIds) && dayIds.length ? dayList.filter((d) => dayIds.includes(d.id)) : dayList;
+    for (const d of wanted) {
+      if (!d.capacity) continue;
+      const taken = await prisma.guestDay.count({ where: { dayId: d.id } });
+      if (taken >= d.capacity) {
+        return NextResponse.json({ error: `${d.label} is fully booked. Please select another day.` }, { status: 403 });
+      }
+    }
+  }
+
   let passId = generatePassId();
   while (await prisma.guest.findUnique({ where: { passId } })) passId = generatePassId();
 

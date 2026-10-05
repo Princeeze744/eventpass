@@ -94,6 +94,7 @@ model EventDay {
   event    Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   label    String @default("")
+  capacity Int?
   dateISO  String @default("")
   dateText String @default("")
   time     String @default("")

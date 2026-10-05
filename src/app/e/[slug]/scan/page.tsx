@@ -6,10 +6,10 @@ import { useParams } from "next/navigation";
 import { CheckCircle2, XCircle, AlertTriangle, Keyboard, ScanLine, ShieldCheck, Check } from "lucide-react";
 
 type Result = {
-  status: "valid" | "invalid" | "duplicate" | "pending";
+  status: "valid" | "invalid" | "duplicate" | "pending" | "wrongday";
   message: string;
   preChecked?: boolean;
-  guest?: { name: string; tier: string; table: string; partySize?: number; checkedInAt?: string };
+  guest?: { name: string; tier: string; table: string; partySize?: number; checkedInAt?: string; validFor?: string };
 };
 
 export default function EventScanner() {
@@ -117,6 +117,8 @@ export default function EventScanner() {
       ? { bg: "bg-emerald-600", Icon: CheckCircle2, title: result.preChecked ? "EXPRESS ✓ WELCOME" : "WELCOME" }
       : result?.status === "duplicate"
       ? { bg: "bg-amber-500", Icon: AlertTriangle, title: "ALREADY USED" }
+      : result?.status === "wrongday"
+      ? { bg: "bg-orange-600", Icon: AlertTriangle, title: "WRONG DAY" }
       : result?.status === "pending"
       ? { bg: "bg-slate-600", Icon: AlertTriangle, title: "NOT APPROVED" }
       : { bg: "bg-red-600", Icon: XCircle, title: "NOT ON LIST" };
@@ -204,6 +206,7 @@ export default function EventScanner() {
                   {result.guest.partySize && result.guest.partySize > 1 ? ` · Party of ${result.guest.partySize}` : ""}
                 </p>
                 {result.guest.checkedInAt && <p className="mt-2 text-sm text-white/70">First scanned at {result.guest.checkedInAt}</p>}
+                {result.guest.validFor && <p className="mt-2 text-sm text-white/80">Registered for: {result.guest.validFor}</p>}
               </div>
             )}
 
