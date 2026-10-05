@@ -11,9 +11,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Wrong access key." }, { status: 401 });
   }
 
-  const [guests, tables] = await Promise.all([
-    prisma.guest.findMany({ where: { eventId: event.id, deletedAt: null } }),
+  const [guests, tables, eventDays] = await Promise.all([
+    prisma.guest.findMany({ where: { eventId: event.id, deletedAt: null }, include: { days: true } }),
     prisma.seatTable.findMany({ where: { eventId: event.id }, orderBy: [{ section: "asc" }, { position: "asc" }] }),
+    prisma.eventDay.findMany({ where: { eventId: event.id }, orderBy: { position: "asc" } }),
   ]);
 
   const attending = guests.filter((g) => g.status === "approved" && g.rsvpAnswer !== "no");
@@ -43,6 +44,18 @@ export async function POST(req: NextRequest) {
       vips: attending.filter((g) => g.tier === "VIP").length,
       family: attending.filter((g) => g.tier === "Family").length,
     },
+    days: eventDays.length > 1 ? eventDays.map((d) => {
+      const onDay = attending.filter((g) => !g.isVendor && g.days.some((gd) => gd.dayId === d.id));
+      const vendorsOnDay = guests.filter((g) => g.isVendor && g.days.some((gd) => gd.dayId === d.id));
+      return {
+        label: d.label,
+        dateText: d.dateText,
+        time: d.time,
+        guests: onDay.length,
+        heads: onDay.reduce((a, g) => a + g.partySize, 0),
+        vendors: vendorsOnDay.length,
+      };
+    }) : [],
     tables: tables.map((t) => ({
       name: t.name, section: t.section, capacity: t.capacity,
       guests: attending.filter((g) => g.table === t.name).map((g) => ({ name: g.name, partySize: g.partySize, tier: g.tier })),
