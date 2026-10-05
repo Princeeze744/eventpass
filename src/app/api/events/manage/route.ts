@@ -81,6 +81,34 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, newSlug: candidate });
   }
 
+  if (action === "setDays") {
+    const incoming = Array.isArray(body.days) ? body.days : [];
+    const rows = incoming
+      .filter((d: { dateISO?: string }) => d && String(d.dateISO || "").trim())
+      .map((d: { label?: string; dateISO?: string; dateText?: string; time?: string }, i: number) => ({
+        eventId: event.id,
+        label: String(d.label || "").trim() || `Day ${i + 1}`,
+        dateISO: String(d.dateISO || "").trim(),
+        dateText: String(d.dateText || "").trim(),
+        time: String(d.time || "").trim(),
+        position: i,
+      }));
+
+    if (!rows.length) {
+      return NextResponse.json({ error: "Set a date for at least one day." }, { status: 400 });
+    }
+
+    await prisma.eventDay.deleteMany({ where: { eventId: event.id } });
+    await prisma.eventDay.createMany({ data: rows });
+
+    await prisma.event.update({
+      where: { id: event.id },
+      data: { eventDate: rows[0].dateText, eventDateISO: rows[0].dateISO, eventTime: rows[0].time || event.eventTime },
+    });
+
+    return NextResponse.json({ ok: true, days: rows.length });
+  }
+
   if (action === "rotateKeys") {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     const gen = (p: string) => `${p}-${Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("")}`;
