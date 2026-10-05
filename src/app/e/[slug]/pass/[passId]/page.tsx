@@ -34,8 +34,18 @@ export default async function PassPage({
     );
   }
 
+  const guestDays = await prisma.guestDay.findMany({
+    where: { guestId: guest.id },
+    include: { day: true },
+  });
+  const allDays = await prisma.eventDay.count({ where: { eventId: event.id } });
+  const dayLabels = guestDays
+    .sort((a, b) => a.day.position - b.day.position)
+    .map((gd) => gd.day.label);
+
   return (
     <EventPass
+      dayLabels={allDays > 1 ? dayLabels : []}
       slug={slug}
       passId={guest.passId}
       name={guest.name}

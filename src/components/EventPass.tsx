@@ -26,6 +26,7 @@ type Props = {
   vendorBrief?: string;
   logoUrl?: string;
   checkedInOnline: boolean;
+  dayLabels?: string[];
   event: { title: string; tagline: string; eventDate: string; eventTime: string; venue: string; eventDateISO?: string; address?: string };
 };
 
@@ -155,6 +156,15 @@ export default function EventPass(p: Props) {
             <p className="mt-1 text-[11px] text-white/45 font-[family-name:var(--font-sans)]">Party of {p.partySize}</p>
           )}
         </div>
+
+        {p.dayLabels && p.dayLabels.length > 0 && (
+          <div className="mt-5 rounded-2xl border px-4 py-3 text-center" style={{ borderColor: `${T.accent}33`, background: `${T.accent}0d` }}>
+            <p className="text-[9px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">Valid for</p>
+            <p className="mt-1 text-[12px] leading-relaxed font-[family-name:var(--font-sans)]" style={{ color: T.accent }}>
+              {p.dayLabels.join(" \u00B7 ")}
+            </p>
+          </div>
+        )}
 
         <div className="mt-6 grid grid-cols-3 gap-2 text-center font-[family-name:var(--font-sans)]">
           {(vendor
