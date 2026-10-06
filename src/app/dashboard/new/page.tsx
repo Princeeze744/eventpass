@@ -190,6 +190,10 @@ export default function NewEventPage() {
                   {d.time && <p className="mt-2 text-[11px] text-[#c9a227] font-[family-name:var(--font-sans)]">{d.time}</p>}
                 </div>
               </div>
+              <div className="mt-4">
+                <label className={lbl}>Capacity for this day (optional)</label>
+                <input value={d.capacity} onChange={(e) => setDay(i, { capacity: e.target.value })} placeholder="Leave empty for no limit" inputMode="numeric" className={inp} />
+              </div>
             </div>
           ))}
           <div className="mt-6">

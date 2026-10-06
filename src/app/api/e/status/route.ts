@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { canManageEvent } from "@/lib/eventAccess";
 import { sendApprovalEmail, sendRegistrationEmail } from "@/lib/mailer";
 
 export async function POST(req: NextRequest) {
   const { slug, adminKey, id, status, tier, action, email } = await req.json();
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
-  if (!event || adminKey !== event.adminKey) {
+  if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
+  if (!(await canManageEvent(event, String(adminKey || "")))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
