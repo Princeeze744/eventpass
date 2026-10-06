@@ -41,7 +41,7 @@ export default async function PassPage({
   const allDays = await prisma.eventDay.count({ where: { eventId: event.id } });
   const dayLabels = guestDays
     .sort((a, b) => a.day.position - b.day.position)
-    .map((gd) => gd.day.label);
+    .map((gd) => `${gd.day.label}${gd.day.dateText ? ` \u2014 ${gd.day.dateText}` : ""}${gd.day.time ? `, ${gd.day.time}` : ""}`);
 
   return (
     <EventPass

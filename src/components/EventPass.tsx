@@ -161,7 +161,7 @@ export default function EventPass(p: Props) {
           <div className="mt-5 rounded-2xl border px-4 py-3 text-center" style={{ borderColor: `${T.accent}33`, background: `${T.accent}0d` }}>
             <p className="text-[9px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">Valid for</p>
             <p className="mt-1 text-[12px] leading-relaxed font-[family-name:var(--font-sans)]" style={{ color: T.accent }}>
-              {p.dayLabels.join(" \u00B7 ")}
+              {p.dayLabels.map((d, i) => (<span key={i} className="block">{d}</span>))}
             </p>
           </div>
         )}
