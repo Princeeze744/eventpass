@@ -25,6 +25,19 @@ export default function SeatingPlan() {
   const [busy, setBusy] = useState(false);
   const [picking, setPicking] = useState<U | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [renaming, setRenaming] = useState("");
+  const [newName, setNewName] = useState("");
+
+  function startRename(id: string, current: string) {
+    setRenaming(id);
+    setNewName(current);
+  }
+  async function saveRename(id: string) {
+    const n = newName.trim();
+    setRenaming("");
+    if (!n) return;
+    await act({ action: "updateTable", id, name: n });
+  }
   const [form, setForm] = useState({ prefix: "Table", section: "Main", count: "10", capacity: "10" });
 
   const load = useCallback(async (k: string) => {
@@ -166,7 +179,18 @@ export default function SeatingPlan() {
                   <motion.div key={t.id} layout className={`${card} p-5 print:border-black/20 ${full ? "border-[#c9a227]/30" : ""}`}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-[family-name:var(--font-serif)] text-2xl">{t.name}</p>
+                        {renaming === t.id ? (
+                          <input
+                            autoFocus
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                            onBlur={() => saveRename(t.id)}
+                            onKeyDown={(e) => { if (e.key === "Enter") saveRename(t.id); if (e.key === "Escape") setRenaming(""); }}
+                            className="w-full rounded-lg border border-[#c9a227]/50 bg-black/50 px-2 py-1 font-[family-name:var(--font-serif)] text-2xl text-[#f5f1ea] outline-none"
+                          />
+                        ) : (
+                          <p onClick={() => startRename(t.id, t.name)} title="Click to rename" className="cursor-text font-[family-name:var(--font-serif)] text-2xl hover:text-[#c9a227] print:hover:text-inherit">{t.name}</p>
+                        )}
                         <p className="mt-0.5 text-[11px] text-white/35 font-[family-name:var(--font-sans)] print:text-black">{t.seated} / {t.capacity} seats</p>
                       </div>
                       <button onClick={() => act({ action: "deleteTable", id: t.id })} className="rounded-full border border-white/10 p-1.5 text-white/30 hover:text-red-400 print:hidden"><Trash2 className="h-3 w-3" /></button>
