@@ -93,6 +93,18 @@ export default function EventAdmin() {
     load(key);
   }
 
+  async function checkIn(g: G, undo = false) {
+    setBusy(true);
+    await fetch("/api/e/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, adminKey: key, id: g.id, action: undo ? "undoCheckIn" : "checkIn" }),
+    });
+    setBusy(false);
+    setMsg(undo ? `${g.name} check-in reversed.` : `${g.name} checked in.`);
+    load(key);
+  }
+
   async function remindAll() {
     const live = guests.filter((g) => !g.deletedAt && g.status === "approved" && g.rsvpAnswer !== "no" && g.email);
     if (!live.length) { setMsg("No approved guests with an email address yet."); return; }
@@ -297,6 +309,8 @@ export default function EventAdmin() {
                       ) : (
                         <>
                           {g.status !== "approved" && <button onClick={() => setStatus(g.id, "approved")} className="rounded-full border border-emerald-500/40 px-3 py-1 text-[10px] text-emerald-400">Approve</button>}
+                          {g.status === "approved" && !g.checkedIn && <button onClick={() => checkIn(g)} disabled={busy} className="rounded-full bg-emerald-500 px-4 py-1 text-[10px] font-semibold text-[#080807] disabled:opacity-60">Check in</button>}
+                          {g.checkedIn && <button onClick={() => checkIn(g, true)} disabled={busy} className="rounded-full border border-white/20 px-3 py-1 text-[10px] text-white/50">Undo check-in</button>}
                           {g.status !== "declined" && <button onClick={() => setStatus(g.id, "declined")} className="rounded-full border border-red-500/40 px-3 py-1 text-[10px] text-red-400">Decline</button>}
                           <button onClick={() => sendPass(g)} disabled={busy} className={`rounded-full border px-3 py-1 text-[10px] font-[family-name:var(--font-sans)] ${g.passSentAt ? "border-emerald-500/30 text-emerald-400/70" : "border-[#c9a227]/40 text-[#c9a227]"}`}>
                             {g.passSentAt ? "Sent \u2713" : "Send pass"}

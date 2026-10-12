@@ -14,6 +14,22 @@ export async function POST(req: NextRequest) {
   const guest = await prisma.guest.findFirst({ where: { id: String(id), eventId: event.id } });
   if (!guest) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  if (action === "checkIn") {
+    await prisma.guest.update({
+      where: { id: guest.id },
+      data: { checkedIn: true, checkedInAt: new Date() },
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  if (action === "undoCheckIn") {
+    await prisma.guest.update({
+      where: { id: guest.id },
+      data: { checkedIn: false, checkedInAt: null, checkedInOnline: false },
+    });
+    return NextResponse.json({ ok: true });
+  }
+
   // Resend the pass email on demand, or set an email address
   if (action === "sendPass") {
     const target = String(email || guest.email || "").trim().toLowerCase();
