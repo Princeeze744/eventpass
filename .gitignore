@@ -65,3 +65,5 @@ check.js
 del.js
 preview.js
 cleanup.js
+
+peek.mjs
