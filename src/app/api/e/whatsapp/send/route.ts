@@ -5,6 +5,7 @@ import {
   sendTemplate,
   normalizePhone,
   whatsappConfigured,
+  whatsappDiagnostics,
   FatalWhatsAppError,
   sleep,
 } from "@/lib/whatsapp";
@@ -238,7 +239,9 @@ export async function GET(req: Request) {
   return NextResponse.json({
     total: guests.length,
     configured: whatsappConfigured(),
+    diagnostics: whatsappDiagnostics(),
     template: TEMPLATE,
+    site: SITE,
     ...counts,
   });
 }

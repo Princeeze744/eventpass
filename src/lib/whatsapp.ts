@@ -7,12 +7,32 @@
  *   WHATSAPP_API_VERSION  - optional, e.g. "v23.0". Defaults below.
  */
 
-const API_VERSION = process.env.WHATSAPP_API_VERSION || "v23.0";
-const TOKEN = process.env.WHATSAPP_TOKEN || "";
-const PHONE_ID = process.env.WHATSAPP_PHONE_ID || "";
+/* Read env at REQUEST time, never at module load.
+   Vercel "Secret" variables are runtime-only - reading them at module
+   scope can bake in an empty string at build time. */
+function cfg() {
+  return {
+    version: process.env.WHATSAPP_API_VERSION || "v23.0",
+    token: (process.env.WHATSAPP_TOKEN || "").trim(),
+    phoneId: (process.env.WHATSAPP_PHONE_ID || "").trim(),
+  };
+}
 
 export function whatsappConfigured(): boolean {
-  return Boolean(TOKEN && PHONE_ID);
+  const c = cfg();
+  return Boolean(c.token && c.phoneId);
+}
+
+/** Diagnostic only - says WHICH piece is missing, never the values. */
+export function whatsappDiagnostics() {
+  const c = cfg();
+  return {
+    hasToken: Boolean(c.token),
+    tokenLength: c.token.length,
+    hasPhoneId: Boolean(c.phoneId),
+    phoneIdLength: c.phoneId.length,
+    apiVersion: c.version,
+  };
 }
 
 /* ------------------------------------------------------------------
@@ -106,7 +126,8 @@ export async function sendTemplate(opts: {
     };
   }
 
-  if (!whatsappConfigured()) {
+  const { token, phoneId, version } = cfg();
+  if (!token || !phoneId) {
     throw new FatalWhatsAppError(
       "WhatsApp is not configured - WHATSAPP_TOKEN or WHATSAPP_PHONE_ID missing"
     );
@@ -155,11 +176,11 @@ export async function sendTemplate(opts: {
   let res: Response;
   try {
     res = await fetch(
-      `https://graph.facebook.com/${API_VERSION}/${PHONE_ID}/messages`,
+      `https://graph.facebook.com/${version}/${phoneId}/messages`,
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${TOKEN}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
