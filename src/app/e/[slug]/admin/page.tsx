@@ -148,7 +148,7 @@ export default function EventAdmin() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         slug, adminKey: key, action: "edit", id: editing.id,
-        name: editing.name, phone: editing.phone || "", tier: editing.tier,
+        name: editing.name, phone: editing.phone || "", email: editing.email || "", tier: editing.tier,
         table: editing.table, partySize: editing.partySize,
       }),
     });
@@ -342,6 +342,9 @@ export default function EventAdmin() {
 
               <label className="mt-4 block text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">Phone</label>
               <input value={editing.phone || ""} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} className={`mt-2 ${inp}`} />
+
+              <label className="mt-4 block text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">Email</label>
+              <input value={editing.email || ""} onChange={(e) => setEditing({ ...editing, email: e.target.value })} placeholder="guest@email.com" className={`mt-2 ${inp}`} />
 
               <div className="mt-4 grid grid-cols-2 gap-3">
                 <div>

@@ -89,12 +89,13 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === "edit") {
-    const data: Record<string, string | number> = {};
+    const data: Record<string, string | number | null> = {};
     if (typeof body.name === "string" && body.name.trim()) data.name = body.name.trim();
     if (typeof body.phone === "string") data.phone = body.phone.replace(/\D/g, "").slice(-10);
     if (typeof body.tier === "string" && ["Guest","Family","VIP","Vendor"].includes(body.tier)) data.tier = body.tier;
     if (typeof body.table === "string") data.table = body.table.trim() || "TBA";
     if (body.partySize) data.partySize = Math.max(1, Math.min(10, Number(body.partySize)));
+    if (typeof body.email === "string") data.email = body.email.trim().toLowerCase() || null;
 
     await prisma.guest.update({ where: { id: String(body.id) }, data });
     return NextResponse.json({ ok: true });
