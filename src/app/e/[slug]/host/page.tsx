@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { Loader2, Heart, Users, Check, X, Crown, Gift, CalendarDays, MapPin, Armchair, Video, Utensils, Clock } from "lucide-react";
 import GiftTracker from "@/components/GiftTracker";
 import Reports from "@/components/Reports";
+import WhatsAppSender from "@/components/WhatsAppSender";
 
 type Data = {
   event: Record<string, string | null>;
@@ -195,6 +196,10 @@ export default function HostDashboard() {
             </div>
           </div>
         )}
+
+        <div className="mt-3">
+          <WhatsAppSender slug={slug} adminKey={key} />
+        </div>
 
         <div className="mt-3">
           <GiftTracker slug={slug} adminKey={key} />
