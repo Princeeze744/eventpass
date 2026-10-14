@@ -27,10 +27,37 @@ export async function GET(req: Request) {
 }
 
 /* ------------------------------------------------------------------
-   The courtesy reply a guest gets the moment they tap a button.
+   Reading a guest's answer.
 
-   Legal because the tap itself is an inbound message, which opens the
-   24-hour service window. Plain text, so no template approval needed.
+   Two sources, two levels of strictness.
+
+   A quick-reply BUTTON carries one of our own fixed labels, so loose
+   matching is safe and generous.
+
+   A TYPED message is a human writing whatever they like, so it must
+   match a short answer exactly. "No problem, thank you!" starts with
+   "no" and must never be recorded as a decline - which is why the
+   typed patterns are anchored to the whole message rather than
+   searched inside it. Anything we are not sure about is ignored.
+------------------------------------------------------------------ */
+const BUTTON_YES = /\b(be there|attend|yes|coming|i'?ll)\b/i;
+const BUTTON_NO = /\b(can'?t|cannot|sorry|no|unable)\b/i;
+
+const TEXT_YES =
+  /^(yes|yeah|yep|yes please|i'?ll be there|i will be there|i'?m coming|i am coming|coming|attending|confirm|confirmed|count me in)$/i;
+const TEXT_NO =
+  /^(no|nope|can'?t make it|i can'?t make it|cannot make it|i cannot make it|not coming|won'?t make it|i won'?t make it|sorry i can'?t make it|decline|unable to attend)$/i;
+
+/* ------------------------------------------------------------------
+   The courtesy reply a guest gets the moment they answer.
+
+   Legal because their tap or message is itself an inbound message,
+   which opens the 24-hour service window. Plain text, so no template
+   approval needed.
+
+   The closing line matters: WhatsApp greys out a quick-reply button
+   permanently once tapped, so we must NOT tell a guest to tap it
+   again. Replying with a word is the only route that still works.
 ------------------------------------------------------------------ */
 function confirmationText(opts: {
   firstName: string;
@@ -43,10 +70,7 @@ function confirmationText(opts: {
   const who = opts.firstName ? `, ${opts.firstName}` : "";
 
   if (opts.attending) {
-    const lines = [
-      `Thank you${who} - you are confirmed for ${opts.title}.`,
-      "",
-    ];
+    const lines = [`Thank you${who} - you are confirmed for ${opts.title}.`, ""];
     const when = [opts.date, opts.time].filter(Boolean).join(" at ");
     if (when) lines.push(when);
     if (opts.venue) lines.push(opts.venue);
@@ -54,6 +78,8 @@ function confirmationText(opts: {
     lines.push(
       "Keep this chat. The invitation card above is your entry pass - show its QR code at the entrance and we will check you in."
     );
+    lines.push("");
+    lines.push("If your plans change, just reply NO to this message.");
     return lines.join("\n");
   }
 
@@ -62,12 +88,12 @@ function confirmationText(opts: {
     "",
     `You will be missed at ${opts.title}.`,
     "",
-    "If your plans change, just tap \"I'll be there\" on the invitation above and your place is back.",
+    "If your plans change, just reply YES to this message and your place is back.",
   ].join("\n");
 }
 
 /* ------------------------------------------------------------------
-   POST - delivery receipts and button taps.
+   POST - delivery receipts, button taps and typed answers.
 
    Always answer 200 quickly. If we return an error Meta retries, and
    repeated failures get the webhook disabled - which would silently
@@ -133,15 +159,17 @@ export async function POST(req: Request) {
           }
         }
 
-        /* ---------- incoming messages, including button taps ---------- */
+        /* ---------- button taps and typed answers ---------- */
         const messages = Array.isArray(value.messages) ? value.messages : [];
         for (const m of messages) {
           const from = normalizePhone(String(m?.from || ""));
           if (!from) continue;
 
-          /* quick-reply buttons on a template arrive as type "button" */
           let label = "";
+          let typed = false;
+
           if (m?.type === "button") {
+            /* quick-reply buttons on a template arrive as type "button" */
             label = String(m?.button?.text || m?.button?.payload || "");
           } else if (m?.type === "interactive") {
             label = String(
@@ -149,12 +177,28 @@ export async function POST(req: Request) {
                 m?.interactive?.list_reply?.title ||
                 ""
             );
+          } else if (m?.type === "text") {
+            /* a guest changing their mind - the button is greyed out by
+               now, so a typed word is the only way back */
+            label = String(m?.text?.body || "");
+            typed = true;
           }
-          if (!label) continue;
+          if (!label.trim()) continue;
 
-          const yes = /\b(be there|attend|yes|coming|i'?ll)\b/i.test(label);
-          const no = /\b(can'?t|cannot|sorry|no|unable)\b/i.test(label);
-          if (!yes && !no) continue;
+          let yes: boolean;
+          let no: boolean;
+
+          if (typed) {
+            const t = label.trim().replace(/[.!,]+$/, "");
+            yes = TEXT_YES.test(t);
+            no = TEXT_NO.test(t);
+          } else {
+            yes = BUTTON_YES.test(label);
+            no = BUTTON_NO.test(label);
+          }
+
+          /* neither matched, or both did - say nothing rather than guess */
+          if (yes === no) continue;
 
           /* match the guest by the last 10 digits, so stored formats
              like 0803..., +234803... and 234803... all find each other */
