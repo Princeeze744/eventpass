@@ -186,6 +186,10 @@ model Guest {
   checkedInAt     DateTime?
   souvenirTaken   Boolean   @default(false)
   passSentAt      DateTime?
+  waMessageId     String?
+  waStatus        String    @default("")
+  waSentAt        DateTime?
+  waError         String?
 
   createdAt DateTime @default(now())
   deletedAt DateTime?
