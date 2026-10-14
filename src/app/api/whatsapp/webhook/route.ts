@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { normalizePhone } from "@/lib/whatsapp";
+import { normalizePhone, sendText } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +24,46 @@ export async function GET(req: Request) {
     });
   }
   return new Response("Forbidden", { status: 403 });
+}
+
+/* ------------------------------------------------------------------
+   The courtesy reply a guest gets the moment they tap a button.
+
+   Legal because the tap itself is an inbound message, which opens the
+   24-hour service window. Plain text, so no template approval needed.
+------------------------------------------------------------------ */
+function confirmationText(opts: {
+  firstName: string;
+  attending: boolean;
+  title: string;
+  date: string;
+  time: string;
+  venue: string;
+}): string {
+  const who = opts.firstName ? `, ${opts.firstName}` : "";
+
+  if (opts.attending) {
+    const lines = [
+      `Thank you${who} - you are confirmed for ${opts.title}.`,
+      "",
+    ];
+    const when = [opts.date, opts.time].filter(Boolean).join(" at ");
+    if (when) lines.push(when);
+    if (opts.venue) lines.push(opts.venue);
+    if (when || opts.venue) lines.push("");
+    lines.push(
+      "Keep this chat. The invitation card above is your entry pass - show its QR code at the entrance and we will check you in."
+    );
+    return lines.join("\n");
+  }
+
+  return [
+    `Thank you for letting us know${who}.`,
+    "",
+    `You will be missed at ${opts.title}.`,
+    "",
+    "If your plans change, just tap \"I'll be there\" on the invitation above and your place is back.",
+  ].join("\n");
 }
 
 /* ------------------------------------------------------------------
@@ -131,13 +171,49 @@ export async function POST(req: Request) {
           );
           if (!match) continue;
 
-          await prisma.guest.update({
+          const updated = await prisma.guest.update({
             where: { id: match.id },
             data: {
               rsvpAnswer: yes ? "yes" : "no",
               ...(no ? { declinedAt: new Date() } : { declinedAt: null }),
             },
+            select: { name: true, phone: true, eventId: true },
           });
+
+          /* ---------- courtesy reply ----------
+             Wrapped so that a failure here can never cost us the status
+             updates above, and can never make us answer Meta with a 500. */
+          try {
+            const ev = await prisma.event.findUnique({
+              where: { id: updated.eventId },
+              select: {
+                title: true,
+                eventDate: true,
+                eventTime: true,
+                venue: true,
+              },
+            });
+
+            if (ev) {
+              const firstName = String(updated.name || "")
+                .trim()
+                .split(/\s+/)[0];
+
+              await sendText({
+                to: updated.phone || from,
+                body: confirmationText({
+                  firstName,
+                  attending: yes,
+                  title: ev.title || "the event",
+                  date: ev.eventDate || "",
+                  time: ev.eventTime || "",
+                  venue: ev.venue || "",
+                }),
+              });
+            }
+          } catch {
+            /* swallow - the RSVP is already recorded, which is what matters */
+          }
         }
       }
     }

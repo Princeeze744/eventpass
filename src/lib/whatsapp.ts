@@ -235,3 +235,84 @@ export async function sendTemplate(opts: {
 export function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
+
+/* ------------------------------------------------------------------
+   Plain text message.
+
+   Only legal inside the 24-hour customer service window - that is,
+   after the guest has written to us or tapped a button. Outside that
+   window Meta rejects anything that is not an approved template.
+
+   Deliberately never throws FatalWhatsAppError: this is a courtesy
+   reply, and a failed courtesy must never take down the webhook or
+   stop a send batch.
+------------------------------------------------------------------ */
+export async function sendText(opts: {
+  to: string;
+  body: string;
+  previewUrl?: boolean;
+}): Promise<SendResult> {
+  const to = normalizePhone(opts.to) || "";
+  if (!to) {
+    return {
+      ok: false,
+      to: String(opts.to || ""),
+      error: "Invalid phone number",
+      retryable: false,
+    };
+  }
+
+  const { token, phoneId, version } = cfg();
+  if (!token || !phoneId) {
+    return { ok: false, to, error: "WhatsApp is not configured", retryable: false };
+  }
+
+  const body = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to,
+    type: "text",
+    text: {
+      preview_url: Boolean(opts.previewUrl),
+      body: String(opts.body || "").slice(0, 4000),
+    },
+  };
+
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://graph.facebook.com/${version}/${phoneId}/messages`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      }
+    );
+  } catch {
+    return { ok: false, to, error: "Network error reaching WhatsApp", retryable: true };
+  }
+
+  let json: any = null;
+  try {
+    json = await res.json();
+  } catch {
+    /* ignore - handled below */
+  }
+
+  if (res.ok && json?.messages?.[0]?.id) {
+    return { ok: true, messageId: json.messages[0].id, to };
+  }
+
+  const err = json?.error || {};
+  return {
+    ok: false,
+    to,
+    error:
+      err.error_user_msg || err.error_data?.details || err.message || `HTTP ${res.status}`,
+    code: err.code,
+    retryable: res.status === 429 || res.status >= 500,
+  };
+}
