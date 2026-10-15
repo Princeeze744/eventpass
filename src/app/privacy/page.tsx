@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "How Story Box collects, uses and protects personal information for event invitations and guest check-in.",
 };
 
-const UPDATED = "14 October 2026";
+const UPDATED = "15 October 2026";
 
 function Section({
   title,
@@ -158,10 +158,25 @@ export default function PrivacyPage() {
 
         <Section title="How long we keep it">
           <p>
-            Guest information is kept for as long as the organiser keeps their
-            event on the platform, so that attendance records and reports remain
-            available to them. When an organiser deletes an event, its guest
-            data is removed.
+            A guest list and its attendance record form part of the
+            organiser&apos;s own business records. Organisers rely on them to
+            reconcile attendance, account to sponsors, committees and auditors,
+            and answer questions about an event long after it has ended. We
+            therefore do not delete event records on a timetable of our own.
+          </p>
+          <p>
+            The organiser decides how long their event information is kept. We
+            hold it on their instruction, and we remove it when they instruct us
+            to, or where we are required to by law. Removing an event from the
+            platform does not by itself erase the organiser&apos;s record of it,
+            so that their audit trail stays intact.
+          </p>
+          <p>
+            Separately, Story Box keeps its own summary records of activity on
+            the platform — how many events have been run, how many guests were
+            invited, how many attended. These are counts and totals kept for our
+            own business records and reporting. They do not identify any
+            individual guest, and we keep them indefinitely.
           </p>
           <p>
             Account information for planners is kept while the account is open.
@@ -195,6 +210,11 @@ export default function PrivacyPage() {
             For information tied to a specific event, contact that event&apos;s
             organiser first, as they decide what happens to their guest list. We
             will always help where we can.
+          </p>
+          <p>
+            Where we are asked to erase personal details, we may still keep the
+            summary counts described above, and any record we are required to
+            keep by law. Those contain no information that identifies you.
           </p>
           <p>
             You also have the right to complain to the Nigeria Data Protection
