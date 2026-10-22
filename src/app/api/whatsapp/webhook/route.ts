@@ -49,15 +49,20 @@ const TEXT_NO =
   /^(no|nope|can'?t make it|i can'?t make it|cannot make it|i cannot make it|not coming|won'?t make it|i won'?t make it|sorry i can'?t make it|decline|unable to attend)$/i;
 
 /* ------------------------------------------------------------------
-   The courtesy reply a guest gets the moment they answer.
+   The reply a guest receives the moment they answer.
 
-   Legal because their tap or message is itself an inbound message,
-   which opens the 24-hour service window. Plain text, so no template
-   approval needed.
+   These guests are often the organiser's most important invitees, and
+   this message is the only thing the platform ever says to them in
+   its own voice. It is written to sound like a gracious host rather
+   than a system: warm, unhurried, and never instructing.
 
-   The closing line matters: WhatsApp greys out a quick-reply button
-   permanently once tapped, so we must NOT tell a guest to tap it
-   again. Replying with a word is the only route that still works.
+   Two constraints shape the wording:
+
+   - WhatsApp greys out a quick-reply button permanently once tapped,
+     so we must not invite a guest to tap it again. Replying with a
+     word is the only route that still works.
+   - "we" here is the organiser, not Story Box. The platform is
+     invisible; the host is the one speaking.
 ------------------------------------------------------------------ */
 function confirmationText(opts: {
   firstName: string;
@@ -70,25 +75,37 @@ function confirmationText(opts: {
   const who = opts.firstName ? `, ${opts.firstName}` : "";
 
   if (opts.attending) {
-    const lines = [`Thank you${who} - you are confirmed for ${opts.title}.`, ""];
+    const lines = [
+      `Thank you${who}. We are delighted to confirm your attendance at ${opts.title}.`,
+      "",
+    ];
+
     const when = [opts.date, opts.time].filter(Boolean).join(" at ");
     if (when) lines.push(when);
     if (opts.venue) lines.push(opts.venue);
     if (when || opts.venue) lines.push("");
+
     lines.push(
-      "Keep this chat. The invitation card above is your entry pass - show its QR code at the entrance and we will check you in."
+      "The personal invitation card above is your entry pass - please keep it safe. Kindly present the QR code at the entrance, where our team will be pleased to welcome you."
     );
     lines.push("");
-    lines.push("If your plans change, just reply NO to this message.");
+    lines.push(
+      "Should your plans change, simply reply NO and we will gladly update your reservation."
+    );
+    lines.push("");
+    lines.push("It will be our pleasure to host you.");
+
     return lines.join("\n");
   }
 
   return [
-    `Thank you for letting us know${who}.`,
+    `Thank you for letting us know${who}, and for the courtesy of your reply.`,
     "",
-    `You will be missed at ${opts.title}.`,
+    `You will be greatly missed at ${opts.title}.`,
     "",
-    "If your plans change, just reply YES to this message and your place is back.",
+    "Should your plans change, kindly reply YES and we will be delighted to reserve your place once more.",
+    "",
+    "We hope to have the pleasure of welcoming you on another occasion.",
   ].join("\n");
 }
 
@@ -262,7 +279,7 @@ export async function POST(req: Request) {
       }
     }
   } catch {
-    /* swallow - a 500 here makes Meta retry and eventually disable us */
+    /* swallow - the RSVP is already recorded, which is what matters */
   }
 
   return NextResponse.json({ ok: true });
