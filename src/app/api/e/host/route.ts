@@ -65,6 +65,9 @@ export async function POST(req: NextRequest) {
         label: d.label,
         dateText: d.dateText,
         time: d.time,
+        /* a day's own venue wins, empty falls back to the event's */
+        venue: d.venue || event.venue || "",
+        address: d.address || event.address || "",
         capacity: d.capacity,
         guests: onDay.length,
         heads: onDay.reduce((a, g) => a + g.partySize, 0),

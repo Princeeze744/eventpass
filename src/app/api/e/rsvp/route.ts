@@ -11,7 +11,18 @@ export async function GET(req: NextRequest) {
   const days = await prisma.eventDay.findMany({ where: { eventId: event.id }, orderBy: { position: "asc" } });
   return NextResponse.json({
     title: event.title,
-    days: days.map((d) => ({ id: d.id, label: d.label, dateText: d.dateText, time: d.time })),
+    venue: event.venue,
+    address: event.address,
+    /* a day's own venue wins, and an empty one falls back to the
+       event's - resolved here so the page never needs to know the rule */
+    days: days.map((d) => ({
+      id: d.id,
+      label: d.label,
+      dateText: d.dateText,
+      time: d.time,
+      venue: d.venue || event.venue || "",
+      address: d.address || event.address || "",
+    })),
   });
 }
 
@@ -109,6 +120,18 @@ export async function POST(req: NextRequest) {
   }
 
   if (guest.email) {
+    /* On a multi-day event the days can run at different venues, so the
+       single venue line in the email names the first day this guest is
+       registered for rather than the event's default. Their card and
+       the event page carry the full per-day breakdown. */
+    let emailVenue = event.venue;
+    if (allDays.length > 1) {
+      const first = (Array.isArray(dayIds) && dayIds.length
+        ? allDays.filter((d) => dayIds.includes(d.id))
+        : allDays)[0];
+      if (first) emailVenue = first.venue || event.venue;
+    }
+
     await sendRegistrationEmail({
       to: guest.email,
       guestName: guest.name,
@@ -118,7 +141,7 @@ export async function POST(req: NextRequest) {
       passId: guest.passId,
       eventDate: event.eventDate,
       eventTime: event.eventTime,
-      venue: event.venue,
+      venue: emailVenue,
       autoApproved: event.approvalMode === "auto",
     });
     await prisma.guest.update({ where: { id: guest.id }, data: { passSentAt: new Date() } }).catch(() => {});

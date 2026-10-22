@@ -59,6 +59,8 @@ async function logoData(url: string | null): Promise<string | null> {
   }
 }
 
+const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 3) + "..." : s);
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ slug: string; passId: string }> }
@@ -82,20 +84,43 @@ export async function GET(
   const accent = event.accentColor || "#d4af37";
   const ink = "#f5f1ea";
 
-  /* multi-day events: which days is this guest admitted for */
-  let validFor = "";
+  /* ---------- which days, and where ----------
+     On a multi-day event each day can run at its own venue, so the card
+     has to carry per-day detail rather than one line for the whole
+     event. An empty day venue means "same as the event", which is how
+     a single-venue event keeps working untouched.
+
+     When every day shares a venue we print it once at the bottom
+     instead of repeating it under each day - three identical addresses
+     on one card reads like a mistake. */
+  type Day = { label: string; dateText: string; time: string; venue: string; address: string };
+  let myDays: Day[] = [];
+
   const dayCount = await prisma.eventDay.count({ where: { eventId: event.id } });
   if (dayCount > 1) {
     const mine = await prisma.guestDay.findMany({
       where: { guestId: guest.id },
       include: { day: true },
     });
-    validFor = mine
+    myDays = mine
       .sort((a, b) => a.day.position - b.day.position)
-      .map((x) => x.day.label)
-      .filter(Boolean)
-      .join("  /  ");
+      .map((x) => ({
+        label: x.day.label || "",
+        dateText: x.day.dateText || "",
+        time: x.day.time || "",
+        venue: x.day.venue || event.venue || "",
+        address: x.day.address || event.address || "",
+      }));
   }
+
+  const multi = myDays.length > 0;
+  const sameVenue =
+    multi &&
+    myDays.every((d) => d.venue === myDays[0].venue && d.address === myDays[0].address);
+
+  /* keep the card readable - beyond three days we summarise */
+  const shown = multi ? myDays.slice(0, 3) : [];
+  const extra = multi ? myDays.length - shown.length : 0;
 
   const [qr, fonts, logo] = await Promise.all([
     QRCode.toDataURL(guest.passId, {
@@ -116,6 +141,10 @@ export async function GET(
   const tLen = event.title.length;
   const titleSize = tLen > 70 ? 62 : tLen > 44 ? 74 : tLen > 26 ? 82 : tLen > 18 ? 92 : 106;
   const nameSize = guest.name.length > 28 ? 46 : guest.name.length > 20 ? 56 : 66;
+
+  /* with several days to print, tighten the per-day type so the QR
+     block keeps its room */
+  const dense = shown.length > 2;
 
   return new ImageResponse(
     (
@@ -243,97 +272,208 @@ export async function GET(
             {guest.name}
           </div>
 
-          {validFor ? (
-            <div
-              style={{
-                fontSize: 20,
-                color: `${ink}99`,
-                marginTop: 16,
-                textAlign: "center",
-                display: "flex",
-              }}
-            >
-              {validFor}
-            </div>
-          ) : null}
-
           {/* ---- details ---- */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              marginTop: 42,
-            }}
-          >
+          {multi ? (
             <div
               style={{
-                fontSize: 22,
-                letterSpacing: 7,
-                color: accent,
-                textTransform: "uppercase",
-                textAlign: "center",
                 display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                marginTop: 36,
+                width: "100%",
               }}
             >
-              {event.eventDate}
+              {shown.map((d, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    marginTop: i === 0 ? 0 : dense ? 16 : 22,
+                  }}
+                >
+                  {d.label ? (
+                    <div
+                      style={{
+                        fontSize: dense ? 17 : 19,
+                        letterSpacing: 6,
+                        color: accent,
+                        textTransform: "uppercase",
+                        textAlign: "center",
+                        display: "flex",
+                      }}
+                    >
+                      {clip(d.label, 34)}
+                    </div>
+                  ) : null}
+
+                  <div
+                    style={{
+                      fontSize: dense ? 20 : 23,
+                      color: `${ink}d6`,
+                      marginTop: 7,
+                      textAlign: "center",
+                      display: "flex",
+                    }}
+                  >
+                    {[d.dateText, d.time].filter(Boolean).join("  ·  ")}
+                  </div>
+
+                  {!sameVenue && d.venue ? (
+                    <div
+                      style={{
+                        fontSize: dense ? 19 : 21,
+                        color: `${ink}9e`,
+                        marginTop: 5,
+                        textAlign: "center",
+                        display: "flex",
+                      }}
+                    >
+                      {clip(d.venue, 46)}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+
+              {extra > 0 ? (
+                <div
+                  style={{
+                    fontSize: 18,
+                    color: `${ink}70`,
+                    marginTop: 14,
+                    display: "flex",
+                  }}
+                >
+                  {`+ ${extra} more day${extra === 1 ? "" : "s"}`}
+                </div>
+              ) : null}
+
+              {sameVenue ? (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    marginTop: 24,
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 27,
+                      color: `${ink}d6`,
+                      textAlign: "center",
+                      display: "flex",
+                    }}
+                  >
+                    {myDays[0].venue}
+                  </div>
+                  {myDays[0].address ? (
+                    <div
+                      style={{
+                        fontSize: 19,
+                        color: `${ink}70`,
+                        marginTop: 9,
+                        textAlign: "center",
+                        display: "flex",
+                      }}
+                    >
+                      {clip(myDays[0].address, 64)}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {event.dressCode ? (
+                <div
+                  style={{
+                    fontSize: 17,
+                    letterSpacing: 5,
+                    color: `${ink}62`,
+                    textTransform: "uppercase",
+                    marginTop: 20,
+                    textAlign: "center",
+                    display: "flex",
+                  }}
+                >
+                  {clip(event.dressCode, 40)}
+                </div>
+              ) : null}
             </div>
+          ) : (
             <div
               style={{
-                fontSize: 22,
-                letterSpacing: 7,
-                color: accent,
-                textTransform: "uppercase",
-                marginTop: 10,
                 display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                marginTop: 42,
               }}
             >
-              {event.eventTime}
-            </div>
-            <div
-              style={{
-                fontSize: 27,
-                color: `${ink}d6`,
-                marginTop: 24,
-                textAlign: "center",
-                display: "flex",
-              }}
-            >
-              {event.venue}
-            </div>
-            {event.address ? (
               <div
                 style={{
-                  fontSize: 19,
-                  color: `${ink}70`,
-                  marginTop: 9,
-                  textAlign: "center",
-                  display: "flex",
-                }}
-              >
-                {event.address.length > 64
-                  ? event.address.slice(0, 61) + "..."
-                  : event.address}
-              </div>
-            ) : null}
-            {event.dressCode ? (
-              <div
-                style={{
-                  fontSize: 17,
-                  letterSpacing: 5,
-                  color: `${ink}62`,
+                  fontSize: 22,
+                  letterSpacing: 7,
+                  color: accent,
                   textTransform: "uppercase",
-                  marginTop: 20,
                   textAlign: "center",
                   display: "flex",
                 }}
               >
-                {event.dressCode.length > 40
-                  ? event.dressCode.slice(0, 37) + "..."
-                  : event.dressCode}
+                {event.eventDate}
               </div>
-            ) : null}
-          </div>
+              <div
+                style={{
+                  fontSize: 22,
+                  letterSpacing: 7,
+                  color: accent,
+                  textTransform: "uppercase",
+                  marginTop: 10,
+                  display: "flex",
+                }}
+              >
+                {event.eventTime}
+              </div>
+              <div
+                style={{
+                  fontSize: 27,
+                  color: `${ink}d6`,
+                  marginTop: 24,
+                  textAlign: "center",
+                  display: "flex",
+                }}
+              >
+                {event.venue}
+              </div>
+              {event.address ? (
+                <div
+                  style={{
+                    fontSize: 19,
+                    color: `${ink}70`,
+                    marginTop: 9,
+                    textAlign: "center",
+                    display: "flex",
+                  }}
+                >
+                  {clip(event.address, 64)}
+                </div>
+              ) : null}
+              {event.dressCode ? (
+                <div
+                  style={{
+                    fontSize: 17,
+                    letterSpacing: 5,
+                    color: `${ink}62`,
+                    textTransform: "uppercase",
+                    marginTop: 20,
+                    textAlign: "center",
+                    display: "flex",
+                  }}
+                >
+                  {clip(event.dressCode, 40)}
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
 
         {/* ---- QR ---- */}

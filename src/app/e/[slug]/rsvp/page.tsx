@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
-import { Loader2, ArrowUpRight, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowUpRight, ArrowLeft, MapPin } from "lucide-react";
+
+type Day = { id: string; label: string; dateText: string; time: string; venue?: string; address?: string };
 
 export default function RsvpPage() {
   const router = useRouter();
@@ -14,7 +16,7 @@ export default function RsvpPage() {
   const [form, setForm] = useState({ name: "", phone: "", email: "", partySize: "1" });
   const [error, setError] = useState("");
 
-  const [days, setDays] = useState<{ id: string; label: string; dateText: string; time: string }[]>([]);
+  const [days, setDays] = useState<Day[]>([]);
   const [picked, setPicked] = useState<string[]>([]);
 
   useEffect(() => {
@@ -33,6 +35,11 @@ export default function RsvpPage() {
     setPicked(picked.includes(id) ? picked.filter((x) => x !== id) : [...picked, id]);
   }
   const [loading, setLoading] = useState(false);
+
+  /* Only worth naming a venue per day when the days actually differ -
+     repeating one address under every day is noise. */
+  const venuesDiffer =
+    days.length > 1 && days.some((d) => (d.venue || "") !== (days[0].venue || ""));
 
   async function submit() {
     if (loading) return;
@@ -86,18 +93,28 @@ export default function RsvpPage() {
               <label className={lbl}>Which days will you attend?</label>
               <div className="mt-3 space-y-2">
                 {days.map((d) => (
-                  <button key={d.id} onClick={() => toggleDay(d.id)} className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3.5 text-left font-[family-name:var(--font-sans)] ${picked.includes(d.id) ? "border-[#c9a227]/60 bg-[#c9a227]/[0.08]" : "border-white/10 bg-black/25"}`}>
-                    <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${picked.includes(d.id) ? "border-[#c9a227] bg-[#c9a227] text-[#080807]" : "border-white/25"}`}>
-                      {picked.includes(d.id) ? "\u2713" : ""}
+                  <button key={d.id} onClick={() => toggleDay(d.id)} className={`flex w-full items-start gap-3 rounded-2xl border px-4 py-3.5 text-left font-[family-name:var(--font-sans)] ${picked.includes(d.id) ? "border-[#c9a227]/60 bg-[#c9a227]/[0.08]" : "border-white/10 bg-black/25"}`}>
+                    <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${picked.includes(d.id) ? "border-[#c9a227] bg-[#c9a227] text-[#080807]" : "border-white/25"}`}>
+                      {picked.includes(d.id) ? "✓" : ""}
                     </span>
-                    <span>
+                    <span className="min-w-0">
                       <span className="block text-[13px] text-[#f5f1ea]">{d.label}</span>
-                      <span className="block text-[11px] text-white/40">{d.dateText}{d.time ? ` \u00B7 ${d.time}` : ""}</span>
+                      <span className="block text-[11px] text-white/40">{d.dateText}{d.time ? ` · ${d.time}` : ""}</span>
+                      {venuesDiffer && d.venue ? (
+                        <span className="mt-1 flex items-start gap-1.5 text-[11px] text-[#c9a227]/85">
+                          <MapPin className="mt-[2px] h-3 w-3 shrink-0" strokeWidth={1.8} />
+                          <span className="min-w-0">{d.venue}</span>
+                        </span>
+                      ) : null}
                     </span>
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">Untick any day you will not be attending.</p>
+              <p className="mt-2 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">
+                {venuesDiffer
+                  ? "These days are at different venues — untick any day you will not be attending."
+                  : "Untick any day you will not be attending."}
+              </p>
             </div>
           )}
 
