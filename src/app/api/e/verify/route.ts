@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
-  const { slug, passId, usherKey } = await req.json();
+  const { slug, passId, usherKey, override } = await req.json();
 
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ status: "invalid", message: "Event not found." }, { status: 404 });
@@ -27,7 +27,9 @@ export async function POST(req: NextRequest) {
       guest: { name: guest.name, tier: guest.tier, table: guest.table },
     });
   }
+
   // Multi-day: is this guest admitted today?
+  let dayOverride = false;
   const eventDays = await prisma.eventDay.findMany({ where: { eventId: event.id }, orderBy: { position: "asc" } });
   if (eventDays.length > 1) {
     const today = new Date();
@@ -36,13 +38,26 @@ export async function POST(req: NextRequest) {
     if (todayDay) {
       const allowed = await prisma.guestDay.findFirst({ where: { guestId: guest.id, dayId: todayDay.id } });
       if (!allowed) {
-        const theirs = await prisma.guestDay.findMany({ where: { guestId: guest.id }, include: { day: true } });
-        const labels = theirs.sort((a, b) => a.day.position - b.day.position).map((x) => x.day.label).join(", ");
-        return NextResponse.json({
-          status: "wrongday",
-          message: `Not registered for ${todayDay.label}.`,
-          guest: { name: guest.name, tier: guest.tier, table: guest.table, validFor: labels || "no days selected" },
-        });
+        if (!override) {
+          const theirs = await prisma.guestDay.findMany({ where: { guestId: guest.id }, include: { day: true } });
+          const labels = theirs.sort((a, b) => a.day.position - b.day.position).map((x) => x.day.label).join(", ");
+          return NextResponse.json({
+            status: "wrongday",
+            message: `Not registered for ${todayDay.label}.`,
+            guest: { name: guest.name, tier: guest.tier, table: guest.table, validFor: labels || "no days selected" },
+          });
+        }
+
+        /* An usher has looked at a real person standing in front of
+           them and decided to let them in. We do not refuse a guest in
+           public over a checkbox ticked weeks ago, so the override
+           proceeds to a normal check-in.
+
+           Nothing new is stored to record it, and nothing needs to be:
+           checkedIn true with no GuestDay row for today IS the record,
+           so a report can always tell who was admitted off-day without
+           a migration. */
+        dayOverride = true;
       }
     }
   }
@@ -67,7 +82,8 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     status: "valid",
-    message: "Welcome.",
+    message: dayOverride ? "Admitted - not registered for today." : "Welcome.",
+    dayOverride,
     preChecked: guest.checkedInOnline,
     guest: { name: guest.name, tier: guest.tier, table: guest.table, partySize: guest.partySize },
   });

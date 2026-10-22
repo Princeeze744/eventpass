@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "next/navigation";
-import { CheckCircle2, XCircle, AlertTriangle, Keyboard, ScanLine, ShieldCheck, Check } from "lucide-react";
+import { CheckCircle2, XCircle, AlertTriangle, Keyboard, ScanLine, ShieldCheck, Check, DoorOpen } from "lucide-react";
 
 type Result = {
   status: "valid" | "invalid" | "duplicate" | "pending" | "wrongday";
   message: string;
   preChecked?: boolean;
+  dayOverride?: boolean;
   guest?: { name: string; tier: string; table: string; partySize?: number; checkedInAt?: string; validFor?: string };
 };
 
@@ -39,7 +40,7 @@ export default function EventScanner() {
     busyRef.current = false;
   }
 
-  async function verify(passId: string) {
+  async function verify(passId: string, override = false) {
     if (busyRef.current) return;
     busyRef.current = true;
     lastPass.current = passId.trim();
@@ -47,7 +48,7 @@ export default function EventScanner() {
       const res = await fetch("/api/e/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, passId, usherKey }),
+        body: JSON.stringify({ slug, passId, usherKey, override }),
       });
       const data: Result = await res.json();
       setResult(data);
@@ -58,6 +59,16 @@ export default function EventScanner() {
     } catch {
       busyRef.current = false;
     }
+  }
+
+  /* The usher has decided to let this guest in despite the day they
+     registered for. Re-runs the same verification with the override so
+     the guest is checked in normally - one tap, no typing, nobody left
+     standing at the door. */
+  async function admitAnyway() {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    busyRef.current = false;
+    await verify(lastPass.current, true);
   }
 
   async function assignTable() {
@@ -114,7 +125,11 @@ export default function EventScanner() {
 
   const theme =
     result?.status === "valid"
-      ? { bg: "bg-emerald-600", Icon: CheckCircle2, title: result.preChecked ? "EXPRESS ✓ WELCOME" : "WELCOME" }
+      ? {
+          bg: "bg-emerald-600",
+          Icon: CheckCircle2,
+          title: result.dayOverride ? "ADMITTED" : result.preChecked ? "EXPRESS ✓ WELCOME" : "WELCOME",
+        }
       : result?.status === "duplicate"
       ? { bg: "bg-amber-500", Icon: AlertTriangle, title: "ALREADY USED" }
       : result?.status === "wrongday"
@@ -208,6 +223,22 @@ export default function EventScanner() {
                 {result.guest.checkedInAt && <p className="mt-2 text-sm text-white/70">First scanned at {result.guest.checkedInAt}</p>}
                 {result.guest.validFor && <p className="mt-2 text-sm text-white/80">Registered for: {result.guest.validFor}</p>}
               </div>
+            )}
+
+            {result.dayOverride && (
+              <p className="mt-3 rounded-full bg-black/25 px-4 py-2 text-center text-[12px] font-semibold text-white font-[family-name:var(--font-sans)]">
+                Admitted by usher — not registered for today
+              </p>
+            )}
+
+            {result.status === "wrongday" && (
+              <button
+                onClick={admitAnyway}
+                className="mt-7 flex items-center gap-2 rounded-full bg-white px-8 py-4 text-[12px] uppercase tracking-[0.2em] font-bold text-[#080807] font-[family-name:var(--font-sans)]"
+              >
+                <DoorOpen className="h-4 w-4" strokeWidth={2} />
+                Admit anyway
+              </button>
             )}
 
             {result.status === "valid" && (
