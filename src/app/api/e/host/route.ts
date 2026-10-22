@@ -11,11 +11,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Wrong access key." }, { status: 401 });
   }
 
-  const [guests, tables, eventDays] = await Promise.all([
+  const [everyone, tables, eventDays] = await Promise.all([
     prisma.guest.findMany({ where: { eventId: event.id, deletedAt: null }, include: { days: true } }),
     prisma.seatTable.findMany({ where: { eventId: event.id }, orderBy: [{ section: "asc" }, { position: "asc" }] }),
     prisma.eventDay.findMany({ where: { eventId: event.id }, orderBy: { position: "asc" } }),
   ]);
+
+  /* Vendors are crew, not guests. They are created with status
+     "approved" and inherit the default rsvpAnswer, so left unfiltered
+     they land inside "attending" and quietly inflate every headline
+     number the host plans catering and seating from.
+
+     They are split out here rather than dropped, so the host can still
+     see them - just never blended into the guest count. */
+  const guests = everyone.filter((g) => !g.isVendor);
+  const vendorRows = everyone.filter((g) => g.isVendor);
 
   const attending = guests.filter((g) => g.status === "approved" && g.rsvpAnswer !== "no");
   const arrived = guests.filter((g) => g.checkedIn);
@@ -43,10 +53,14 @@ export async function POST(req: NextRequest) {
       express: guests.filter((g) => g.checkedInOnline && !g.checkedIn).length,
       vips: attending.filter((g) => g.tier === "VIP").length,
       family: attending.filter((g) => g.tier === "Family").length,
+      /* counted separately so crew are visible without distorting
+         guest numbers */
+      vendors: vendorRows.length,
+      vendorsArrived: vendorRows.filter((g) => g.checkedIn).length,
     },
     days: eventDays.length > 1 ? eventDays.map((d) => {
-      const onDay = attending.filter((g) => !g.isVendor && g.days.some((gd) => gd.dayId === d.id));
-      const vendorsOnDay = guests.filter((g) => g.isVendor && g.days.some((gd) => gd.dayId === d.id));
+      const onDay = attending.filter((g) => g.days.some((gd) => gd.dayId === d.id));
+      const vendorsOnDay = vendorRows.filter((g) => g.days.some((gd) => gd.dayId === d.id));
       return {
         label: d.label,
         dateText: d.dateText,

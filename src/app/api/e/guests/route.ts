@@ -14,16 +14,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Wrong admin key." }, { status: 401 });
   }
 
+  /* Vendors are managed on the vendors page, where they have a call
+     time and a role. Mixed into this list they are indistinguishable
+     from guests, so they are excluded here and counted instead - that
+     way the list is honest and nothing looks like it went missing. */
   const guests = await prisma.guest.findMany({
     where: {
       eventId: event.id,
+      isVendor: false,
       ...(includeTrash ? {} : { deletedAt: null }),
     },
     orderBy: { createdAt: "desc" },
   });
 
+  const vendorCount = await prisma.guest.count({
+    where: {
+      eventId: event.id,
+      isVendor: true,
+      ...(includeTrash ? {} : { deletedAt: null }),
+    },
+  });
+
   return NextResponse.json({
     event: { title: event.title, approvalMode: event.approvalMode },
+    vendorCount,
     guests: guests.map((g) => ({
       id: g.id,
       passId: g.passId,

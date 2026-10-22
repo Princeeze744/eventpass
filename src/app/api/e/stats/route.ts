@@ -8,10 +8,15 @@ export async function POST(req: NextRequest) {
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const guests = await prisma.guest.findMany({
+  const everyone = await prisma.guest.findMany({
     where: { eventId: event.id, deletedAt: null },
     orderBy: { checkedInAt: "desc" },
   });
+
+  /* Vendors are crew, not guests - see the note in the host route.
+     Split out so the live wall never shows catering staff as guests. */
+  const guests = everyone.filter((g) => !g.isVendor);
+  const vendorRows = everyone.filter((g) => g.isVendor);
 
   const approved = guests.filter((g) => g.status === "approved" && g.rsvpAnswer !== "no");
   const declinedCount = guests.filter((g) => g.rsvpAnswer === "no").length;
@@ -37,6 +42,8 @@ export async function POST(req: NextRequest) {
     arrivedHeads,
     arrivedCount: arrived.length,
     express: guests.filter((g) => g.checkedInOnline && !g.checkedIn).length,
+    vendors: vendorRows.length,
+    vendorsArrived: vendorRows.filter((g) => g.checkedIn).length,
     hourly: Object.entries(hourly).map(([hour, count]) => ({ hour, count })),
     recent: arrived.slice(0, 10).map((g) => ({
       name: g.name,
