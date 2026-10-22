@@ -24,6 +24,15 @@ const DAILY_CAP = 250;
    timeout, and lets the dashboard show real progress */
 const BATCH = 20;
 
+/* Vendors are never sent a guest invitation. A guest invitation says
+   "we are delighted to confirm your attendance" and carries an entry
+   pass; a vendor needs a call time and a load-in brief, which is a
+   different message entirely. Sending one to a caterer is both wrong
+   and billable, so they are excluded at the query rather than filtered
+   later - that way the dashboard counts and the send list can never
+   drift apart. */
+const GUESTS_ONLY = { isVendor: false } as const;
+
 type Row = {
   id: string;
   name: string;
@@ -64,7 +73,7 @@ export async function POST(req: Request) {
 
   /* ---- who still needs sending ---- */
   const all = (await prisma.guest.findMany({
-    where: { eventId: event.id, deletedAt: null },
+    where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY },
     select: { id: true, name: true, phone: true, passId: true, waStatus: true },
     orderBy: { createdAt: "asc" },
   })) as Row[];
@@ -83,6 +92,7 @@ export async function POST(req: Request) {
     where: {
       eventId: event.id,
       deletedAt: null,
+      ...GUESTS_ONLY,
       waSentAt: { gte: since },
       waStatus: { in: ["sent", "delivered", "read"] },
     },
@@ -208,8 +218,14 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
 
   const guests = await prisma.guest.findMany({
-    where: { eventId: event.id, deletedAt: null },
+    where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY },
     select: { phone: true, waStatus: true, rsvpAnswer: true },
+  });
+
+  /* counted separately so the host can see vendors are deliberately
+     excluded rather than missing */
+  const vendors = await prisma.guest.count({
+    where: { eventId: event.id, deletedAt: null, isVendor: true },
   });
 
   const counts = { sent: 0, delivered: 0, read: 0, failed: 0, pending: 0, noPhone: 0 };
@@ -238,6 +254,7 @@ export async function GET(req: Request) {
 
   return NextResponse.json({
     total: guests.length,
+    vendors,
     configured: whatsappConfigured(),
     diagnostics: whatsappDiagnostics(),
     template: TEMPLATE,
