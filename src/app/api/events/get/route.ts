@@ -12,6 +12,25 @@ export async function GET(req: NextRequest) {
   });
   if (!event) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  /* The settings page reads d.days to populate its day editor, and
+     saving days deletes and recreates every row from what that editor
+     holds. Without this query the editor loaded empty, so saving days
+     on a live multi-day event replaced the real days with whatever was
+     on screen. */
+  const days = await prisma.eventDay.findMany({
+    where: { eventId: event.id },
+    orderBy: { position: "asc" },
+    select: {
+      label: true,
+      dateISO: true,
+      dateText: true,
+      time: true,
+      venue: true,
+      address: true,
+      capacity: true,
+    },
+  });
+
   return NextResponse.json({
     event: {
       title: event.title,
@@ -29,5 +48,6 @@ export async function GET(req: NextRequest) {
       approvalMode: event.approvalMode,
       accentColor: event.accentColor,
     },
+    days,
   });
 }

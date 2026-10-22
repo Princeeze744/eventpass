@@ -82,18 +82,26 @@ export default function EventSettings() {
           accentColor: d.event.accentColor || "#c9a227",
         });
         if (Array.isArray(d.days) && d.days.length) {
-          setDays(d.days.map((x: { label: string; dateISO: string; dateText: string; time: string; capacity: number | null }) => ({ label: x.label, dateISO: x.dateISO, dateText: x.dateText, time: x.time, capacity: x.capacity ? String(x.capacity) : "" })));
+          setDays(d.days.map((x: { label: string; dateISO: string; dateText: string; time: string; venue?: string; address?: string; capacity: number | null }) => ({
+            label: x.label,
+            dateISO: x.dateISO,
+            dateText: x.dateText,
+            time: x.time,
+            venue: x.venue || "",
+            address: x.address || "",
+            capacity: x.capacity ? String(x.capacity) : "",
+          })));
         }
         setLoading(false);
       })
       .catch(() => { setMsg("Network error."); setLoading(false); });
   }, [slug]);
 
-  const [days, setDays] = useState<{ label: string; dateISO: string; dateText: string; time: string; capacity: string }[]>([]);
+  const [days, setDays] = useState<{ label: string; dateISO: string; dateText: string; time: string; venue: string; address: string; capacity: string }[]>([]);
 
   function setDayCount(n: number) {
     const next = [...days];
-    while (next.length < n) next.push({ label: "", dateISO: "", dateText: "", time: "", capacity: "" });
+    while (next.length < n) next.push({ label: "", dateISO: "", dateText: "", time: "", venue: "", address: "", capacity: "" });
     while (next.length > n) next.pop();
     setDays(next);
   }
@@ -118,7 +126,7 @@ export default function EventSettings() {
     if (!res.ok) { setMsg(data.error || "Something went wrong."); return; }
     if (action === "trash" || data.destroyed) { router.push("/dashboard"); router.refresh(); return; }
     if (data.newSlug) { router.push(`/dashboard/${data.newSlug}/settings`); router.refresh(); return; }
-    if (data.invited) { setMsg(`Invitation sent to ${data.invited} \u2014 the event will appear on their dashboard once they sign in with that email.`); return; }
+    if (data.invited) { setMsg(`Invitation sent to ${data.invited} — the event will appear on their dashboard once they sign in with that email.`); return; }
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
     if (action === "rotateKeys") setMsg("New keys generated. Share them with your team.");
@@ -313,6 +321,17 @@ export default function EventSettings() {
                     <input type="date" value={d.dateISO} onChange={(e) => setDay(i, { dateISO: e.target.value, dateText: prettyDate(e.target.value) })} className={`${inp} [color-scheme:dark]`} />
                     <input value={d.time} onChange={(e) => setDay(i, { time: e.target.value })} placeholder="2:00 PM" className={inp} />
                   </div>
+                  {days.length > 1 && (
+                    <>
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <input value={d.venue} onChange={(e) => setDay(i, { venue: e.target.value })} placeholder="Venue for this day" className={inp} />
+                        <input value={d.address} onChange={(e) => setDay(i, { address: e.target.value })} placeholder="Address for this day" className={inp} />
+                      </div>
+                      <p className="mt-2 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">
+                        Leave both empty if this day runs at {form.venue || "the main venue"}.
+                      </p>
+                    </>
+                  )}
                   <input value={d.capacity} onChange={(e) => setDay(i, { capacity: e.target.value })} placeholder="Capacity for this day (leave empty for no limit)" inputMode="numeric" className={`mt-3 ${inp}`} />
                 </div>
               ))}

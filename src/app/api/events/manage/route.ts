@@ -85,12 +85,17 @@ export async function POST(req: NextRequest) {
     const incoming = Array.isArray(body.days) ? body.days : [];
     const rows = incoming
       .filter((d: { dateISO?: string }) => d && String(d.dateISO || "").trim())
-      .map((d: { label?: string; dateISO?: string; dateText?: string; time?: string; capacity?: string }, i: number) => ({
+      .map((d: { label?: string; dateISO?: string; dateText?: string; time?: string; venue?: string; address?: string; capacity?: string }, i: number) => ({
         eventId: event.id,
         label: String(d.label || "").trim() || `Day ${i + 1}`,
         dateISO: String(d.dateISO || "").trim(),
         dateText: String(d.dateText || "").trim(),
         time: String(d.time || "").trim(),
+        /* left empty on purpose when the day runs at the event's own
+           venue - readers resolve day.venue || event.venue, so an empty
+           string keeps a single-venue event working untouched */
+        venue: String(d.venue || "").trim(),
+        address: String(d.address || "").trim(),
         capacity: d.capacity ? Number(d.capacity) : null,
         position: i,
       }));

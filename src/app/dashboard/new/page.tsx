@@ -57,13 +57,13 @@ export default function NewEventPage() {
     capacity: "",
     approvalMode: "manual",
   });
-  const [days, setDays] = useState([{ label: "", dateISO: "", dateText: "", time: "", timeISO: "", capacity: "" }]);
+  const [days, setDays] = useState([{ label: "", dateISO: "", dateText: "", time: "", timeISO: "", venue: "", address: "", capacity: "" }]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   function setDayCount(n: number) {
     const next = [...days];
-    while (next.length < n) next.push({ label: "", dateISO: "", dateText: "", time: "", timeISO: "", capacity: "" });
+    while (next.length < n) next.push({ label: "", dateISO: "", dateText: "", time: "", timeISO: "", venue: "", address: "", capacity: "" });
     while (next.length > n) next.pop();
     setDays(next);
   }
@@ -96,7 +96,16 @@ export default function NewEventPage() {
         eventDate: days[0].dateText || form.eventDate,
         dateISO: days[0].dateISO || form.dateISO,
         eventTime: days[0].time || form.eventTime,
-        days: days.map((d, i) => ({ label: d.label || (days.length > 1 ? `Day ${i + 1}` : form.eventType), dateISO: d.dateISO, dateText: d.dateText, time: d.time, capacity: d.capacity })),
+        days: days.map((d, i) => ({
+          label: d.label || (days.length > 1 ? `Day ${i + 1}` : form.eventType),
+          dateISO: d.dateISO,
+          dateText: d.dateText,
+          time: d.time,
+          /* empty means this day runs at the event's own venue */
+          venue: d.venue,
+          address: d.address,
+          capacity: d.capacity,
+        })),
       }),
     });
     const data = await res.json();
@@ -190,6 +199,20 @@ export default function NewEventPage() {
                   {d.time && <p className="mt-2 text-[11px] text-[#c9a227] font-[family-name:var(--font-sans)]">{d.time}</p>}
                 </div>
               </div>
+
+              {days.length > 1 && (
+                <div className="mt-4 grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <label className={lbl}>Venue for this day</label>
+                    <input value={d.venue} onChange={(e) => setDay(i, { venue: e.target.value })} placeholder={form.venue || "Leave empty for the main venue"} className={inp} />
+                  </div>
+                  <div>
+                    <label className={lbl}>Address for this day</label>
+                    <input value={d.address} onChange={(e) => setDay(i, { address: e.target.value })} placeholder={form.address || "Leave empty for the main address"} className={inp} />
+                  </div>
+                </div>
+              )}
+
               <div className="mt-4">
                 <label className={lbl}>Capacity for this day (optional)</label>
                 <input value={d.capacity} onChange={(e) => setDay(i, { capacity: e.target.value })} placeholder="Leave empty for no limit" inputMode="numeric" className={inp} />
@@ -199,6 +222,11 @@ export default function NewEventPage() {
           <div className="mt-6">
             <label className={lbl}>Venue</label>
             <input value={form.venue} onChange={(e) => set("venue", e.target.value)} placeholder="Aztech Arcum Event Center" className={inp} />
+            {days.length > 1 && (
+              <p className="mt-2 text-[11px] text-white/30 font-[family-name:var(--font-sans)]">
+                The main venue. Any day left blank above runs here.
+              </p>
+            )}
           </div>
 
           <div className="mt-6">

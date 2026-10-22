@@ -98,6 +98,13 @@ model EventDay {
   dateISO  String @default("")
   dateText String @default("")
   time     String @default("")
+
+  // A day can run at its own venue - a traditional wedding at the family
+  // compound, the white wedding at a hall. Empty means "same as the event",
+  // so single-venue events need nothing filled in and nothing backfilled.
+  venue    String @default("")
+  address  String @default("")
+
   position Int    @default(0)
 
   createdAt DateTime @default(now())
