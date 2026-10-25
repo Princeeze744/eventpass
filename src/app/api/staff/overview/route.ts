@@ -4,6 +4,12 @@ import { getStaff } from "@/lib/staff";
 
 export const dynamic = "force-dynamic";
 
+/* Guest numbers on the staff dashboard are a business metric - how many
+   people these events are actually serving. Crew are staff working the
+   room, and a deleted guest was removed on purpose, so neither belongs
+   in the count. */
+const GUESTS_ONLY = { isVendor: false, deletedAt: null } as const;
+
 export async function GET() {
   const staff = await getStaff();
   if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,11 +20,11 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       include: {
         owner: { select: { name: true, email: true, phone: true, role: true } },
-        _count: { select: { guests: true } },
+        _count: { select: { guests: { where: GUESTS_ONLY } } },
       },
     }),
     prisma.user.findMany({ orderBy: { createdAt: "desc" } }),
-    prisma.guest.count({ where: { deletedAt: null } }),
+    prisma.guest.count({ where: GUESTS_ONLY }),
   ]);
 
   const ownerEmail = (process.env.OWNER_EMAIL || "").toLowerCase();

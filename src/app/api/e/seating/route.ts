@@ -3,6 +3,12 @@ import { prisma } from "@/lib/db";
 import { sendTableEmail } from "@/lib/mailer";
 import { canManageEvent } from "@/lib/eventAccess";
 
+/* Vendors are crew, not guests. They are created approved with the
+   default rsvpAnswer, so any query that filters only on status and RSVP
+   picks them up - which is how they ended up in the seating picker, the
+   auto-seat pool and the notify-all list. */
+const GUESTS_ONLY = { isVendor: false } as const;
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { slug, adminKey, action } = body;
@@ -21,7 +27,7 @@ export async function POST(req: NextRequest) {
     const [tables, guests] = await Promise.all([
       prisma.seatTable.findMany({ where: { eventId: event.id }, orderBy: [{ section: "asc" }, { position: "asc" }] }),
       prisma.guest.findMany({
-        where: { eventId: event.id, deletedAt: null, status: "approved", rsvpAnswer: { not: "no" } },
+        where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY, status: "approved", rsvpAnswer: { not: "no" } },
         orderBy: { name: "asc" },
       }),
     ]);
@@ -76,16 +82,55 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === "updateTable") {
+    /* A guest stores their table as text ("Table 32"), matched against
+       the table's name. Renaming the table alone therefore orphans every
+       guest sitting at it - they vanish from the plan until the old name
+       is restored. So carry the rename across to the guests in the same
+       breath, and do the same for a section change. */
+    const before = await prisma.seatTable.findUnique({ where: { id: String(body.id) } });
+    if (!before) return NextResponse.json({ error: "Table not found." }, { status: 404 });
+
+    const nextName = body.name ? String(body.name).trim() : undefined;
+    const nextSection = body.section ? String(body.section).trim() : undefined;
+
+    /* two tables sharing a name would make seating ambiguous, since
+       guests are matched by name alone */
+    if (nextName && nextName !== before.name) {
+      const clash = await prisma.seatTable.findFirst({
+        where: { eventId: event.id, name: nextName, NOT: { id: before.id } },
+      });
+      if (clash) {
+        return NextResponse.json(
+          { error: `Another table is already called "${nextName}".` },
+          { status: 400 }
+        );
+      }
+    }
+
     await prisma.seatTable.update({
-      where: { id: String(body.id) },
+      where: { id: before.id },
       data: {
-        name: body.name ? String(body.name).trim() : undefined,
-        section: body.section ? String(body.section).trim() : undefined,
+        name: nextName,
+        section: nextSection,
         capacity: body.capacity ? Math.max(1, Math.min(50, Number(body.capacity))) : undefined,
         note: typeof body.note === "string" ? body.note.trim() : undefined,
       },
     });
-    return NextResponse.json({ ok: true });
+
+    const moved: Record<string, string> = {};
+    if (nextName && nextName !== before.name) moved.table = nextName;
+    if (nextSection && nextSection !== before.section) moved.section = nextSection;
+
+    let reseated = 0;
+    if (Object.keys(moved).length) {
+      const r = await prisma.guest.updateMany({
+        where: { eventId: event.id, deletedAt: null, table: before.name },
+        data: moved,
+      });
+      reseated = r.count;
+    }
+
+    return NextResponse.json({ ok: true, reseated });
   }
 
   if (action === "deleteTable") {
@@ -99,7 +144,7 @@ export async function POST(req: NextRequest) {
 
   if (action === "notifyAll") {
     const seated = await prisma.guest.findMany({
-      where: { eventId: event.id, deletedAt: null, status: "approved", email: { not: null }, NOT: { table: "TBA" } },
+      where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY, status: "approved", email: { not: null }, NOT: { table: "TBA" } },
     });
     let sent = 0;
     for (const g of seated) {
@@ -125,15 +170,23 @@ export async function POST(req: NextRequest) {
         wristband: typeof body.wristband === "string" ? body.wristband.trim() : undefined,
       },
     });
-    const seatedGuest = await prisma.guest.findUnique({ where: { id: String(body.guestId) } });
-    if (seatedGuest && seatedGuest.email && body.tableId && body.notify !== false) {
-      await sendTableEmail({
-        to: seatedGuest.email, guestName: seatedGuest.name, eventTitle: event.title, tagline: event.tagline,
-        slug: event.slug, passId: seatedGuest.passId, section: seatedGuest.section,
-        table: seatedGuest.table, seat: seatedGuest.seat,
-        eventDate: event.eventDate, eventDateISO: event.eventDateISO, eventTime: event.eventTime,
-        venue: event.venue, address: event.address,
-      });
+
+    /* Seating is iterative - a host shuffles people between tables for an
+       hour before the plan settles. Emailing on each move means a guest
+       gets five emails and the first four are wrong, so a seat change is
+       silent unless the caller explicitly asks for a notification.
+       "Notify seated" is the deliberate moment to tell everyone. */
+    if (body.notify === true) {
+      const seatedGuest = await prisma.guest.findUnique({ where: { id: String(body.guestId) } });
+      if (seatedGuest && seatedGuest.email && !seatedGuest.isVendor && body.tableId) {
+        await sendTableEmail({
+          to: seatedGuest.email, guestName: seatedGuest.name, eventTitle: event.title, tagline: event.tagline,
+          slug: event.slug, passId: seatedGuest.passId, section: seatedGuest.section,
+          table: seatedGuest.table, seat: seatedGuest.seat,
+          eventDate: event.eventDate, eventDateISO: event.eventDateISO, eventTime: event.eventTime,
+          venue: event.venue, address: event.address,
+        });
+      }
     }
 
     return NextResponse.json({ ok: true });
@@ -143,7 +196,7 @@ export async function POST(req: NextRequest) {
     const [tables, guests] = await Promise.all([
       prisma.seatTable.findMany({ where: { eventId: event.id }, orderBy: [{ section: "asc" }, { position: "asc" }] }),
       prisma.guest.findMany({
-        where: { eventId: event.id, deletedAt: null, status: "approved", rsvpAnswer: { not: "no" }, OR: [{ table: "TBA" }, { table: "" }] },
+        where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY, status: "approved", rsvpAnswer: { not: "no" }, OR: [{ table: "TBA" }, { table: "" }] },
         orderBy: [{ tier: "asc" }, { name: "asc" }],
       }),
     ]);
@@ -151,7 +204,7 @@ export async function POST(req: NextRequest) {
     if (tables.length === 0) return NextResponse.json({ error: "Create tables first." }, { status: 400 });
 
     const load: Record<string, number> = {};
-    const seatedAll = await prisma.guest.findMany({ where: { eventId: event.id, deletedAt: null } });
+    const seatedAll = await prisma.guest.findMany({ where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY } });
     tables.forEach((t) => {
       load[t.id] = seatedAll.filter((g) => g.table === t.name).reduce((a, g) => a + g.partySize, 0);
     });

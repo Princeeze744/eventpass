@@ -73,7 +73,12 @@ export async function POST(req: NextRequest) {
   }
 
   if (event.capacity) {
-    const count = await prisma.guest.count({ where: { eventId: event.id } });
+    /* Capacity counts guests in the room, not crew working it, and a
+       guest the host removed no longer occupies a place. Counting
+       either closed registration early. */
+    const count = await prisma.guest.count({
+      where: { eventId: event.id, deletedAt: null, isVendor: false },
+    });
     if (count >= event.capacity) {
       return NextResponse.json({ error: "Registration is full." }, { status: 403 });
     }

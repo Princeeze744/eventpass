@@ -221,7 +221,10 @@ export async function POST(req: Request) {
              like 0803..., +234803... and 234803... all find each other */
           const tail = from.slice(-10);
           const candidates = await prisma.guest.findMany({
-            where: { deletedAt: null, phone: { not: null } },
+            /* crew are never sent a guest invitation, so a message from a
+               vendor's number is not an RSVP - matching one would record
+               an answer nobody gave and reply with a guest confirmation */
+            where: { deletedAt: null, isVendor: false, phone: { not: null } },
             select: { id: true, phone: true, waSentAt: true },
             orderBy: { waSentAt: "desc" },
             take: 2000,

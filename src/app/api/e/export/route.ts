@@ -10,13 +10,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  /* Two things were missing here and both put rows in the host's export
+     that should never have been there: vendors are crew rather than
+     guests, and a trashed guest is one the host deliberately removed.
+     Vendors have their own page; this file is the guest list. */
   const guests = await prisma.guest.findMany({
-    where: { eventId: event.id },
+    where: { eventId: event.id, deletedAt: null, isVendor: false },
     orderBy: { name: "asc" },
   });
 
   const esc = (v: string) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const header = ["Name", "Phone", "Email", "Category", "Party Size", "Pass ID", "Status", "Table", "Checked In", "Arrival Time"];
+  const header = ["Name", "Phone", "Email", "Category", "Party Size", "Pass ID", "Status", "RSVP", "Section", "Table", "Seat", "Checked In", "Arrival Time"];
   const rows = guests.map((g) => [
     esc(g.name),
     esc(g.phone || ""),
@@ -25,7 +29,10 @@ export async function POST(req: NextRequest) {
     g.partySize,
     esc(g.passId),
     esc(g.status),
+    esc(g.rsvpAnswer === "no" ? "Not attending" : "Attending"),
+    esc(g.section || ""),
     esc(g.table),
+    esc(g.seat || ""),
     g.checkedIn ? "Yes" : "No",
     esc(g.checkedInAt ? new Date(g.checkedInAt).toLocaleString() : ""),
   ].join(","));

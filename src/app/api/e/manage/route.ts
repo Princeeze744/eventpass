@@ -46,8 +46,10 @@ export async function POST(req: NextRequest) {
       data: { status },
     });
     if (status === "approved") {
+      /* a vendor's approval is handled on the vendors page and carries a
+         call time, not a guest pass - never send them the guest email */
       const approved = await prisma.guest.findMany({
-        where: { eventId: event.id, id: { in: idList }, email: { not: null }, passSentAt: null },
+        where: { eventId: event.id, id: { in: idList }, isVendor: false, email: { not: null }, passSentAt: null },
       });
       for (const g of approved) {
         await sendApprovalEmail({
@@ -72,8 +74,10 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === "remindAll") {
+    /* "Send reminder" is a guest-facing message about attending. Crew
+       get their brief and call time from the vendors page instead. */
     const list = await prisma.guest.findMany({
-      where: { eventId: event.id, deletedAt: null, status: "approved", rsvpAnswer: { not: "no" }, email: { not: null } },
+      where: { eventId: event.id, deletedAt: null, isVendor: false, status: "approved", rsvpAnswer: { not: "no" }, email: { not: null } },
     });
     let sent = 0;
     for (const g of list) {

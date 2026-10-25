@@ -17,8 +17,11 @@ export async function POST(req: NextRequest) {
     await prisma.guest.update({ where: { id: String(guestId) }, data: { status: String(status) } });
   }
 
+  /* Two filters were missing and both put rows in front of the host that
+     do not belong in a guest list: vendors are crew and have their own
+     page, and a trashed guest is one the host deliberately removed. */
   const guests = await prisma.guest.findMany({
-    where: { eventId: event.id },
+    where: { eventId: event.id, deletedAt: null, isVendor: false },
     orderBy: { createdAt: "desc" },
   });
 
