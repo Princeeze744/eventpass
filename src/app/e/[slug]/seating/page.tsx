@@ -5,11 +5,46 @@ import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { EventNav, Crumbs } from "@/components/Nav";
+import { EventNav } from "@/components/Nav";
 import { Loader2, ShieldCheck, Plus, Sparkles, Printer, X, Users, ArrowLeft, Trash2 } from "lucide-react";
 
 type T = { id: string; name: string; section: string; capacity: number; note: string; seated: number; guests: { id: string; name: string; tier: string; partySize: number; seat: string; wristband: string }[] };
 type U = { id: string; name: string; tier: string; partySize: number };
+
+/* The app is dark-themed, and its own surface classes set a light text
+   colour that beats Tailwind's print variants - which is why the printed
+   plan came out blank. These rules are scoped to the plan and marked
+   important so the paper version is black on white whatever the theme
+   does, with each table kept whole across a page break. */
+const PRINT_CSS = `
+@media print {
+  @page { margin: 12mm; }
+  html, body { background: #fff !important; }
+  .sb-plan, .sb-plan * {
+    color: #000 !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  .sb-plan .sb-card {
+    border: 1px solid #999 !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  .sb-plan .sb-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .sb-plan .sb-table-name { font-size: 15px !important; font-weight: 700 !important; }
+  .sb-plan .sb-guest { font-size: 12px !important; padding: 2px 0 !important; border-bottom: 1px dotted #ccc !important; }
+  .sb-plan .sb-section-title { font-size: 11px !important; letter-spacing: 2px !important; margin-top: 14px !important; }
+  .sb-plan .sb-bar { display: none !important; }
+}
+`;
 
 export default function SeatingPlan() {
   const params = useParams();
@@ -64,16 +99,6 @@ export default function SeatingPlan() {
     }
   }, [tried, slug, load]);
 
-  useEffect(() => {
-    if (tried) return;
-    setTried(true);
-    const saved = typeof window !== "undefined" ? sessionStorage.getItem(`sb_admin_${slug}`) : null;
-    if (saved) {
-      setKey(saved);
-      load(saved).then((ok) => { if (ok) setUnlocked(true); });
-    }
-  }, [tried, slug, load]);
-
   async function unlock() {
     setBusy(true);
     const ok = await load(key);
@@ -93,6 +118,7 @@ export default function SeatingPlan() {
     if (d.error) { setMsg(d.error); return; }
     if (d.sent !== undefined) setMsg(`Emailed ${d.sent} seated guests.`);
     if (d.placed !== undefined) setMsg(`Seated ${d.placed} guests${d.left ? ` · ${d.left} still need space` : ""}.`);
+    if (d.reseated) setMsg(`Table renamed · ${d.reseated} guest${d.reseated === 1 ? "" : "s"} moved with it.`);
     setPicking(null);
     setShowAdd(false);
     load(key);
@@ -122,7 +148,9 @@ export default function SeatingPlan() {
   const totalSeated = tables.reduce((a, t) => a + t.seated, 0);
 
   return (
-    <main className="min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-8 sm:px-8 print:bg-white print:text-black">
+    <main className="sb-plan min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-8 sm:px-8 print:bg-white print:text-black">
+      <style dangerouslySetInnerHTML={{ __html: PRINT_CSS }} />
+
       <div className="mx-auto max-w-[1300px]">
         <TopBar back={`/e/${slug}/admin`} backLabel="Guests" />
         <div className="flex flex-wrap items-end justify-between gap-4 print:hidden">
@@ -141,11 +169,14 @@ export default function SeatingPlan() {
           </div>
         </div>
 
-        <h1 className="hidden font-[family-name:var(--font-serif)] text-4xl sb-display print:block">{title} — Seating Plan</h1>
+        <div className="hidden print:block">
+          <h1 className="font-[family-name:var(--font-serif)] text-3xl">{title} — Seating Plan</h1>
+          <p className="mt-1 text-[12px]">{tables.length} tables · {totalSeated} of {totalSeats} seats filled{unseated.length ? ` · ${unseated.length} unseated` : ""}</p>
+        </div>
 
-        <EventNav slug={slug} />
+        <div className="print:hidden"><EventNav slug={slug} /></div>
 
-        <div className="mt-6 flex flex-wrap gap-5 text-[12px] text-white/50 font-[family-name:var(--font-sans)] print:text-black">
+        <div className="mt-6 flex flex-wrap gap-5 text-[12px] text-white/50 font-[family-name:var(--font-sans)] print:hidden">
           <span>{tables.length} tables</span>
           <span>{totalSeated} / {totalSeats} seats filled</span>
           <span className="text-[#c9a227]">{unseated.length} guests unseated</span>
@@ -171,12 +202,12 @@ export default function SeatingPlan() {
 
         {sections.map((sec) => (
           <div key={sec} className="mt-8">
-            <p className="text-[10px] uppercase tracking-[0.35em] text-[#c9a227] font-[family-name:var(--font-sans)]">{sec}</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <p className="sb-section-title text-[10px] uppercase tracking-[0.35em] text-[#c9a227] font-[family-name:var(--font-sans)]">{sec}</p>
+            <div className="sb-grid mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {tables.filter((t) => t.section === sec).map((t) => {
                 const full = t.seated >= t.capacity;
                 return (
-                  <motion.div key={t.id} layout className={`${card} p-5 print:border-black/20 ${full ? "border-[#c9a227]/30" : ""}`}>
+                  <motion.div key={t.id} layout className={`sb-card ${card} p-5 ${full ? "border-[#c9a227]/30" : ""}`}>
                     <div className="flex items-start justify-between">
                       <div>
                         {renaming === t.id ? (
@@ -189,21 +220,21 @@ export default function SeatingPlan() {
                             className="w-full rounded-lg border border-[#c9a227]/50 bg-black/50 px-2 py-1 font-[family-name:var(--font-serif)] text-2xl text-[#f5f1ea] outline-none"
                           />
                         ) : (
-                          <p onClick={() => startRename(t.id, t.name)} title="Click to rename" className="cursor-text font-[family-name:var(--font-serif)] text-2xl hover:text-[#c9a227] print:hover:text-inherit">{t.name}</p>
+                          <p onClick={() => startRename(t.id, t.name)} title="Click to rename" className="sb-table-name cursor-text font-[family-name:var(--font-serif)] text-2xl hover:text-[#c9a227] print:hover:text-inherit">{t.name}</p>
                         )}
-                        <p className="mt-0.5 text-[11px] text-white/35 font-[family-name:var(--font-sans)] print:text-black">{t.seated} / {t.capacity} seats</p>
+                        <p className="mt-0.5 text-[11px] text-white/35 font-[family-name:var(--font-sans)]">{t.seated} / {t.capacity} seats</p>
                       </div>
                       <button onClick={() => act({ action: "deleteTable", id: t.id })} className="rounded-full border border-white/10 p-1.5 text-white/30 hover:text-red-400 print:hidden"><Trash2 className="h-3 w-3" /></button>
                     </div>
 
-                    <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/[0.07]">
+                    <div className="sb-bar mt-3 h-1 overflow-hidden rounded-full bg-white/[0.07]">
                       <motion.div animate={{ width: `${Math.min(100, (t.seated / t.capacity) * 100)}%` }} className="h-full rounded-full bg-gradient-to-r from-[#1c4634] to-[#c9a227]" />
                     </div>
 
                     <div className="mt-4 space-y-1.5">
                       {t.guests.map((g) => (
-                        <div key={g.id} className="flex items-center justify-between rounded-lg bg-black/25 px-3 py-2 print:bg-transparent">
-                          <span className="text-[12px] text-white/75 font-[family-name:var(--font-sans)] print:text-black">
+                        <div key={g.id} className="sb-guest flex items-center justify-between rounded-lg bg-black/25 px-3 py-2">
+                          <span className="text-[12px] text-white/75 font-[family-name:var(--font-sans)]">
                             {g.name}{g.partySize > 1 ? ` +${g.partySize - 1}` : ""}
                           </span>
                           <button onClick={() => act({ action: "seat", guestId: g.id, tableId: null })} className="text-[10px] uppercase text-white/25 hover:text-red-400 print:hidden">remove</button>
@@ -227,7 +258,7 @@ export default function SeatingPlan() {
 
       <AnimatePresence>
         {picking && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPicking(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-5 backdrop-blur-sm">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setPicking(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-5 backdrop-blur-sm print:hidden">
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} onClick={(e) => e.stopPropagation()} className="max-h-[80vh] w-full max-w-[440px] overflow-y-auto sb-panel p-6">
               <h3 className="font-[family-name:var(--font-serif)] text-2xl text-[#c9a227]">Seat {picking.name}</h3>
               <p className="mt-1 text-[12px] text-white/40 font-[family-name:var(--font-sans)]">{picking.partySize > 1 ? `Needs ${picking.partySize} seats` : "1 seat"}</p>
@@ -248,7 +279,7 @@ export default function SeatingPlan() {
         )}
 
         {showAdd && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAdd(false)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-5 backdrop-blur-sm">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAdd(false)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-5 backdrop-blur-sm print:hidden">
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} onClick={(e) => e.stopPropagation()} className="w-full max-w-[420px] sb-panel p-6">
               <div className="flex items-start justify-between">
                 <h3 className="font-[family-name:var(--font-serif)] text-3xl text-[#c9a227]">Add tables</h3>

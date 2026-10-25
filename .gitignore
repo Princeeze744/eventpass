@@ -67,3 +67,5 @@ preview.js
 cleanup.js
 
 peek.mjs
+status.mjs
+tidy.ps1
