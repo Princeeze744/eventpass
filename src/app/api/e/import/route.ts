@@ -48,6 +48,7 @@ type ColMap = {
   tier?: number;
   party?: number;
   table?: number;
+  group?: number;
 };
 
 function readHeader(cells: string[]): ColMap | null {
@@ -68,6 +69,10 @@ function readHeader(cells: string[]): ColMap | null {
       map.tier = i; hits++;
     } else if (map.party === undefined && (h.includes("party") || h.includes("seats") || h.includes("guests") || h === "size")) {
       map.party = i; hits++;
+    /* GROUP is tested before TABLE on purpose: "Table Group" contains
+       both words, and the group is the one the host means. */
+    } else if (map.group === undefined && (h.includes("group") || h.includes("section") || h.includes("affiliation"))) {
+      map.group = i; hits++;
     } else if (map.table === undefined && h.includes("table")) {
       map.table = i; hits++;
     }
@@ -110,6 +115,8 @@ export async function POST(req: NextRequest) {
   let updated = 0;
   let skipped = 0;
   let withEmail = 0;
+  let withGroup = 0;
+  const groups = new Set<string>();
   const errors: string[] = [];
 
   for (let li = start; li < lines.length; li++) {
@@ -153,6 +160,21 @@ export async function POST(req: NextRequest) {
 
     const table = (map ? at(map.table) : "").trim();
 
+    /* ------------------------------------------------------------
+       The GROUP a guest belongs to - "Standard Chartered Bank",
+       "Arowojobe Family", "Uyi's Friends".
+
+       Real events are seated by affiliation, not one guest at a time,
+       and the group is knowledge only the host has. Carried in on the
+       list, it lets a guest be seated the moment they say yes instead
+       of waiting for someone to remember who they are.
+
+       It is stored in `section`, the same field seating has always
+       stamped from the table, so a group named here and a table
+       section named the same thing are the same group.
+    ------------------------------------------------------------ */
+    const group = (map ? at(map.group) : "").trim().slice(0, 60);
+
     if (!name || name.length < 2) { skipped++; continue; }
     if (/^(name|guest|guest name|full name)$/i.test(name)) { skipped++; continue; }
 
@@ -166,14 +188,20 @@ export async function POST(req: NextRequest) {
     });
 
     if (exists) {
-      const patch: { deletedAt?: null; email?: string; phone?: string } = {};
+      const patch: { deletedAt?: null; email?: string; phone?: string; section?: string } = {};
       if (exists.deletedAt) patch.deletedAt = null;
       if (email && !exists.email) patch.email = email;
       if (phone && !exists.phone) patch.phone = phone;
+      /* fill a missing group, never overwrite one - an existing value
+         may be the section of the table they are already sitting at,
+         and a re-import must not move anybody */
+      if (group && !String(exists.section || "").trim()) patch.section = group;
       if (Object.keys(patch).length) {
         await prisma.guest.update({ where: { id: exists.id }, data: patch });
         if (patch.email) { updated++; withEmail++; }
         else if (patch.phone) updated++;
+        else if (patch.section) updated++;
+        if (patch.section) { withGroup++; groups.add(group); }
         if (patch.deletedAt === null) added++;
       } else {
         skipped++;
@@ -195,11 +223,13 @@ export async function POST(req: NextRequest) {
           tier: TIERS.includes(tier) ? tier : "Guest",
           partySize,
           ...(table ? { table } : {}),
+          ...(group ? { section: group } : {}),
           status: autoApprove ? "approved" : "pending",
         },
       });
       added++;
       if (email) withEmail++;
+      if (group) { withGroup++; groups.add(group); }
     } catch {
       errors.push(name);
       skipped++;
@@ -211,7 +241,10 @@ export async function POST(req: NextRequest) {
     updated,
     skipped,
     withEmail,
+    withGroup,
+    groups: Array.from(groups).slice(0, 20),
     headerDetected: Boolean(map),
+    groupDetected: Boolean(map && map.group !== undefined),
     total: lines.length - start,
     errors: errors.slice(0, 5),
   });

@@ -40,6 +40,34 @@ async function freeTableName(eventId: string, prefix: string, taken?: Set<string
   return out;
 }
 
+/* ------------------------------------------------------------------
+   Groups.
+
+   Real events are not seated guest by guest - they are seated by
+   affiliation. One table block for the bank colleagues, another for
+   the family, another for the school set. The host knows who belongs
+   to which group; the seat inside the group rarely matters.
+
+   A guest's GROUP lives in `section`. Seating has always stamped the
+   table's section onto the guest, so for anyone already seated the
+   field is their group already. The import can now set it in advance,
+   which is what lets a guest be seated the moment they say yes.
+------------------------------------------------------------------ */
+type TableRow = { id: string; name: string; section: string; capacity: number };
+type GuestRow = { id: string; name: string; section: string; table: string; partySize: number };
+
+const groupOf = (g: { section: string }) => String(g.section || "").trim();
+
+function tableLoad(tables: TableRow[], guests: GuestRow[]) {
+  const load: Record<string, number> = {};
+  for (const t of tables) load[t.id] = 0;
+  for (const g of guests) {
+    const t = tables.find((x) => x.name === g.table);
+    if (t) load[t.id] += g.partySize;
+  }
+  return load;
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { slug, adminKey, action } = body;
@@ -91,6 +119,9 @@ export async function POST(req: NextRequest) {
         .filter((g) => !g.table || g.table === "TBA" || !names.has(g.table))
         .map((g) => ({
           id: g.id, name: g.name, tier: g.tier, partySize: g.partySize,
+          /* their intended group, if the list carried one - this is what
+             lets the plan seat them without being told twice */
+          group: groupOf(g),
           lost: Boolean(g.table && g.table !== "TBA" && !names.has(g.table)) ? g.table : "",
         })),
     });
@@ -276,27 +307,59 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  if (action === "autoSeat") {
-    const [tables, guests] = await Promise.all([
-      prisma.seatTable.findMany({ where: { eventId: event.id }, orderBy: [{ section: "asc" }, { position: "asc" }] }),
-      prisma.guest.findMany({
-        where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY, status: "approved", rsvpAnswer: { not: "no" }, OR: [{ table: "TBA" }, { table: "" }] },
-        orderBy: [{ tier: "asc" }, { name: "asc" }],
-      }),
-    ]);
+  /* ----------------------------------------------------------------
+     seatMany - put a handful of people into one group, or one table,
+     in a single action.
 
-    if (tables.length === 0) return NextResponse.json({ error: "Create tables first." }, { status: 400 });
+     The host ticks the three Standard Chartered colleagues who just
+     said yes, picks that group, and they land on whichever of its
+     tables has room. Previously this was three separate dialogs and
+     the host had to remember which of the five bank tables was full.
+  ---------------------------------------------------------------- */
+  if (action === "seatMany") {
+    const ids = (Array.isArray(body.guestIds) ? body.guestIds : []).map(String).filter(Boolean);
+    if (!ids.length) return NextResponse.json({ error: "Nobody selected." }, { status: 400 });
 
-    const load: Record<string, number> = {};
-    const seatedAll = await prisma.guest.findMany({ where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY } });
-    tables.forEach((t) => {
-      load[t.id] = seatedAll.filter((g) => g.table === t.name).reduce((a, g) => a + g.partySize, 0);
+    const section = String(body.section || "").trim();
+    const tableId = String(body.tableId || "").trim();
+    if (!section && !tableId) return NextResponse.json({ error: "Pick a group or a table." }, { status: 400 });
+
+    const tables = await prisma.seatTable.findMany({
+      where: { eventId: event.id },
+      orderBy: [{ section: "asc" }, { position: "asc" }],
+      select: { id: true, name: true, section: true, capacity: true },
     });
 
+    const all = await prisma.guest.findMany({
+      where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY },
+      select: { id: true, name: true, section: true, table: true, partySize: true },
+    });
+
+    const load = tableLoad(tables, all);
+
+    const chosen = tableId
+      ? tables.filter((t) => t.id === tableId)
+      : tables.filter((t) => t.section === section);
+
+    if (!chosen.length) {
+      return NextResponse.json(
+        { error: section ? `There are no tables in "${section}" yet. Add some first.` : "Table not found." },
+        { status: 400 }
+      );
+    }
+
+    /* biggest parties first, so a family of four is not left stranded
+       after the singles have eaten the gaps */
+    const picked = all
+      .filter((g) => ids.includes(g.id))
+      .sort((a, b) => b.partySize - a.partySize || a.name.localeCompare(b.name));
+
     let placed = 0;
-    for (const g of guests) {
-      const target = tables.find((t) => load[t.id] + g.partySize <= t.capacity);
-      if (!target) continue;
+    const left: string[] = [];
+
+    for (const g of picked) {
+      const target = chosen.find((t) => load[t.id] + g.partySize <= t.capacity);
+      if (!target) { left.push(g.name); continue; }
       await prisma.guest.update({
         where: { id: g.id },
         data: { table: target.name, section: target.section },
@@ -305,7 +368,247 @@ export async function POST(req: NextRequest) {
       placed++;
     }
 
-    return NextResponse.json({ ok: true, placed, left: guests.length - placed });
+    return NextResponse.json({ ok: true, placed, left: left.length, leftNames: left.slice(0, 6) });
+  }
+
+  /* ----------------------------------------------------------------
+     setGroup - record which group people belong to without seating
+     them yet. Useful when the host knows the affiliation but has not
+     decided the table block, and it is what makes "Plan it for me"
+     able to place them afterwards.
+  ---------------------------------------------------------------- */
+  if (action === "setGroup") {
+    const ids = (Array.isArray(body.guestIds) ? body.guestIds : []).map(String).filter(Boolean);
+    const section = String(body.section || "").trim();
+    if (!ids.length) return NextResponse.json({ error: "Nobody selected." }, { status: 400 });
+
+    const r = await prisma.guest.updateMany({
+      where: { eventId: event.id, id: { in: ids }, deletedAt: null, ...GUESTS_ONLY },
+      data: { section },
+    });
+    return NextResponse.json({ ok: true, grouped: r.count, section });
+  }
+
+  /* ----------------------------------------------------------------
+     tablesForGroup - "this group has 48 people, give it tables".
+
+     Works out how many are still needed on top of the room the group
+     already has, and creates exactly that many.
+  ---------------------------------------------------------------- */
+  if (action === "tablesForGroup") {
+    const section = String(body.section || "").trim();
+    if (!section) return NextResponse.json({ error: "Which group?" }, { status: 400 });
+    const capacity = Math.max(1, Math.min(50, Number(body.capacity) || 10));
+
+    const tables = await prisma.seatTable.findMany({
+      where: { eventId: event.id },
+      orderBy: [{ section: "asc" }, { position: "asc" }],
+      select: { id: true, name: true, section: true, capacity: true },
+    });
+
+    const guests = await prisma.guest.findMany({
+      where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY, status: "approved", rsvpAnswer: { not: "no" } },
+      select: { id: true, name: true, section: true, table: true, partySize: true },
+    });
+
+    const names = new Set(tables.map((t) => t.name));
+    const load = tableLoad(tables, guests);
+
+    const mine = tables.filter((t) => t.section === section);
+    const room = mine.reduce((a, t) => a + Math.max(0, t.capacity - load[t.id]), 0);
+
+    const waitingSeats = guests
+      .filter((g) => (!g.table || g.table === "TBA" || !names.has(g.table)) && groupOf(g) === section)
+      .reduce((a, g) => a + g.partySize, 0);
+
+    const short = Math.max(0, waitingSeats - room);
+    const need = Math.ceil(short / capacity);
+
+    if (!need) {
+      return NextResponse.json({ ok: true, added: 0, note: `"${section}" already has room for everyone waiting.` });
+    }
+
+    const prefix = String(body.prefix || "Table").trim();
+    const existing = tables.length;
+    const taken = new Set<string>();
+    const newNames: string[] = [];
+    for (let i = 0; i < need; i++) newNames.push(await freeTableName(event.id, prefix, taken));
+
+    await prisma.seatTable.createMany({
+      data: newNames.map((name, i) => ({
+        eventId: event.id, name, section, capacity, position: existing + i,
+      })),
+    });
+
+    return NextResponse.json({ ok: true, added: need, first: newNames[0], last: newNames[newNames.length - 1] });
+  }
+
+  /* ----------------------------------------------------------------
+     planSeating - read the whole event and seat everyone into their
+     own group, keeping parties whole.
+
+     Returns the plan WITHOUT changing anything unless apply is true,
+     because a host will not trust a button that rearranges 345 people
+     without showing its work first.
+  ---------------------------------------------------------------- */
+  if (action === "planSeating") {
+    const apply = body.apply === true;
+
+    const [tables, guests] = await Promise.all([
+      prisma.seatTable.findMany({
+        where: { eventId: event.id },
+        orderBy: [{ section: "asc" }, { position: "asc" }],
+        select: { id: true, name: true, section: true, capacity: true },
+      }),
+      prisma.guest.findMany({
+        where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY, status: "approved", rsvpAnswer: { not: "no" } },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true, section: true, table: true, partySize: true },
+      }),
+    ]);
+
+    if (!tables.length) return NextResponse.json({ error: "Create tables first." }, { status: 400 });
+
+    const names = new Set(tables.map((t) => t.name));
+    const isSeated = (g: GuestRow) => Boolean(g.table) && g.table !== "TBA" && names.has(g.table);
+
+    const load = tableLoad(tables, guests.filter(isSeated));
+    const waiting = guests.filter((g) => !isSeated(g));
+
+    /* bucket by the group each guest belongs to */
+    const buckets = new Map<string, GuestRow[]>();
+    for (const g of waiting) {
+      const k = groupOf(g);
+      if (!buckets.has(k)) buckets.set(k, []);
+      (buckets.get(k) as GuestRow[]).push(g);
+    }
+
+    type Move = { id: string; tableName: string; section: string };
+    const moves: Move[] = [];
+
+    const plan = Array.from(buckets.entries()).map(([group, list]) => {
+      const waitingSeats = list.reduce((a, g) => a + g.partySize, 0);
+
+      /* no group recorded - the system has no honest basis for a guess,
+         so it says so instead of dropping them somewhere wrong */
+      if (!group) {
+        return {
+          group: "",
+          waiting: list.length,
+          waitingSeats,
+          placed: [] as { name: string; table: string }[],
+          shortfall: list.length,
+          tablesNeeded: 0,
+          reason: "no group recorded",
+          names: list.map((g) => g.name),
+        };
+      }
+
+      const mine = tables.filter((t) => t.section === group);
+      const placed: { name: string; table: string }[] = [];
+      const left: GuestRow[] = [];
+
+      /* biggest parties first so a family of four is not shut out by
+         singles that already ate the gaps */
+      const ordered = [...list].sort((a, b) => b.partySize - a.partySize || a.name.localeCompare(b.name));
+
+      for (const g of ordered) {
+        const target = mine.find((t) => load[t.id] + g.partySize <= t.capacity);
+        if (!target) { left.push(g); continue; }
+        load[target.id] += g.partySize;
+        placed.push({ name: g.name, table: target.name });
+        moves.push({ id: g.id, tableName: target.name, section: target.section });
+      }
+
+      const cap = mine.length ? mine[0].capacity : 10;
+      const shortSeats = left.reduce((a, g) => a + g.partySize, 0);
+
+      return {
+        group,
+        waiting: list.length,
+        waitingSeats,
+        placed,
+        shortfall: left.length,
+        tablesNeeded: shortSeats ? Math.ceil(shortSeats / cap) : 0,
+        reason: !mine.length
+          ? "no tables in this group yet"
+          : left.length
+          ? "this group's tables are full"
+          : "",
+        names: left.map((g) => g.name),
+      };
+    });
+
+    /* groups with something to say first, then the clean ones */
+    plan.sort((a, b) => b.shortfall - a.shortfall || b.placed.length - a.placed.length);
+
+    if (apply) {
+      for (const m of moves) {
+        await prisma.guest.update({
+          where: { id: m.id },
+          data: { table: m.tableName, section: m.section },
+        });
+      }
+    }
+
+    return NextResponse.json({
+      ok: true,
+      applied: apply,
+      placed: moves.length,
+      left: waiting.length - moves.length,
+      plan,
+    });
+  }
+
+  if (action === "autoSeat") {
+    const [tables, guests] = await Promise.all([
+      prisma.seatTable.findMany({
+        where: { eventId: event.id },
+        orderBy: [{ section: "asc" }, { position: "asc" }],
+        select: { id: true, name: true, section: true, capacity: true },
+      }),
+      prisma.guest.findMany({
+        where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY, status: "approved", rsvpAnswer: { not: "no" }, OR: [{ table: "TBA" }, { table: "" }] },
+        orderBy: [{ tier: "asc" }, { name: "asc" }],
+        select: { id: true, name: true, section: true, table: true, partySize: true },
+      }),
+    ]);
+
+    if (tables.length === 0) return NextResponse.json({ error: "Create tables first." }, { status: 400 });
+
+    const seatedAll = await prisma.guest.findMany({
+      where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY },
+      select: { id: true, name: true, section: true, table: true, partySize: true },
+    });
+    const load = tableLoad(tables, seatedAll);
+
+    let placed = 0;
+    let grouped = 0;
+
+    for (const g of guests) {
+      /* A guest who belongs to a group goes into that group or nowhere.
+         Dropping a bank colleague onto a family table to fill a gap is
+         worse than leaving them for the host to place, because nobody
+         would notice the mistake until the guest was standing at the
+         wrong table. Guests with no group fall back to any free seat,
+         which is how this has always behaved. */
+      const group = groupOf(g);
+      const pool = group ? tables.filter((t) => t.section === group) : tables;
+      if (group && !pool.length) continue;
+
+      const target = pool.find((t) => load[t.id] + g.partySize <= t.capacity);
+      if (!target) continue;
+
+      await prisma.guest.update({
+        where: { id: g.id },
+        data: { table: target.name, section: target.section },
+      });
+      load[target.id] += g.partySize;
+      placed++;
+      if (group) grouped++;
+    }
+
+    return NextResponse.json({ ok: true, placed, grouped, left: guests.length - placed });
   }
 
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });

@@ -69,3 +69,10 @@ cleanup.js
 peek.mjs
 status.mjs
 tidy.ps1
+
+tables.mjs
+vendorcheck.mjs
+
+whichtable.mjs
+
+unseated.mjs
