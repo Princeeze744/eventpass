@@ -4,10 +4,41 @@ import { sendTableEmail } from "@/lib/mailer";
 import { canManageEvent } from "@/lib/eventAccess";
 
 /* Vendors are crew, not guests. They are created approved with the
-   default rsvpAnswer, so any query that filters only on status and RSVP
-   picks them up - which is how they ended up in the seating picker, the
-   auto-seat pool and the notify-all list. */
+   default rsvpAnswer, so any query filtering only on status and RSVP
+   picks them up. */
 const GUESTS_ONLY = { isVendor: false } as const;
+
+/* ------------------------------------------------------------------
+   Table names must be unique within an event.
+
+   A guest records their table as TEXT - "Table 35" - and is matched to
+   a table by that string. Two tables sharing a name are therefore
+   indistinguishable: both show the same guests, and renaming either
+   one drags the other's guests along with it.
+
+   Names used to be generated from a COUNT of existing tables, so
+   deleting a table made the count fall behind the highest number in
+   use and the next table created was handed a name already taken.
+   Counting from the highest number actually in use, then stepping past
+   anything taken, cannot collide.
+------------------------------------------------------------------ */
+async function freeTableName(eventId: string, prefix: string, taken?: Set<string>) {
+  const rows = await prisma.seatTable.findMany({ where: { eventId }, select: { name: true } });
+  const used = taken ?? new Set<string>();
+  for (const r of rows) used.add(r.name);
+
+  let max = 0;
+  for (const name of used) {
+    const m = String(name).match(/^(.*?)\s+(\d+)$/);
+    if (m && m[1].toLowerCase() === prefix.toLowerCase()) max = Math.max(max, Number(m[2]));
+  }
+
+  let n = max + 1;
+  while (used.has(`${prefix} ${n}`)) n++;
+  const out = `${prefix} ${n}`;
+  used.add(out);
+  return out;
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -32,36 +63,68 @@ export async function POST(req: NextRequest) {
       }),
     ]);
 
+    /* surfaced so the host can see a clash rather than wonder why two
+       tables show the same people */
+    const seen = new Set<string>();
+    const duplicates = new Set<string>();
+    for (const t of tables) {
+      if (seen.has(t.name)) duplicates.add(t.name);
+      seen.add(t.name);
+    }
+
+    const names = new Set(tables.map((t) => t.name));
+
     return NextResponse.json({
       event: { title: event.title },
+      duplicates: Array.from(duplicates),
       tables: tables.map((t) => ({
         id: t.id, name: t.name, section: t.section, capacity: t.capacity, note: t.note,
+        duplicate: duplicates.has(t.name),
         seated: guests.filter((g) => g.table === t.name).reduce((a, g) => a + g.partySize, 0),
         guests: guests.filter((g) => g.table === t.name).map((g) => ({
           id: g.id, name: g.name, tier: g.tier, partySize: g.partySize, seat: g.seat, wristband: g.wristband,
         })),
       })),
-      unseated: guests.filter((g) => !g.table || g.table === "TBA").map((g) => ({
-        id: g.id, name: g.name, tier: g.tier, partySize: g.partySize,
-      })),
+      /* a guest whose table was deleted or renamed away still holds the
+         old text - without this they are invisible on the plan */
+      unseated: guests
+        .filter((g) => !g.table || g.table === "TBA" || !names.has(g.table))
+        .map((g) => ({
+          id: g.id, name: g.name, tier: g.tier, partySize: g.partySize,
+          lost: Boolean(g.table && g.table !== "TBA" && !names.has(g.table)) ? g.table : "",
+        })),
     });
   }
 
   if (!canEdit) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   if (action === "addTable") {
+    const section = String(body.section || "Main").trim();
+    const asked = String(body.name || "").trim();
+
+    let name: string;
+    if (asked) {
+      const clash = await prisma.seatTable.findFirst({ where: { eventId: event.id, name: asked } });
+      if (clash) {
+        return NextResponse.json({ error: `A table called "${asked}" already exists.` }, { status: 400 });
+      }
+      name = asked;
+    } else {
+      name = await freeTableName(event.id, "Table");
+    }
+
     const count = await prisma.seatTable.count({ where: { eventId: event.id } });
     await prisma.seatTable.create({
       data: {
         eventId: event.id,
-        name: String(body.name || `Table ${count + 1}`).trim(),
-        section: String(body.section || "Main").trim(),
+        name,
+        section,
         capacity: Math.max(1, Math.min(50, Number(body.capacity) || 10)),
         note: String(body.note || "").trim(),
         position: count,
       },
     });
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, name });
   }
 
   if (action === "bulkTables") {
@@ -71,30 +134,31 @@ export async function POST(req: NextRequest) {
     const prefix = String(body.prefix || "Table").trim();
     const existing = await prisma.seatTable.count({ where: { eventId: event.id } });
 
+    /* one shared "taken" set so the batch does not collide with itself */
+    const taken = new Set<string>();
+    const names: string[] = [];
+    for (let i = 0; i < count; i++) names.push(await freeTableName(event.id, prefix, taken));
+
     await prisma.seatTable.createMany({
-      data: Array.from({ length: count }, (_, i) => ({
+      data: names.map((name, i) => ({
         eventId: event.id,
-        name: `${prefix} ${existing + i + 1}`,
+        name,
         section, capacity, position: existing + i,
       })),
     });
-    return NextResponse.json({ ok: true, added: count });
+    return NextResponse.json({ ok: true, added: count, first: names[0], last: names[names.length - 1] });
   }
 
   if (action === "updateTable") {
-    /* A guest stores their table as text ("Table 32"), matched against
-       the table's name. Renaming the table alone therefore orphans every
-       guest sitting at it - they vanish from the plan until the old name
-       is restored. So carry the rename across to the guests in the same
-       breath, and do the same for a section change. */
+    /* A guest stores their table as text, matched against the table's
+       name, so renaming the table alone orphans everyone sitting at it.
+       The rename carries them across in the same breath. */
     const before = await prisma.seatTable.findUnique({ where: { id: String(body.id) } });
     if (!before) return NextResponse.json({ error: "Table not found." }, { status: 404 });
 
     const nextName = body.name ? String(body.name).trim() : undefined;
     const nextSection = body.section ? String(body.section).trim() : undefined;
 
-    /* two tables sharing a name would make seating ambiguous, since
-       guests are matched by name alone */
     if (nextName && nextName !== before.name) {
       const clash = await prisma.seatTable.findFirst({
         where: { eventId: event.id, name: nextName, NOT: { id: before.id } },
@@ -102,6 +166,21 @@ export async function POST(req: NextRequest) {
       if (clash) {
         return NextResponse.json(
           { error: `Another table is already called "${nextName}".` },
+          { status: 400 }
+        );
+      }
+    }
+
+    /* If this table's old name was shared with another table, moving
+       guests by name would move the other table's guests too. Refuse
+       rather than scramble two tables at once. */
+    if (nextName && nextName !== before.name) {
+      const sharing = await prisma.seatTable.count({
+        where: { eventId: event.id, name: before.name, NOT: { id: before.id } },
+      });
+      if (sharing) {
+        return NextResponse.json(
+          { error: `Another table is also called "${before.name}". Give one of them a different name first.` },
           { status: 400 }
         );
       }
@@ -136,7 +215,13 @@ export async function POST(req: NextRequest) {
   if (action === "deleteTable") {
     const t = await prisma.seatTable.findUnique({ where: { id: String(body.id) } });
     if (t) {
-      await prisma.guest.updateMany({ where: { eventId: event.id, table: t.name }, data: { table: "TBA", section: "", seat: "" } });
+      /* only clear guests if no other table still carries this name */
+      const sharing = await prisma.seatTable.count({
+        where: { eventId: event.id, name: t.name, NOT: { id: t.id } },
+      });
+      if (!sharing) {
+        await prisma.guest.updateMany({ where: { eventId: event.id, table: t.name }, data: { table: "TBA", section: "", seat: "" } });
+      }
       await prisma.seatTable.delete({ where: { id: t.id } });
     }
     return NextResponse.json({ ok: true });
@@ -171,11 +256,10 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    /* Seating is iterative - a host shuffles people between tables for an
-       hour before the plan settles. Emailing on each move means a guest
-       gets five emails and the first four are wrong, so a seat change is
-       silent unless the caller explicitly asks for a notification.
-       "Notify seated" is the deliberate moment to tell everyone. */
+    /* Seating is iterative - a host shuffles people for an hour before
+       the plan settles. Emailing on each move means five emails of which
+       the first four are wrong, so a seat change is silent unless the
+       caller explicitly asks. "Notify seated" is the deliberate moment. */
     if (body.notify === true) {
       const seatedGuest = await prisma.guest.findUnique({ where: { id: String(body.guestId) } });
       if (seatedGuest && seatedGuest.email && !seatedGuest.isVendor && body.tableId) {
