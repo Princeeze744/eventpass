@@ -46,9 +46,10 @@ const PRINT_CSS = `
 @media print {
   @page { margin: 12mm; }
   html, body { background: #fff !important; }
-  .sb-plan, .sb-plan * {
+
+  .sb-pv, .sb-pv * {
     color: #000 !important;
-    background: transparent !important;
+    background: #fff !important;
     background-image: none !important;
     box-shadow: none !important;
     text-shadow: none !important;
@@ -58,34 +59,56 @@ const PRINT_CSS = `
     filter: none !important;
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
+    font-family: Georgia, "Times New Roman", serif !important;
   }
-  .sb-plan .sb-grid {
-    display: block !important;
-    margin: 0 !important;
+  /* the theme paints its card surfaces with pseudo-elements, and a
+     "*" selector cannot reach one - which is how every table came out
+     a solid black block. Nothing here needs them. */
+  .sb-pv *::before, .sb-pv *::after {
+    display: none !important;
+    content: none !important;
   }
-  .sb-plan .sb-card {
-    display: inline-block !important;
-    vertical-align: top !important;
-    width: 31.5% !important;
-    margin: 0 0.8% 8px 0 !important;
-    border: 1px solid #999 !important;
-    border-radius: 8px !important;
-    padding: 10px !important;
-    overflow: visible !important;
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
+
+  .sb-pv-title { font-size: 22px; font-weight: 700; margin: 0; }
+  .sb-pv-sub { font-size: 11px; margin: 2px 0 12px; }
+
+  .sb-pv-section {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 16px 0 6px;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #000 !important;
+    break-after: avoid;
+    page-break-after: avoid;
   }
-  .sb-plan .sb-table-name { font-size: 15px !important; font-weight: 700 !important; }
-  .sb-plan .sb-guest { font-size: 12px !important; padding: 2px 0 !important; border-bottom: 1px dotted #ccc !important; }
-  /* a section heading must never be left stranded at the foot of a page */
-  .sb-plan .sb-section-title {
-    font-size: 11px !important;
-    letter-spacing: 2px !important;
-    margin-top: 14px !important;
-    break-after: avoid !important;
-    page-break-after: avoid !important;
+
+  /* CSS grid does not paginate reliably in Chrome: a row that does not
+     fit the page is cut rather than moved, whatever break-inside says.
+     Plain inline-block flow paginates correctly. */
+  .sb-pv-tables { display: block; }
+  .sb-pv-table {
+    display: inline-block;
+    vertical-align: top;
+    width: 31.5%;
+    margin: 0 0.8% 8px 0;
+    padding: 8px 10px;
+    border: 1px solid #777 !important;
+    border-radius: 6px;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
-  .sb-plan .sb-bar { display: none !important; }
+  .sb-pv-name { font-size: 14px; font-weight: 700; margin: 0; }
+  .sb-pv-cap { font-size: 10px; margin: 1px 0 5px; }
+  .sb-pv-g {
+    font-size: 11px;
+    line-height: 1.45;
+    margin: 0;
+    padding: 1px 0;
+    border-bottom: 1px dotted #bbb !important;
+  }
+  .sb-pv-empty { font-size: 10px; font-style: italic; }
 }
 `;
 
@@ -266,9 +289,61 @@ export default function SeatingPlan() {
           </div>
         </div>
 
-        <div className="hidden print:block">
-          <h1 className="font-[family-name:var(--font-serif)] text-3xl">{title} — Seating Plan</h1>
-          <p className="mt-1 text-[12px]">{tables.length} tables · {totalSeated} of {totalSeats} seats filled{unseated.length ? ` · ${unseated.length} unseated` : ""}</p>
+        {/* ---------- what actually goes on paper ----------
+
+            Styling the live plan for print was a losing game. The dark
+            theme paints its card surfaces with pseudo-elements, which
+            no "*" rule can override, so every table came out a solid
+            black block with the names invisible inside it.
+
+            So paper gets its own rendering instead. It uses none of
+            the app's classes, which means there is nothing to fight:
+            plain text, plain boxes, black on white. The live plan is
+            hidden when printing and this is printed in its place. */}
+        <div className="sb-pv hidden print:block">
+          <p className="sb-pv-title">{title} — Seating Plan</p>
+          <p className="sb-pv-sub">
+            {tables.length} tables · {totalSeated} of {totalSeats} seats filled{unseated.length ? ` · ${unseated.length} unseated` : ""}
+          </p>
+
+          {sections.map((sec) => (
+            <div key={sec}>
+              <p className="sb-pv-section">{sec}</p>
+              <div className="sb-pv-tables">
+                {tables.filter((t) => t.section === sec).map((t) => (
+                  <div key={t.id} className="sb-pv-table">
+                    <p className="sb-pv-name">{t.name}</p>
+                    <p className="sb-pv-cap">{t.seated} / {t.capacity} seats</p>
+                    {t.guests.length === 0 ? (
+                      <p className="sb-pv-empty">Empty</p>
+                    ) : (
+                      t.guests.map((g, i) => (
+                        <p key={g.id} className="sb-pv-g">
+                          {i + 1}. {g.name}{g.partySize > 1 ? ` +${g.partySize - 1}` : ""}
+                        </p>
+                      ))
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {unseated.length > 0 && (
+            <>
+              <p className="sb-pv-section">Not yet seated</p>
+              <div className="sb-pv-tables">
+                <div className="sb-pv-table" style={{ width: "98%" }}>
+                  {unseated.map((g) => (
+                    <p key={g.id} className="sb-pv-g">
+                      {g.name}{g.partySize > 1 ? ` +${g.partySize - 1}` : ""}
+                      {g.group ? ` — ${g.group}` : ""}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="print:hidden"><EventNav slug={slug} /></div>
@@ -399,7 +474,7 @@ export default function SeatingPlan() {
         )}
 
         {sections.map((sec) => (
-          <div key={sec} className="mt-8">
+          <div key={sec} className="mt-8 print:hidden">
             <p className="sb-section-title text-[10px] uppercase tracking-[0.35em] text-[#c9a227] font-[family-name:var(--font-sans)]">{sec}</p>
             <div className="sb-grid mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {tables.filter((t) => t.section === sec).map((t) => {
@@ -454,7 +529,7 @@ export default function SeatingPlan() {
         ))}
 
         {tables.length === 0 && (
-          <div className={`${card} mt-8 p-12 text-center`}>
+          <div className={`${card} mt-8 p-12 text-center print:hidden`}>
             <p className="text-[13px] text-white/40 font-[family-name:var(--font-sans)]">No tables yet. Add some, then use Auto seat to fill them.</p>
           </div>
         )}
