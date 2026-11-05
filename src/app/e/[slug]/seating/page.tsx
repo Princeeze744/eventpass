@@ -87,13 +87,18 @@ const PRINT_CSS = `
   /* CSS grid does not paginate reliably in Chrome: a row that does not
      fit the page is cut rather than moved, whatever break-inside says.
      Plain inline-block flow paginates correctly. */
-  .sb-pv-tables { display: block; }
+  /* the width below is the whole box, padding and border included -
+     stated here rather than relying on a global reset, because three
+     across the page is the difference between six sheets and ten */
+  .sb-pv-tables { display: block; font-size: 0; }
   .sb-pv-table {
+    box-sizing: border-box;
     display: inline-block;
     vertical-align: top;
-    width: 31.5%;
-    margin: 0 0.8% 8px 0;
+    width: 32.5%;
+    margin: 0 0.75% 8px 0;
     padding: 8px 10px;
+    font-size: 11px;
     border: 1px solid #777 !important;
     border-radius: 6px;
     break-inside: avoid;
