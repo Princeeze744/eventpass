@@ -26,7 +26,22 @@ type PlanRow = {
 /* The app is dark-themed and its surface classes set a light text
    colour that beats Tailwind's print variants, which is why the printed
    plan came out blank. These rules are scoped to the plan and marked
-   important so paper is black on white whatever the theme does. */
+   important so paper is black on white whatever the theme does.
+
+   Two further things cut the plan in half on paper once every table
+   was full, and both are fixed below.
+
+   TRANSFORMS. Each table card is a Framer Motion element with `layout`,
+   which leaves an inline transform on it. A transformed element becomes
+   its own containing block, and Chrome will slice one across a page
+   boundary or drop half of it rather than push it to the next page.
+   Nothing needs to animate on paper, so all of it goes.
+
+   GRID. CSS grid does not paginate reliably in Chrome: a grid row that
+   does not fit the remaining page is cut instead of moved, whatever
+   break-inside says. Ordinary inline-block flow does paginate properly,
+   so the plan drops to that for print only. The screen keeps its grid.
+*/
 const PRINT_CSS = `
 @media print {
   @page { margin: 12mm; }
@@ -37,22 +52,39 @@ const PRINT_CSS = `
     background-image: none !important;
     box-shadow: none !important;
     text-shadow: none !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+    filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+  .sb-plan .sb-grid {
+    display: block !important;
+    margin: 0 !important;
   }
   .sb-plan .sb-card {
+    display: inline-block !important;
+    vertical-align: top !important;
+    width: 31.5% !important;
+    margin: 0 0.8% 8px 0 !important;
     border: 1px solid #999 !important;
     border-radius: 8px !important;
     padding: 10px !important;
+    overflow: visible !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
-  .sb-plan .sb-grid {
-    display: grid !important;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-    gap: 8px !important;
-  }
   .sb-plan .sb-table-name { font-size: 15px !important; font-weight: 700 !important; }
   .sb-plan .sb-guest { font-size: 12px !important; padding: 2px 0 !important; border-bottom: 1px dotted #ccc !important; }
-  .sb-plan .sb-section-title { font-size: 11px !important; letter-spacing: 2px !important; margin-top: 14px !important; }
+  /* a section heading must never be left stranded at the foot of a page */
+  .sb-plan .sb-section-title {
+    font-size: 11px !important;
+    letter-spacing: 2px !important;
+    margin-top: 14px !important;
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
   .sb-plan .sb-bar { display: none !important; }
 }
 `;
@@ -210,7 +242,11 @@ export default function SeatingPlan() {
       <style dangerouslySetInnerHTML={{ __html: PRINT_CSS }} />
 
       <div className="mx-auto max-w-[1300px]">
-        <TopBar back={`/e/${slug}/admin`} backLabel="Guests" />
+        {/* the bar is sticky on screen, which on paper either repeats or
+            lands on top of the first tables - it has no business there */}
+        <div className="print:hidden">
+          <TopBar back={`/e/${slug}/admin`} backLabel="Guests" />
+        </div>
         <div className="flex flex-wrap items-end justify-between gap-4 print:hidden">
           <div>
             <Link href={`/e/${slug}/admin`} className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/40 font-[family-name:var(--font-sans)]">
