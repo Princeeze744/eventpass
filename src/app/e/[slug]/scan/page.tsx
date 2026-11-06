@@ -13,6 +13,14 @@ type Result = {
   guest?: { name: string; tier: string; table: string; partySize?: number; checkedInAt?: string; validFor?: string };
 };
 
+/* A guest's table is stored as text, and "TBA" is what the system
+   writes when nobody has been seated yet - so neither that nor an
+   empty string is a real table. */
+const seatedAt = (t?: string) => {
+  const v = String(t || "").trim();
+  return v && v.toUpperCase() !== "TBA" ? v : "";
+};
+
 export default function EventScanner() {
   const params = useParams();
   const slug = String(params.slug);
@@ -26,6 +34,8 @@ export default function EventScanner() {
   const [cameraError, setCameraError] = useState(false);
   const [tableInput, setTableInput] = useState("");
   const [tableSaved, setTableSaved] = useState(false);
+  /* the assign box stays shut for a guest who already has a seat */
+  const [showAssign, setShowAssign] = useState(false);
 
   const scannerRef = useRef<{ stop: () => Promise<void> } | null>(null);
   const busyRef = useRef(false);
@@ -37,6 +47,7 @@ export default function EventScanner() {
     setResult(null);
     setTableInput("");
     setTableSaved(false);
+    setShowAssign(false);
     busyRef.current = false;
   }
 
@@ -52,6 +63,9 @@ export default function EventScanner() {
       });
       const data: Result = await res.json();
       setResult(data);
+      setTableInput("");
+      setTableSaved(false);
+      setShowAssign(false);
       if (typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate(data.status === "valid" ? 80 : [60, 40, 60]);
       }
@@ -138,6 +152,8 @@ export default function EventScanner() {
       ? { bg: "bg-slate-600", Icon: AlertTriangle, title: "NOT APPROVED" }
       : { bg: "bg-red-600", Icon: XCircle, title: "NOT ON LIST" };
 
+  const table = seatedAt(result?.guest?.table);
+
   if (!gateOpen) {
     return (
       <main className="min-h-[100svh] bg-[#080807] text-[#f5f1ea] flex flex-col items-center justify-center px-5">
@@ -209,9 +225,9 @@ export default function EventScanner() {
             className={`fixed inset-0 z-50 flex flex-col items-center justify-center px-6 ${theme.bg}`}
           >
             <motion.div initial={{ scale: 0, rotate: -25 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 260, damping: 14 }}>
-              <theme.Icon className="h-24 w-24" strokeWidth={1.5} />
+              <theme.Icon className="h-20 w-20" strokeWidth={1.5} />
             </motion.div>
-            <h1 className="mt-5 text-center text-3xl font-bold tracking-widest sm:text-4xl font-[family-name:var(--font-sans)]">{theme.title}</h1>
+            <h1 className="mt-4 text-center text-3xl font-bold tracking-widest sm:text-4xl font-[family-name:var(--font-sans)]">{theme.title}</h1>
 
             {result.guest && (
               <div className="mt-3 text-center font-[family-name:var(--font-sans)]">
@@ -225,6 +241,22 @@ export default function EventScanner() {
               </div>
             )}
 
+            {/* ---------------------------------------------------------
+                Where they sit.
+
+                This is the one thing the usher has to say out loud, and
+                it was the one thing the screen never showed. It belongs
+                here, large, and nowhere near an input box - an empty
+                field's example text was being read as the guest's table
+                because it was the only table-shaped thing in view.
+            --------------------------------------------------------- */}
+            {table && (
+              <div className="mt-5 rounded-2xl bg-black/30 px-10 py-4 text-center font-[family-name:var(--font-sans)]">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-white/75">Seated at</p>
+                <p className="mt-1 text-4xl font-bold tracking-wide sm:text-5xl">{table}</p>
+              </div>
+            )}
+
             {result.dayOverride && (
               <p className="mt-3 rounded-full bg-black/25 px-4 py-2 text-center text-[12px] font-semibold text-white font-[family-name:var(--font-sans)]">
                 Admitted by usher — not registered for today
@@ -234,7 +266,7 @@ export default function EventScanner() {
             {result.status === "wrongday" && (
               <button
                 onClick={admitAnyway}
-                className="mt-7 flex items-center gap-2 rounded-full bg-white px-8 py-4 text-[12px] uppercase tracking-[0.2em] font-bold text-[#080807] font-[family-name:var(--font-sans)]"
+                className="mt-6 flex items-center gap-2 rounded-full bg-white px-8 py-4 text-[12px] uppercase tracking-[0.2em] font-bold text-[#080807] font-[family-name:var(--font-sans)]"
               >
                 <DoorOpen className="h-4 w-4" strokeWidth={2} />
                 Admit anyway
@@ -242,21 +274,33 @@ export default function EventScanner() {
             )}
 
             {result.status === "valid" && (
-              <div className="mt-6 w-full max-w-[300px]">
+              <div className="mt-5 w-full max-w-[300px]">
                 {tableSaved ? (
                   <div className="flex items-center justify-center gap-2 rounded-xl bg-black/25 px-4 py-3 font-[family-name:var(--font-sans)]">
                     <Check className="h-5 w-5" /> <span className="font-semibold">Seated at {tableInput}</span>
                   </div>
+                ) : table && !showAssign ? (
+                  /* they already have a seat - no box to misread, just a
+                     quiet way in if the usher needs to move them */
+                  <button
+                    onClick={() => setShowAssign(true)}
+                    className="mx-auto block text-[10px] uppercase tracking-[0.2em] text-white/60 underline underline-offset-4 font-[family-name:var(--font-sans)]"
+                  >
+                    Move to another table
+                  </button>
                 ) : (
                   <>
-                    <p className="text-center text-[10px] uppercase tracking-[0.25em] text-white/80 font-[family-name:var(--font-sans)]">Assign Table</p>
+                    <p className="text-center text-[10px] uppercase tracking-[0.25em] text-white/80 font-[family-name:var(--font-sans)]">
+                      {table ? "Move to another table" : "No table yet — assign one"}
+                    </p>
                     <div className="mt-2 flex gap-2">
                       <input
                         value={tableInput}
                         onChange={(e) => setTableInput(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && assignTable()}
-                        placeholder="Table 12"
-                        className="flex-1 rounded-xl border border-white/30 bg-black/25 px-4 py-3 text-white placeholder-white/50 outline-none focus:border-white font-[family-name:var(--font-sans)]"
+                        placeholder="Type a table name"
+                        autoFocus={showAssign}
+                        className="flex-1 rounded-xl border border-white/30 bg-black/25 px-4 py-3 text-white placeholder-white/40 outline-none focus:border-white font-[family-name:var(--font-sans)]"
                       />
                       <button onClick={assignTable} className="rounded-xl bg-black/40 px-5 font-semibold text-white font-[family-name:var(--font-sans)]">Save</button>
                     </div>
