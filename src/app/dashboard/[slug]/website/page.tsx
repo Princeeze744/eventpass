@@ -6,7 +6,7 @@ import TopBar from "@/components/TopBar";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { upload } from "@vercel/blob/client";
-import { ArrowLeft, Loader2, Check, ExternalLink, UploadCloud, X, ImageIcon } from "lucide-react";
+import { ArrowLeft, Loader2, Check, ExternalLink, UploadCloud, X, ImageIcon, Send } from "lucide-react";
 
 const GROUPS = [
   {
@@ -18,8 +18,8 @@ const GROUPS = [
   {
     title: "The Story",
     fields: [
-      { k: "story", l: "Love / Brand Story", type: "area", p: "Tell your guests how it began\u2026" },
-      { k: "dressCode", l: "Dress Code", p: "Traditional attire \u00B7 Black tie" },
+      { k: "story", l: "Love / Brand Story", type: "area", p: "Tell your guests how it began…" },
+      { k: "dressCode", l: "Dress Code", p: "Traditional attire · Black tie" },
       { k: "colours", l: "Event Colours", p: "Emerald green, gold, ivory" },
     ],
   },
@@ -35,14 +35,14 @@ const GROUPS = [
     title: "On The Day",
     fields: [
       { k: "programNote", l: "Programme", type: "area", p: "2:00 PM Arrival\n3:00 PM Ceremony\n5:00 PM Reception" },
-      { k: "menuNote", l: "Menu", type: "area", p: "Jollof rice, pepper soup, small chops\u2026" },
+      { k: "menuNote", l: "Menu", type: "area", p: "Jollof rice, pepper soup, small chops…" },
     ],
   },
   {
     title: "Gifting",
     fields: [
-      { k: "giftNote", l: "Gift Message", type: "area", p: "Your presence is our present, but if you wish\u2026" },
-      { k: "bankDetails", l: "Bank / Registry Details", type: "area", p: "GTBank \u00B7 0123456789 \u00B7 Chioma Amadi" },
+      { k: "giftNote", l: "Gift Message", type: "area", p: "Your presence is our present, but if you wish…" },
+      { k: "bankDetails", l: "Bank / Registry Details", type: "area", p: "GTBank · 0123456789 · Chioma Amadi" },
     ],
   },
 ];
@@ -62,7 +62,7 @@ function parsePlaces(text: string): PlaceRow[] {
         return { name: name.trim(), url: rest.join("|").trim() };
       }
       const m = l.match(/https?:\/\/\S+/);
-      if (m) return { name: l.replace(m[0], "").replace(/[\s:,\u2014-]+$/, "").trim(), url: m[0] };
+      if (m) return { name: l.replace(m[0], "").replace(/[\s:,—-]+$/, "").trim(), url: m[0] };
       return { name: l, url: "" };
     });
 }
@@ -218,7 +218,57 @@ export default function WebsiteEditor() {
           <>
             {err && <p className="mt-5 rounded-2xl border border-red-500/25 bg-red-500/[0.06] px-5 py-3 text-[12px] text-red-400 font-[family-name:var(--font-sans)]">{err}</p>}
 
+            {/* ----------------------------------------------------------
+                The picture a guest sees before anything else: the
+                preview when the link is shared, and the image at the
+                top of the RSVP page. Given its own card above the rest
+                because it is the first impression of the whole event.
+            ---------------------------------------------------------- */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`${card} mt-7 p-6`}>
+              <div className="flex items-center gap-2">
+                <Send className="h-3.5 w-3.5 text-[#c9a227]" strokeWidth={1.8} />
+                <p className="text-[10px] uppercase tracking-[0.35em] text-[#c9a227] font-[family-name:var(--font-sans)]">Invitation Image</p>
+              </div>
+              <p className="mt-3 text-[13px] leading-relaxed text-white/50 font-[family-name:var(--font-sans)]">
+                What guests see when this invitation is shared on WhatsApp, and at the top of the
+                registration page. Upload the couple&apos;s photo, the celebrant&apos;s portrait, or the
+                invitation card itself &mdash; whatever the host would want sent in their name.
+              </p>
+
+              <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start">
+                <div className="sm:w-[220px] sm:shrink-0">
+                  {form.inviteImage ? (
+                    <div className="relative">
+                      <img src={form.inviteImage} alt="" className="w-full rounded-2xl border border-white/12 bg-black/30" style={{ maxHeight: 260, objectFit: "contain" }} />
+                      <button onClick={() => setForm({ ...form, inviteImage: "" })} className="absolute right-2 top-2 rounded-full border border-white/20 bg-[#080807]/80 p-1.5 text-white/70 hover:text-red-400"><X className="h-3 w-3" /></button>
+                    </div>
+                  ) : (
+                    <div className="flex h-[150px] w-full items-center justify-center rounded-2xl border border-white/10 bg-black/30"><ImageIcon className="h-6 w-6 text-white/20" /></div>
+                  )}
+                </div>
+
+                <div className="flex-1">
+                  <label className={upBtn}>
+                    {uploading === "inviteImage" ? <Loader2 className="h-4 w-4 animate-spin" /> : <UploadCloud className="h-4 w-4" />}
+                    {uploading === "inviteImage" ? "Uploading..." : form.inviteImage ? "Replace invitation image" : "Upload invitation image"}
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => doUpload("inviteImage", e.target.files, false)} disabled={!!uploading} />
+                  </label>
+                  <p className="mt-3 text-[11px] leading-relaxed text-white/35 font-[family-name:var(--font-sans)]">
+                    Portrait or landscape, both work &mdash; it is never cropped. JPG, PNG or WebP, up to 8MB.
+                  </p>
+                  <p className="mt-2 text-[11px] leading-relaxed text-white/30 font-[family-name:var(--font-sans)]">
+                    Leave it empty and the cover photo is used instead. With neither, a preview is
+                    generated from the event name, date and colour.
+                  </p>
+                  <p className="mt-3 rounded-xl border border-[#c9a227]/20 bg-[#c9a227]/[0.05] px-4 py-3 text-[11px] leading-relaxed text-[#c9a227]/85 font-[family-name:var(--font-sans)]">
+                    WhatsApp remembers a link&apos;s preview for days. After changing this, test on a link
+                    WhatsApp has not seen before &mdash; adding <span className="font-mono">?i=2</span> to the end is enough.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`${card} mt-4 p-6`}>
               <p className="text-[10px] uppercase tracking-[0.35em] text-[#c9a227] font-[family-name:var(--font-sans)]">Photos</p>
 
               <div className="mt-5 grid gap-5 sm:grid-cols-2">

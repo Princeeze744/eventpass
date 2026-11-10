@@ -43,6 +43,15 @@ model Event {
   address    String  @default("")
 
   logoUrl     String?
+
+  // The picture a guest sees first: the preview when the link is shared
+  // on WhatsApp, and the image at the top of the RSVP page. It is NOT
+  // the cover photo - a cover is a wide background with the title laid
+  // over it, while this is often a portrait invitation card. Empty
+  // falls back to the cover, and then to a generated preview, so a
+  // guest never receives our logo on someone else's invitation.
+  inviteImage String?
+
   accentColor String  @default("#d4af37")
 
   deadline     DateTime?

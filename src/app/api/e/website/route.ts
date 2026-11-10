@@ -6,6 +6,9 @@ const FIELDS = [
   "story","dressCode","colours","hotels","restaurants","funSpots",
   "ceremonyName","ceremonyMap","receptionMap","livestream",
   "programNote","menuNote","giftNote","bankDetails","coverImage","gallery","hashtag","logoUrl",
+  /* the picture guests see when the link is shared and when they land
+     on the RSVP page - see the Event model for why it is not the cover */
+  "inviteImage",
 ] as const;
 
 export async function POST(req: NextRequest) {

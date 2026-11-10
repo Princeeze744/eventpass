@@ -19,6 +19,11 @@ export default function RsvpPage() {
   const [days, setDays] = useState<Day[]>([]);
   const [picked, setPicked] = useState<string[]>([]);
 
+  /* The host's own picture. A guest arrives here from a link that
+     previewed their invitation - landing on a bare form breaks the
+     spell, so the same image opens the page. */
+  const [invite, setInvite] = useState("");
+
   useEffect(() => {
     fetch(`/api/e/rsvp?slug=${slug}`)
       .then((r) => r.json())
@@ -28,6 +33,11 @@ export default function RsvpPage() {
           setPicked(d.days.map((x: { id: string }) => x.id));
         }
       })
+      .catch(() => {});
+
+    fetch(`/api/e/brand?slug=${slug}`)
+      .then((r) => r.json())
+      .then((d) => { if (d && typeof d.image === "string") setInvite(d.image); })
       .catch(() => {});
   }, [slug]);
 
@@ -72,6 +82,21 @@ export default function RsvpPage() {
         <Link href={`/e/${slug}`} className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-white/45 font-[family-name:var(--font-sans)]">
           <ArrowLeft className="h-3.5 w-3.5" /> Event details
         </Link>
+
+        {/* contain rather than cover, because this is as likely to be a
+            portrait invitation card as a landscape photograph, and
+            cropping someone's invitation is not ours to do */}
+        {invite && (
+          <motion.img
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            src={invite}
+            alt=""
+            className="mt-6 w-full rounded-3xl border border-white/10 bg-black/30"
+            style={{ maxHeight: "48vh", objectFit: "contain" }}
+          />
+        )}
 
         <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} className="mt-6 font-[family-name:var(--font-serif)] text-5xl sb-display">
           Reserve your <span className="italic text-[#c9a227]">seat.</span>
