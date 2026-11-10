@@ -48,11 +48,15 @@ export async function generateMetadata(
 
   const image = e.inviteImage || e.coverImage || `/e/${slug}/preview`;
 
+  /* The line of text under the picture. WhatsApp gives it about two
+     lines before it trims, and it is the only sentence a guest reads
+     before deciding whether to open anything - so it opens the way an
+     invitation opens, not the way a listing does. */
   const when = [e.eventDate, e.eventTime].filter(Boolean).join(" at ");
-  const description =
-    [when, e.venue].filter(Boolean).join(" · ") ||
-    e.tagline ||
-    "You are invited.";
+  const parts = ["You are invited"];
+  if (when) parts.push(when);
+  if (e.venue) parts.push(e.venue);
+  const description = `${parts.join(" · ")}. Tap to confirm your attendance.`;
 
   /* openGraph is replaced wholesale rather than merged, which is what
      we want: the root's siteName and images do not survive, so no

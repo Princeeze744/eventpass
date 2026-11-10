@@ -35,7 +35,9 @@ export async function GET(
 
   const ac = (e && !e.deletedAt && e.accentColor) || "#c9a227";
   const title = (e && !e.deletedAt && e.title) || "You are invited";
-  const tagline = (e && !e.deletedAt && e.tagline) || "";
+  /* an event with no tagline still opens with the words that make the
+     card read as an invitation rather than a notice */
+  const tagline = (e && !e.deletedAt && e.tagline) || "You are invited";
   const when = e && !e.deletedAt ? [e.eventDate, e.eventTime].filter(Boolean).join("  ·  ") : "";
   const venue = (e && !e.deletedAt && e.venue) || "";
 
