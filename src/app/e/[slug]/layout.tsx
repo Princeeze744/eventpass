@@ -46,7 +46,14 @@ export async function generateMetadata(
   /* nothing to describe - let the root metadata stand */
   if (!e || e.deletedAt) return {};
 
-  const image = e.inviteImage || e.coverImage || `/e/${slug}/preview`;
+  /* An uploaded picture is whatever shape the host chose - often a
+     portrait invitation card. Declaring 1200x630 for one is a lie, and
+     WhatsApp lays the preview out from what it is told rather than
+     from the file, so a tall image announced as wide renders wrong.
+     Dimensions are stated only for the card we draw ourselves, which
+     really is 1200x630. */
+  const uploaded = e.inviteImage || e.coverImage || "";
+  const image = uploaded || `/e/${slug}/preview`;
 
   /* The line of text under the picture. WhatsApp gives it about two
      lines before it trims, and it is the only sentence a guest reads
@@ -67,7 +74,11 @@ export async function generateMetadata(
     openGraph: {
       title: e.title,
       description,
-      images: [{ url: image, width: 1200, height: 630, alt: e.title }],
+      images: [
+        uploaded
+          ? { url: uploaded, alt: e.title }
+          : { url: image, width: 1200, height: 630, alt: e.title },
+      ],
       type: "website",
     },
     twitter: {
