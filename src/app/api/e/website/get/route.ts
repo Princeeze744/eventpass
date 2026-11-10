@@ -9,8 +9,11 @@ export async function GET(req: NextRequest) {
   if (!event) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (event.ownerId !== userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { story, dressCode, colours, hotels, restaurants, funSpots, ceremonyName, ceremonyMap, receptionMap, livestream, programNote, menuNote, giftNote, bankDetails, coverImage, gallery, hashtag, logoUrl } = event;
+  /* This list and the FIELDS list the editor saves through must stay in
+     step. A field missing here loads as empty however well it saved,
+     and the host re-uploads a picture that was never lost. */
+  const { story, dressCode, colours, hotels, restaurants, funSpots, ceremonyName, ceremonyMap, receptionMap, livestream, programNote, menuNote, giftNote, bankDetails, coverImage, gallery, hashtag, logoUrl, inviteImage } = event;
   return NextResponse.json({
-    event: { story, dressCode, colours, hotels, restaurants, funSpots, ceremonyName, ceremonyMap, receptionMap, livestream, programNote, menuNote, giftNote, bankDetails, coverImage, gallery, hashtag, logoUrl },
+    event: { story, dressCode, colours, hotels, restaurants, funSpots, ceremonyName, ceremonyMap, receptionMap, livestream, programNote, menuNote, giftNote, bankDetails, coverImage, gallery, hashtag, logoUrl, inviteImage },
   });
 }
