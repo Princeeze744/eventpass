@@ -3,8 +3,12 @@ import { prisma } from "@/lib/db";
 import { normPhone, generatePassId } from "@/lib/ids";
 import { getSessionOrganizerId } from "@/lib/auth";
 import { sendRegistrationEmail } from "@/lib/mailer";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
 
 export async function GET(req: NextRequest) {
+  const gate = await rateLimit(`rsvp-get:${callerIp(req)}`, LIMITS.read.limit, LIMITS.read.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
   const slug = req.nextUrl.searchParams.get("slug") || "";
   const event = await prisma.event.findUnique({ where: { slug } });
   if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
@@ -26,8 +30,28 @@ export async function GET(req: NextRequest) {
   });
 }
 
+/* ------------------------------------------------------------------
+   Registration.
+
+   The most exposed endpoint on the platform: no key, open to the
+   whole internet by design, and it both WRITES a row and SENDS an
+   email every time it succeeds.
+
+   That second part is what makes a limit urgent rather than tidy. A
+   script left running against this fills a client's guest list with
+   invented people and spends our email allowance doing it - and the
+   host discovers both the morning of the event.
+
+   Twelve registrations in ten minutes from one address is far more
+   than a family signing up together on the same wifi, and far less
+   than anything automated is interested in.
+------------------------------------------------------------------ */
 export async function POST(req: NextRequest) {
-  const { slug, name, phone, email, partySize, dayIds } = await req.json();
+  const ip = callerIp(req);
+  const gate = await rateLimit(`rsvp:${ip}`, LIMITS.rsvp.limit, LIMITS.rsvp.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
+  const { slug, name, phone, email, partySize, dayIds } = await req.json().catch(() => ({}));
 
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
@@ -104,9 +128,9 @@ export async function POST(req: NextRequest) {
     data: {
       eventId: event.id,
       passId,
-      name: String(name).trim().replace(/\s+/g, " "),
+      name: String(name).trim().replace(/\s+/g, " ").slice(0, 120),
       phone: cleanPhone,
-      email: cleanEmail,
+      email: cleanEmail.slice(0, 200),
       partySize: Math.max(1, Math.min(10, Number(partySize) || 1)),
       status: event.approvalMode === "auto" ? "approved" : "pending",
     },
