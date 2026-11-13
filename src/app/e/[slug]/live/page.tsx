@@ -5,7 +5,7 @@ import TopBar from "@/components/TopBar";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, DoorOpen, Crown, Zap, Activity } from "lucide-react";
+import { Users, DoorOpen, Crown, Zap, Activity, ShieldCheck, Loader2 } from "lucide-react";
 
 type Stats = {
   event: { title: string; tagline: string; eventDate: string; venue: string; capacity: number | null };
@@ -21,20 +21,62 @@ export default function LiveBoard() {
   const [s, setS] = useState<Stats | null>(null);
   const [clock, setClock] = useState("");
 
-  const load = useCallback(async () => {
+  /* This board shows guest names as they walk in, so it needs a key
+     the way the gate scanner and the seating plan do. Either key
+     works: the host has the admin key, the ushers have the gate key,
+     and whoever sets up the screen at the venue has one of them. */
+  const [key, setKey] = useState("");
+  const [unlocked, setUnlocked] = useState(false);
+  const [tried, setTried] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [keyError, setKeyError] = useState("");
+
+  const load = useCallback(async (k: string) => {
     const res = await fetch("/api/e/stats", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug }),
+      /* sent as both: the server checks each against its own key, so
+         one field works whichever kind of key was typed */
+      body: JSON.stringify({ slug, adminKey: k, usherKey: k }),
     });
-    if (res.ok) setS(await res.json());
+    if (!res.ok) return false;
+    setS(await res.json());
+    return true;
   }, [slug]);
 
+  /* A screen left running all night must not go dark because of one
+     dropped request, so a failed poll keeps the last good numbers on
+     screen rather than throwing the board back to the lock. */
   useEffect(() => {
-    load();
-    const t = setInterval(load, 4000);
+    if (!unlocked) return;
+    const t = setInterval(() => { load(key); }, 4000);
     return () => clearInterval(t);
-  }, [load]);
+  }, [unlocked, key, load]);
+
+  useEffect(() => {
+    if (tried) return;
+    setTried(true);
+    if (typeof window === "undefined") return;
+    /* the host usually reaches this from the console, where the admin
+       key is already in hand - so the common case needs no typing */
+    const saved =
+      sessionStorage.getItem(`sb_live_${slug}`) ||
+      sessionStorage.getItem(`sb_admin_${slug}`);
+    if (!saved) return;
+    setKey(saved);
+    load(saved).then((ok) => { if (ok) setUnlocked(true); });
+  }, [tried, slug, load]);
+
+  async function unlock() {
+    if (!key.trim()) return;
+    setBusy(true);
+    setKeyError("");
+    const ok = await load(key.trim());
+    setBusy(false);
+    if (!ok) { setKeyError("That key does not open this event."); return; }
+    setUnlocked(true);
+    sessionStorage.setItem(`sb_live_${slug}`, key.trim());
+  }
 
   useEffect(() => {
     const tick = () => setClock(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
@@ -46,6 +88,37 @@ export default function LiveBoard() {
   const pct = s && s.expectedHeads > 0 ? Math.min(100, Math.round((s.arrivedHeads / s.expectedHeads) * 100)) : 0;
   const card = "sb-surface sb-lift";
   const peak = s?.hourly.length ? Math.max(...s.hourly.map((h) => h.count)) : 1;
+
+  if (!unlocked) {
+    return (
+      <main className="min-h-[100svh] bg-[#080807] text-[#f5f1ea] flex flex-col items-center justify-center px-5">
+        <div className={`${card} w-full max-w-[380px] p-6`}>
+          <ShieldCheck className="h-5 w-5 text-[#c9a227]" strokeWidth={1.6} />
+          <p className="mt-3 text-[10px] uppercase tracking-[0.3em] text-white/40 font-[family-name:var(--font-sans)]">Live Arrivals</p>
+          <h1 className="mt-2 font-[family-name:var(--font-serif)] text-3xl text-[#c9a227]">Unlock the board</h1>
+          <p className="mt-3 text-[12px] leading-relaxed text-white/40 font-[family-name:var(--font-sans)]">
+            This board shows your guests&apos; names as they arrive, so it needs a key.
+            Either the admin key or the gate key will open it.
+          </p>
+          <input
+            type="password"
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && unlock()}
+            placeholder="ADM-XXXXXX or GATE-XXXXXX"
+            className="mt-5 w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 uppercase tracking-widest text-[#f5f1ea] outline-none focus:border-[#c9a227]/60 font-[family-name:var(--font-sans)]"
+          />
+          {keyError && <p className="mt-3 text-sm text-red-400 font-[family-name:var(--font-sans)]">{keyError}</p>}
+          <button onClick={unlock} disabled={busy} className="mt-4 w-full min-h-[50px] sb-btn text-[11px] uppercase tracking-[0.2em] font-semibold text-[#080807] font-[family-name:var(--font-sans)]">
+            {busy ? <Loader2 className="mx-auto h-5 w-5 animate-spin" /> : "Open board"}
+          </button>
+          <p className="mt-4 text-[11px] leading-relaxed text-white/25 font-[family-name:var(--font-sans)]">
+            You only enter this once per screen. Leave the tab open and it stays unlocked for the night.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="relative min-h-[100svh] bg-[#080807] text-[#f5f1ea] px-5 py-8 sm:px-8">
