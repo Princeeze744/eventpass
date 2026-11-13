@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,15 @@ export const dynamic = "force-dynamic";
    show at /e/[slug]. No guest records, no keys, no counts. The RSVP
    page is a client component with no session, so it needs somewhere
    to read a picture from, and this is that - and nothing more.
+
+   Public still means limited. Nothing here is worth stealing, but an
+   unlimited endpoint is a free way to make the database work on
+   somebody else's behalf, and that is reason enough.
 ------------------------------------------------------------------ */
 export async function GET(req: NextRequest) {
+  const gate = await rateLimit(`brand:${callerIp(req)}`, LIMITS.read.limit, LIMITS.read.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
   const slug = String(req.nextUrl.searchParams.get("slug") || "").trim();
   if (!slug) return NextResponse.json({ error: "Missing slug." }, { status: 400 });
 

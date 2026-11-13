@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
 
+/* ------------------------------------------------------------------
+   The gate.
+
+   Two very different callers share this endpoint: an usher scanning
+   a queue, who is fast, and anyone trying keys or pass IDs, who is
+   faster. The limits below are set so the first never notices and
+   the second stops immediately:
+
+   - scanning is allowed at four a second, which no human reaches
+   - a wrong GATE key burns a budget twenty times smaller, so the key
+     itself cannot be guessed
+------------------------------------------------------------------ */
 export async function POST(req: NextRequest) {
-  const { slug, passId, usherKey, override } = await req.json();
+  const { slug, passId, usherKey, override } = await req.json().catch(() => ({}));
+
+  const ip = callerIp(req);
+  const gate = await rateLimit(`verify:${ip}`, LIMITS.verify.limit, LIMITS.verify.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
 
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ status: "invalid", message: "Event not found." }, { status: 404 });
@@ -10,6 +27,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ status: "invalid", message: "Event not activated." }, { status: 403 });
   }
   if (usherKey !== event.usherKey) {
+    const guess = await rateLimit(`verify-auth:${ip}`, LIMITS.auth.limit, LIMITS.auth.window);
+    if (!guess.ok) return tooMany(guess.retryAfter);
     return NextResponse.json({ status: "invalid", message: "Unauthorized." }, { status: 401 });
   }
 
