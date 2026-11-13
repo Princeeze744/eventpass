@@ -214,3 +214,15 @@ model Guest {
   @@unique([eventId, phone])
   @@index([eventId])
 }
+
+/// Counters for rate limiting. One row per caller per action, swept
+/// when it expires. Here rather than in Redis because Postgres is
+/// already running and this costs nothing to keep alive.
+model RateLimit {
+  id        String   @id
+  bucket    String   @unique
+  count     Int      @default(0)
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
