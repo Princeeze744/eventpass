@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { canManageEvent } from "@/lib/eventAccess";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
+  const ip = callerIp(req);
+  const gate = await rateLimit(`guests:${ip}`, LIMITS.read.limit, LIMITS.read.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
   const body = await req.json().catch(() => ({}));
   const { slug, adminKey, includeTrash } = body as {
     slug?: string; adminKey?: string; includeTrash?: boolean;
@@ -11,6 +16,10 @@ export async function POST(req: NextRequest) {
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
   if (!(await canManageEvent(event, String(adminKey || "")))) {
+    /* this returns every name, phone and email on the event, so a
+       wrong key is charged against the tight budget */
+    const guess = await rateLimit(`guests-auth:${ip}`, LIMITS.auth.limit, LIMITS.auth.window);
+    if (!guess.ok) return tooMany(guess.retryAfter);
     return NextResponse.json({ error: "Wrong admin key." }, { status: 401 });
   }
 

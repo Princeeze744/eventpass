@@ -1,13 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getSessionOrganizerId } from "@/lib/auth";
+import { canManageEvent } from "@/lib/eventAccess";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
-  const { slug, adminKey } = await req.json();
+  const ip = callerIp(req);
+  const gate = await rateLimit(`host:${ip}`, LIMITS.read.limit, LIMITS.read.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
+  const { slug, adminKey } = await req.json().catch(() => ({}));
 
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
-  if (adminKey !== event.adminKey) {
+
+  /* through canManageEvent like every other managing route, so the
+     signed-in owner is not the one person made to type a key */
+  if (!(await canManageEvent(event, String(adminKey || "")))) {
+    const guess = await rateLimit(`host-auth:${ip}`, LIMITS.auth.limit, LIMITS.auth.window);
+    if (!guess.ok) return tooMany(guess.retryAfter);
     return NextResponse.json({ error: "Wrong access key." }, { status: 401 });
   }
 

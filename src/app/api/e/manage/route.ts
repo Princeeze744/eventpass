@@ -2,14 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { canManageEvent } from "@/lib/eventAccess";
 import { sendApprovalEmail, sendReminderEmail } from "@/lib/mailer";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const ip = callerIp(req);
+  const gate = await rateLimit(`manage:${ip}`, LIMITS.write.limit, LIMITS.write.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
+  const body = await req.json().catch(() => ({}));
   const { slug, adminKey, action, ids } = body;
 
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
   if (!(await canManageEvent(event, String(adminKey || "")))) {
+    const guess = await rateLimit(`manage-auth:${ip}`, LIMITS.auth.limit, LIMITS.auth.window);
+    if (!guess.ok) return tooMany(guess.retryAfter);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -101,7 +108,17 @@ export async function POST(req: NextRequest) {
     if (body.partySize) data.partySize = Math.max(1, Math.min(10, Number(body.partySize)));
     if (typeof body.email === "string") data.email = body.email.trim().toLowerCase() || null;
 
-    await prisma.guest.update({ where: { id: String(body.id) }, data });
+    /* Scoped to this event. It was updating by guest id alone, which
+       meant one valid admin key let the holder rename, re-phone or
+       re-email a guest at ANY event on the platform - they only had
+       to know that guest's id. updateMany takes a where clause the
+       way update cannot, so the event is part of the match rather
+       than something we check and then forget. */
+    const r = await prisma.guest.updateMany({
+      where: { id: String(body.id), eventId: event.id },
+      data,
+    });
+    if (!r.count) return NextResponse.json({ error: "Guest not found on this event." }, { status: 404 });
     return NextResponse.json({ ok: true });
   }
 

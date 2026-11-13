@@ -3,14 +3,27 @@ import { prisma } from "@/lib/db";
 import { canManageEvent } from "@/lib/eventAccess";
 import { normPhone, generatePassId } from "@/lib/ids";
 import { sendVendorBadgeEmail } from "@/lib/mailer";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const ip = callerIp(req);
+  const gate = await rateLimit(`vendors:${ip}`, LIMITS.write.limit, LIMITS.write.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
+  const body = await req.json().catch(() => ({}));
   const { slug, adminKey, action } = body;
 
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
   if (!event) return NextResponse.json({ error: "Event not found." }, { status: 404 });
-  if (adminKey !== event.adminKey) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  /* canManageEvent was imported here and never called, so a signed-in
+     owner was made to type a key the rest of the app let them past
+     without. Inconsistent auth is how holes are born. */
+  if (!(await canManageEvent(event, String(adminKey || "")))) {
+    const guess = await rateLimit(`vendors-auth:${ip}`, LIMITS.auth.limit, LIMITS.auth.window);
+    if (!guess.ok) return tooMany(guess.retryAfter);
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   if (action === "list") {
     const vendors = await prisma.guest.findMany({
@@ -103,8 +116,11 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === "update") {
-    await prisma.guest.update({
-      where: { id: String(body.id) },
+    /* Scoped to this event and to crew. It was updating by id alone,
+       so one valid admin key was enough to rewrite a vendor - or any
+       guest - at somebody else's event, given only their id. */
+    const r = await prisma.guest.updateMany({
+      where: { id: String(body.id), eventId: event.id, isVendor: true },
       data: {
         name: body.name ? String(body.name).trim() : undefined,
         company: typeof body.company === "string" ? body.company.trim() : undefined,
@@ -114,11 +130,18 @@ export async function POST(req: NextRequest) {
         phone: typeof body.phone === "string" ? normPhone(body.phone) : undefined,
       },
     });
+    if (!r.count) return NextResponse.json({ error: "Vendor not found on this event." }, { status: 404 });
     return NextResponse.json({ ok: true });
   }
 
   if (action === "remove") {
-    await prisma.guest.update({ where: { id: String(body.id) }, data: { deletedAt: new Date() } });
+    /* the same scope, and it matters more here: unscoped, this was a
+       way to remove any guest from any event on the platform */
+    const r = await prisma.guest.updateMany({
+      where: { id: String(body.id), eventId: event.id, isVendor: true },
+      data: { deletedAt: new Date() },
+    });
+    if (!r.count) return NextResponse.json({ error: "Vendor not found on this event." }, { status: 404 });
     return NextResponse.json({ ok: true });
   }
 
