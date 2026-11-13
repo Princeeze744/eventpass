@@ -76,3 +76,5 @@ vendorcheck.mjs
 whichtable.mjs
 
 unseated.mjs
+.vercel
+.env*
