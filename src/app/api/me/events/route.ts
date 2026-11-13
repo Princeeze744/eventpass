@@ -2,12 +2,29 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSessionOrganizerId } from "@/lib/auth";
 import { normPhone } from "@/lib/ids";
+import { rateLimit, tooMany } from "@/lib/rateLimit";
 
 export const dynamic = "force-dynamic";
 
+/* ------------------------------------------------------------------
+   Everything the signed-in person is registered to, matched on the
+   phone number they linked.
+
+   This returns PASS IDS, and a pass ID opens a pass. It is therefore
+   only ever as trustworthy as the link between an account and a phone
+   number - and that link is currently unverified. See the note in
+   api/me/link: until a one-time code proves the number, anybody can
+   claim somebody else's and read this.
+
+   Budgeted per account rather than per address, because the person is
+   signed in and the account is the thing worth limiting.
+------------------------------------------------------------------ */
 export async function GET() {
   const userId = await getSessionOrganizerId();
   if (!userId) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+
+  const gate = await rateLimit(`meevents:${userId}`, 60, 60);
+  if (!gate.ok) return tooMany(gate.retryAfter);
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });

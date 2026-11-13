@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendHostInviteEmail } from "@/lib/mailer";
 import { getSessionOrganizerId } from "@/lib/auth";
+import { makeEventKey } from "@/lib/keys";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
 
 function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 40);
@@ -10,10 +12,13 @@ function slugify(s: string) {
 const EDITABLE = ["title","eventType","hostName","hostEmail","tagline","state","accentColor","eventDate","eventTime","venue","address","approvalMode"] as const;
 
 export async function POST(req: NextRequest) {
+  const gate = await rateLimit(`events-manage:${callerIp(req)}`, LIMITS.write.limit, LIMITS.write.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
   const userId = await getSessionOrganizerId();
   if (!userId) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
 
-  const body = await req.json();
+  const body = await req.json().catch(() => ({}));
   const { slug, action } = body;
 
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
@@ -41,7 +46,7 @@ export async function POST(req: NextRequest) {
   if (action === "update") {
     const data: Record<string, string | number | null> = {};
     for (const f of EDITABLE) {
-      if (typeof body[f] === "string" && body[f].trim()) data[f] = body[f].trim();
+      if (typeof body[f] === "string" && body[f].trim()) data[f] = body[f].trim().slice(0, 300);
     }
     if (typeof body.dateISO === "string" && body.dateISO) {
       data.eventDateISO = body.dateISO;
@@ -55,7 +60,9 @@ export async function POST(req: NextRequest) {
 
   if (action === "inviteHost") {
     const email = String(body.hostEmail || "").trim().toLowerCase();
-    if (!email || !email.includes("@")) {
+    /* this address is about to be emailed an invitation to manage an
+       event, so "contains an @" is not a good enough test of it */
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       return NextResponse.json({ error: "Enter a valid email address for the host." }, { status: 400 });
     }
     const planner = await prisma.user.findUnique({ where: { id: userId } });
@@ -116,11 +123,13 @@ export async function POST(req: NextRequest) {
   }
 
   if (action === "rotateKeys") {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    const gen = (p: string) => `${p}-${Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("")}`;
+    /* rotation exists so a leaked key can be killed. Generating the
+       replacement with Math.random made rotating a key worth less
+       than it looked - the new one came from the same predictable
+       sequence as the one being replaced. */
     await prisma.event.update({
       where: { id: event.id },
-      data: { adminKey: gen("ADM"), usherKey: gen("GATE") },
+      data: { adminKey: makeEventKey("ADM"), usherKey: makeEventKey("GATE") },
     });
     return NextResponse.json({ ok: true });
   }

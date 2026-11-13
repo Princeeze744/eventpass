@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSessionOrganizerId } from "@/lib/auth";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const gate = await rateLimit(`events-get:${callerIp(req)}`, LIMITS.read.limit, LIMITS.read.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
   const userId = await getSessionOrganizerId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const slug = req.nextUrl.searchParams.get("slug") || "";
+  /* already scoped to the owner, which is why this one needed no
+     repair - the event and the person are matched in the same query */
   const event = await prisma.event.findFirst({
     where: { slug, ownerId: userId, deletedAt: null },
   });

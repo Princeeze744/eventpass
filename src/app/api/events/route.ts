@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSessionOrganizerId } from "@/lib/auth";
+import { makeEventKey } from "@/lib/keys";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
 
 function slugify(s: string) {
   return s
@@ -11,18 +13,14 @@ function slugify(s: string) {
     .slice(0, 40);
 }
 
-function makeKey(prefix: string) {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "";
-  for (let i = 0; i < 6; i++) out += chars[Math.floor(Math.random() * chars.length)];
-  return `${prefix}-${out}`;
-}
-
 export async function POST(req: NextRequest) {
+  const gate = await rateLimit(`events-new:${callerIp(req)}`, LIMITS.write.limit, LIMITS.write.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
   const userId = await getSessionOrganizerId();
   if (!userId) return NextResponse.json({ error: "Not signed in." }, { status: 401 });
 
-  const body = await req.json();
+  const body = await req.json().catch(() => ({}));
   const { title, hostName, tagline, eventDate, eventTime, venue, address, approvalMode, capacity } = body;
 
   if (!title || !eventDate || !venue) {
@@ -44,7 +42,7 @@ export async function POST(req: NextRequest) {
     data: {
       slug: candidate,
       ownerId: userId,
-      title: String(title).trim(),
+      title: String(title).trim().slice(0, 150),
       eventType: body.eventType ? String(body.eventType).trim() : "White Wedding",
       hostName: hostName ? String(hostName).trim() : "",
       tagline: tagline ? String(tagline).trim() : "A Celebration",
@@ -56,8 +54,10 @@ export async function POST(req: NextRequest) {
       address: address ? String(address).trim() : "",
       approvalMode: approvalMode === "auto" ? "auto" : "manual",
       capacity: capacity ? Number(capacity) : null,
-      adminKey: makeKey("ADM"),
-      usherKey: makeKey("GATE"),
+      /* from crypto, not Math.random - see lib/keys.ts for why that
+         difference is the whole security of an event */
+      adminKey: makeEventKey("ADM"),
+      usherKey: makeEventKey("GATE"),
     },
   });
 

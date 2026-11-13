@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { canManageEvent } from "@/lib/eventAccess";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
 import {
   sendTemplate,
   normalizePhone,
@@ -42,6 +43,13 @@ type Row = {
 };
 
 export async function POST(req: Request) {
+  /* Of every route here this is the only one where an attempt costs
+     actual money - Meta charges per message. A wrong key is charged
+     to the tight budget for exactly that reason. */
+  const ip = callerIp(req);
+  const gate = await rateLimit(`wasend:${ip}`, LIMITS.write.limit, LIMITS.write.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
   let body: { slug?: string; key?: string; dryRun?: boolean } = {};
   try {
     body = await req.json();
@@ -61,6 +69,8 @@ export async function POST(req: Request) {
   }
 
   if (!(await canManageEvent(event, key))) {
+    const guess = await rateLimit(`wasend-auth:${ip}`, LIMITS.auth.limit, LIMITS.auth.window);
+    if (!guess.ok) return tooMany(guess.retryAfter);
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   }
 
@@ -207,6 +217,10 @@ export async function POST(req: Request) {
 
 /* quick status read for the dashboard */
 export async function GET(req: Request) {
+  const ip = callerIp(req);
+  const gate = await rateLimit(`wasend-get:${ip}`, LIMITS.read.limit, LIMITS.read.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
   const url = new URL(req.url);
   const slug = String(url.searchParams.get("slug") || "").trim();
   const key = String(url.searchParams.get("key") || "");
@@ -214,8 +228,11 @@ export async function GET(req: Request) {
 
   const event = await prisma.event.findFirst({ where: { slug, deletedAt: null } });
   if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
-  if (!(await canManageEvent(event, key)))
+  if (!(await canManageEvent(event, key))) {
+    const guess = await rateLimit(`wasend-auth:${ip}`, LIMITS.auth.limit, LIMITS.auth.window);
+    if (!guess.ok) return tooMany(guess.retryAfter);
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
+  }
 
   const guests = await prisma.guest.findMany({
     where: { eventId: event.id, deletedAt: null, ...GUESTS_ONLY },

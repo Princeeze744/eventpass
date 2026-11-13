@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getStaff, requireLevel } from "@/lib/staff";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
 
+export const dynamic = "force-dynamic";
+
+/* Platform staff act across every event by design, so there is no
+   tenant to scope to here - the scoping is the staff check itself.
+   What it had no answer to was volume: this route can delete accounts
+   and the events under them. */
 export async function POST(req: NextRequest) {
+  const gate = await rateLimit(`staff:${callerIp(req)}`, LIMITS.write.limit, LIMITS.write.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
   const staff = await getStaff();
   if (!staff) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json();
+  const body = await req.json().catch(() => ({}));
   const { action, eventId, userId, approval, note, paymentStatus, paymentAmount, level, email } = body;
 
   if (action === "review" && eventId) {
@@ -16,7 +26,7 @@ export async function POST(req: NextRequest) {
         approval: ["pending", "approved", "rejected", "suspended"].includes(approval) ? approval : "pending",
         approvedAt: approval === "approved" ? new Date() : null,
         approvedBy: approval === "approved" ? staff.name : null,
-        reviewNote: typeof note === "string" ? note.trim() || null : undefined,
+        reviewNote: typeof note === "string" ? note.trim().slice(0, 1000) || null : undefined,
       },
     });
     return NextResponse.json({ ok: true });
