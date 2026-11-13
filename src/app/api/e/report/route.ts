@@ -1,15 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { canManageEvent } from "@/lib/eventAccess";
+import { rateLimit, callerIp, tooMany, LIMITS } from "@/lib/rateLimit";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const { slug, adminKey, kind } = await req.json();
+  const ip = callerIp(req);
+  const gate = await rateLimit(`report:${ip}`, LIMITS.write.limit, LIMITS.write.window);
+  if (!gate.ok) return tooMany(gate.retryAfter);
+
+  const { slug, adminKey, kind } = await req.json().catch(() => ({}));
 
   const event = await prisma.event.findUnique({ where: { slug: String(slug || "") } });
-  if (!event || adminKey !== event.adminKey) {
+  if (!event || !(await canManageEvent(event, String(adminKey || "")))) {
+    const guess = await rateLimit(`report-auth:${ip}`, LIMITS.auth.limit, LIMITS.auth.window);
+    if (!guess.ok) return tooMany(guess.retryAfter);
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  /* The same guard as the export: a cell beginning = + - or @ is read
+     as a formula by Excel and Sheets, so a guest who registers under
+     a name like =HYPERLINK(...) becomes live code the moment the host
+     opens their own report. Quoting does not stop it; a leading
+     apostrophe does. */
+  const esc = (v: unknown) => {
+    const s = String(v ?? "");
+    const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
+    return `"${safe.replace(/"/g, '""')}"`;
+  };
+
   let header: string[] = [];
   let rows: string[] = [];
   let name = "report";
